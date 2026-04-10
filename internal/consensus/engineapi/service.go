@@ -32,10 +32,11 @@ type ForkchoiceStore interface {
 }
 
 type PayloadEnvelope struct {
-	BlockNumber uint64 `json:"blockNumber"`
-	BlockHash   string `json:"blockHash"`
-	ParentHash  string `json:"parentHash"`
-	StateRoot   string `json:"stateRoot"`
+	BlockNumber     uint64 `json:"blockNumber"`
+	BlockHash       string `json:"blockHash"`
+	ParentHash      string `json:"parentHash"`
+	ParentStateRoot string `json:"parentStateRoot"`
+	StateRoot       string `json:"stateRoot"`
 }
 
 type PayloadStatus struct {
