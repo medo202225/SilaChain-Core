@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	execstate "silachain/internal/consensus/executionstate"
 	"silachain/internal/consensus/p2p"
+	execstate "silachain/internal/execution/executionstate"
 )
 
 func main() {

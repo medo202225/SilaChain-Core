@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	execstate "silachain/internal/consensus/executionstate"
+	execstate "silachain/internal/execution/executionstate"
 )
 
 func TestSilaExecutionTransportStaticPeerConnection(t *testing.T) {

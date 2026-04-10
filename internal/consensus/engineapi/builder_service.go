@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 
 	"silachain/internal/consensus/blockassembly"
-	"silachain/internal/consensus/executionstate"
 	"silachain/internal/consensus/txpool"
+	"silachain/internal/execution/executionstate"
 )
 
 var (

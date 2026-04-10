@@ -12,7 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	execstate "silachain/internal/consensus/executionstate"
+	execstate "silachain/internal/execution/executionstate"
 )
 
 const (

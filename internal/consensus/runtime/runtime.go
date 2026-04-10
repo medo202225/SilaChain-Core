@@ -11,11 +11,11 @@ import (
 	"silachain/internal/consensus/engine"
 	"silachain/internal/consensus/engineapi"
 	"silachain/internal/consensus/engineapiserver"
-	"silachain/internal/consensus/executionstate"
 	"silachain/internal/consensus/txpool"
 	"silachain/internal/consensus/txpoolapi"
 	"silachain/internal/consensus/vmstate"
 	coretypes "silachain/internal/core/types"
+	"silachain/internal/execution/executionstate"
 )
 
 var (

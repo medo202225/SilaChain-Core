@@ -5,8 +5,8 @@ import (
 
 	"silachain/internal/consensus/blockassembly"
 	"silachain/internal/consensus/engine"
-	"silachain/internal/consensus/executionstate"
 	"silachain/internal/consensus/txpool"
+	"silachain/internal/execution/executionstate"
 )
 
 type bridgeTestState struct {
