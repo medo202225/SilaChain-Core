@@ -180,6 +180,121 @@ func (api *ConsensusAPI) forkchoiceUpdated(ctx context.Context, update beaconeng
 	}, nil
 }
 
+var invalidStatus = beaconengine.PayloadStatusV1{Status: beaconengine.INVALID}
+
+func (api *ConsensusAPI) NewPayloadV1(ctx context.Context, params beaconengine.ExecutableData) (beaconengine.PayloadStatusV1, error) {
+	if params.Withdrawals != nil {
+		return invalidStatus, paramsErr("withdrawals not supported in V1")
+	}
+	return api.newPayload(ctx, params, nil, nil, nil, false)
+}
+
+func (api *ConsensusAPI) NewPayloadV2(ctx context.Context, params beaconengine.ExecutableData) (beaconengine.PayloadStatusV1, error) {
+	switch {
+	case latestFork(params.Timestamp) == PayloadForkCancun || latestFork(params.Timestamp) == PayloadForkAmsterdam:
+		return invalidStatus, paramsErr("can't use newPayloadV2 post-cancun")
+	case latestFork(params.Timestamp) == PayloadForkShanghai && params.Withdrawals == nil:
+		return invalidStatus, paramsErr("nil withdrawals post-shanghai")
+	case latestFork(params.Timestamp) == PayloadForkParis && params.Withdrawals != nil:
+		return invalidStatus, paramsErr("non-nil withdrawals pre-shanghai")
+	case params.ExcessBlobGas != nil:
+		return invalidStatus, paramsErr("non-nil excessBlobGas pre-cancun")
+	case params.BlobGasUsed != nil:
+		return invalidStatus, paramsErr("non-nil blobGasUsed pre-cancun")
+	}
+	return api.newPayload(ctx, params, nil, nil, nil, false)
+}
+
+func (api *ConsensusAPI) NewPayloadV3(ctx context.Context, params beaconengine.ExecutableData, versionedHashes []string, beaconRoot *string) (beaconengine.PayloadStatusV1, error) {
+	switch {
+	case params.Withdrawals == nil:
+		return invalidStatus, paramsErr("nil withdrawals post-shanghai")
+	case params.ExcessBlobGas == nil:
+		return invalidStatus, paramsErr("nil excessBlobGas post-cancun")
+	case params.BlobGasUsed == nil:
+		return invalidStatus, paramsErr("nil blobGasUsed post-cancun")
+	case versionedHashes == nil:
+		return invalidStatus, paramsErr("nil versionedHashes post-cancun")
+	case beaconRoot == nil:
+		return invalidStatus, paramsErr("nil beaconRoot post-cancun")
+	case !api.checkFork(params.Timestamp, PayloadForkCancun):
+		return invalidStatus, unsupportedForkErr("newPayloadV3 must only be called for cancun payloads")
+	}
+	return api.newPayload(ctx, params, versionedHashes, beaconRoot, nil, false)
+}
+
+func (api *ConsensusAPI) NewPayloadV4(ctx context.Context, params beaconengine.ExecutableData, versionedHashes []string, beaconRoot *string, executionRequests [][]byte) (beaconengine.PayloadStatusV1, error) {
+	switch {
+	case params.Withdrawals == nil:
+		return invalidStatus, paramsErr("nil withdrawals post-shanghai")
+	case params.ExcessBlobGas == nil:
+		return invalidStatus, paramsErr("nil excessBlobGas post-cancun")
+	case params.BlobGasUsed == nil:
+		return invalidStatus, paramsErr("nil blobGasUsed post-cancun")
+	case versionedHashes == nil:
+		return invalidStatus, paramsErr("nil versionedHashes post-cancun")
+	case beaconRoot == nil:
+		return invalidStatus, paramsErr("nil beaconRoot post-cancun")
+	case executionRequests == nil:
+		return invalidStatus, paramsErr("nil executionRequests post-prague")
+	case !api.checkFork(params.Timestamp, PayloadForkPrague, PayloadForkOsaka, PayloadForkBPO1, PayloadForkBPO2, PayloadForkBPO3, PayloadForkBPO4, PayloadForkBPO5):
+		return invalidStatus, unsupportedForkErr("newPayloadV4 must only be called for prague/osaka payloads")
+	}
+	if err := validateRequests(executionRequests); err != nil {
+		return beaconengine.PayloadStatusV1{Status: beaconengine.INVALID}, beaconengine.InvalidParams.With(err)
+	}
+	return api.newPayload(ctx, params, versionedHashes, beaconRoot, executionRequests, false)
+}
+
+func (api *ConsensusAPI) NewPayloadV5(ctx context.Context, params beaconengine.ExecutableData, versionedHashes []string, beaconRoot *string, executionRequests [][]byte) (beaconengine.PayloadStatusV1, error) {
+	switch {
+	case params.Withdrawals == nil:
+		return invalidStatus, paramsErr("nil withdrawals post-shanghai")
+	case params.ExcessBlobGas == nil:
+		return invalidStatus, paramsErr("nil excessBlobGas post-cancun")
+	case params.BlobGasUsed == nil:
+		return invalidStatus, paramsErr("nil blobGasUsed post-cancun")
+	case versionedHashes == nil:
+		return invalidStatus, paramsErr("nil versionedHashes post-cancun")
+	case beaconRoot == nil:
+		return invalidStatus, paramsErr("nil beaconRoot post-cancun")
+	case executionRequests == nil:
+		return invalidStatus, paramsErr("nil executionRequests post-prague")
+	case params.SlotNumber == nil:
+		return invalidStatus, paramsErr("nil slotnumber post-amsterdam")
+	case !api.checkFork(params.Timestamp, PayloadForkAmsterdam):
+		return invalidStatus, unsupportedForkErr("newPayloadV5 must only be called for amsterdam payloads")
+	}
+	if err := validateRequests(executionRequests); err != nil {
+		return beaconengine.PayloadStatusV1{Status: beaconengine.INVALID}, beaconengine.InvalidParams.With(err)
+	}
+	return api.newPayload(ctx, params, versionedHashes, beaconRoot, executionRequests, false)
+}
+
+func (api *ConsensusAPI) newPayload(ctx context.Context, params beaconengine.ExecutableData, versionedHashes []string, beaconRoot *string, requests [][]byte, witness bool) (beaconengine.PayloadStatusV1, error) {
+	_ = ctx
+	_ = versionedHashes
+	_ = beaconRoot
+	_ = requests
+	_ = witness
+
+	api.newPayloadLock.Lock()
+	defer api.newPayloadLock.Unlock()
+
+	api.lastNewPayloadUpdate.Store(time.Now().Unix())
+
+	hash := params.BlockHash
+	if hash == "" {
+		return beaconengine.PayloadStatusV1{
+			Status: beaconengine.INVALID,
+		}, paramsErr("empty block hash")
+	}
+	return beaconengine.PayloadStatusV1{
+		Status:          beaconengine.VALID,
+		LatestValidHash: &hash,
+	}, nil
+}
+
 func (api *ConsensusAPI) setInvalidAncestor(invalidHash string, originHash string) {
 	api.invalidLock.Lock()
 	defer api.invalidLock.Unlock()
@@ -246,6 +361,18 @@ func latestFork(timestamp uint64) PayloadFork {
 	default:
 		return PayloadForkParis
 	}
+}
+
+func validateRequests(requests [][]byte) error {
+	for i, req := range requests {
+		if len(req) < 2 {
+			return errors.New("empty request")
+		}
+		if i > 0 && req[0] <= requests[i-1][0] {
+			return errors.New("invalid request order")
+		}
+	}
+	return nil
 }
 
 func paramsErr(msg string) error {
