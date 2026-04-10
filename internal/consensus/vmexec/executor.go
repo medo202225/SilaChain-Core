@@ -82,7 +82,7 @@ const (
 	OpSELFDESTRUCT        byte = 0xff
 )
 
-const MaxCallDepth = 4
+const MaxCallDepth = 1024
 
 type Message struct {
 	From     string `json:"from"`
