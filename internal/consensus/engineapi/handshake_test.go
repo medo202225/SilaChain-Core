@@ -5,6 +5,7 @@ import (
 
 	"silachain/internal/consensus/blockassembly"
 	"silachain/internal/consensus/engine"
+	"silachain/internal/consensus/executionstate"
 	"silachain/internal/consensus/txpool"
 )
 
@@ -36,6 +37,36 @@ func (s *handshakeState) SetSenderNonce(sender string, nonce uint64) error {
 
 func (s *handshakeState) SenderNonce(sender string) uint64 {
 	return s.nonces[sender]
+}
+func (s *handshakeState) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
+	receipts := make([]executionstate.Receipt, 0, len(req.Txs))
+	var gasUsed uint64
+
+	for _, tx := range req.Txs {
+		intrinsicGas := executionstate.IntrinsicGas(tx)
+		gasUsed += intrinsicGas
+
+		s.nonces[tx.From] = tx.Nonce + 1
+
+		receipts = append(receipts, executionstate.Receipt{
+			TxHash:          tx.Hash,
+			BlockNumber:     req.Block.Number,
+			BlockHash:       req.Block.Hash,
+			From:            tx.From,
+			To:              tx.To,
+			GasUsed:         intrinsicGas,
+			EffectiveGasFee: intrinsicGas * tx.Fee,
+			Success:         true,
+		})
+	}
+
+	return executionstate.BlockExecutionResult{
+		BlockHash:   req.Block.Hash,
+		BlockNumber: req.Block.Number,
+		StateRoot:   s.head.StateRoot,
+		GasUsed:     gasUsed,
+		Receipts:    receipts,
+	}, nil
 }
 
 func TestLocalPayloadHandshake_BuildGetSubmitAndAdvanceCanonicalHead(t *testing.T) {
