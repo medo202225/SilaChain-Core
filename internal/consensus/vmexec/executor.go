@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"hash/fnv"
 	"silachain/internal/consensus/vmstate"
+
+	"golang.org/x/crypto/sha3"
 )
 
 var (
@@ -1453,6 +1455,19 @@ func consumeGas(gasRemaining *uint64, cost uint64) error {
 	}
 	*gasRemaining -= cost
 	return nil
+}
+
+func codeHashWord(code []byte) word {
+	if len(code) == 0 {
+		return zeroWord()
+	}
+	hasher := sha3.NewLegacyKeccak256()
+	_, _ = hasher.Write(code)
+	sum := hasher.Sum(nil)
+
+	var out word
+	copy(out[:], sum)
+	return out
 }
 
 func calldataLoadWord(calldata []byte, offset uint64) word {
