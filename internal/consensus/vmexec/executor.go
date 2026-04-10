@@ -1390,6 +1390,52 @@ func contractWordFromAddress(address string) uint64 {
 	return 0
 }
 
+func legacyContractAddressFromWord(v uint64) string {
+	return fmt.Sprintf("contract%d", v)
+}
+
+func legacyContractWordFromAddress(address string) uint64 {
+	var index uint64
+	n, _ := fmt.Sscanf(address, "contract%d", &index)
+	if n == 1 {
+		return index
+	}
+	return 0
+}
+
+func ethereumLikeAddressFromBytes(sum []byte) string {
+	if len(sum) < 20 {
+		return ""
+	}
+	return "0x" + fmt.Sprintf("%x", sum[len(sum)-20:])
+}
+
+func ethereumLikeCreateAddress(creator string, counter uint64) string {
+	hasher := sha3.NewLegacyKeccak256()
+	_, _ = hasher.Write([]byte(creator))
+
+	var counterBuf [8]byte
+	binary.BigEndian.PutUint64(counterBuf[:], counter)
+	_, _ = hasher.Write(counterBuf[:])
+
+	return ethereumLikeAddressFromBytes(hasher.Sum(nil))
+}
+
+func ethereumLikeCreate2Address(creator string, salt uint64, initCode []byte) string {
+	hasher := sha3.NewLegacyKeccak256()
+	_, _ = hasher.Write([]byte{0xff})
+	_, _ = hasher.Write([]byte(creator))
+
+	var saltBuf [32]byte
+	binary.BigEndian.PutUint64(saltBuf[24:], salt)
+	_, _ = hasher.Write(saltBuf[:])
+
+	initHasher := sha3.NewLegacyKeccak256()
+	_, _ = initHasher.Write(initCode)
+	_, _ = hasher.Write(initHasher.Sum(nil))
+
+	return ethereumLikeAddressFromBytes(hasher.Sum(nil))
+}
 func wordsForBytes(size uint64) uint64 {
 	if size == 0 {
 		return 0
