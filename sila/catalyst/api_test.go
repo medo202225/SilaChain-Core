@@ -264,3 +264,48 @@ func TestGetPayloadRejectsWrongVersion(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func testHasString(items []string, want string) bool {
+	for _, item := range items {
+		if item == want {
+			return true
+		}
+	}
+	return false
+}
+
+func TestExchangeCapabilities(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	caps := api.ExchangeCapabilities(nil)
+
+	if len(caps) == 0 {
+		t.Fatal("expected capabilities")
+	}
+	if !testHasString(caps, "engine_getPayloadV1") {
+		t.Fatal("expected engine_getPayloadV1 capability")
+	}
+	if !testHasString(caps, "engine_getClientVersionV1") {
+		t.Fatal("expected engine_getClientVersionV1 capability")
+	}
+}
+
+func TestGetClientVersionV1(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	res := api.GetClientVersionV1(beaconengine.ClientVersionV1{})
+
+	if len(res) != 1 {
+		t.Fatalf("unexpected version count: %d", len(res))
+	}
+	if res[0].Code != beaconengine.ClientCode {
+		t.Fatalf("unexpected code: %s", res[0].Code)
+	}
+	if res[0].Name != beaconengine.ClientName {
+		t.Fatalf("unexpected name: %s", res[0].Name)
+	}
+	if res[0].Version == "" {
+		t.Fatal("expected version")
+	}
+	if len(res[0].Commit) < 2 || res[0].Commit[0:2] != "0x" {
+		t.Fatalf("unexpected commit: %s", res[0].Commit)
+	}
+}

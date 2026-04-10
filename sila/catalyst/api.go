@@ -479,3 +479,36 @@ func attributesErr(msg string) error {
 func unsupportedForkErr(msg string) error {
 	return beaconengine.UnsupportedFork.With(errors.New(msg))
 }
+
+func (api *ConsensusAPI) ExchangeCapabilities([]string) []string {
+	return []string{
+		"engine_forkchoiceUpdatedV1",
+		"engine_forkchoiceUpdatedV2",
+		"engine_forkchoiceUpdatedV3",
+		"engine_forkchoiceUpdatedV4",
+		"engine_newPayloadV1",
+		"engine_newPayloadV2",
+		"engine_newPayloadV3",
+		"engine_newPayloadV4",
+		"engine_newPayloadV5",
+		"engine_getPayloadV1",
+		"engine_getPayloadV2",
+		"engine_getPayloadV3",
+		"engine_getPayloadV4",
+		"engine_getPayloadV5",
+		"engine_getPayloadV6",
+		"engine_getClientVersionV1",
+	}
+}
+
+func (api *ConsensusAPI) GetClientVersionV1(info beaconengine.ClientVersionV1) []beaconengine.ClientVersionV1 {
+	_ = info
+	return []beaconengine.ClientVersionV1{
+		{
+			Code:    beaconengine.ClientCode,
+			Name:    beaconengine.ClientName,
+			Version: "sila/1.0.0",
+			Commit:  "0x00000000",
+		},
+	}
+}
