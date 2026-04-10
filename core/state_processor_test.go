@@ -140,12 +140,12 @@ func TestExecute_AppliesAssembledPayloadAndAdvancesHead(t *testing.T) {
 		t.Fatalf("new assembler: %v", err)
 	}
 
-	executor, err := New(state, assembler)
+	executor, err := NewStateProcessor(state, assembler)
 	if err != nil {
 		t.Fatalf("new executor: %v", err)
 	}
 
-	result, err := executor.Execute(blockassembly.PayloadAttributes{
+	result, err := executor.Process(blockassembly.PayloadAttributes{
 		Timestamp:         1000,
 		FeeRecipient:      "SILA_fee_recipient_exec",
 		Random:            "SILA_rand_exec",
@@ -228,12 +228,12 @@ func TestExecute_FailsOnSenderNonceMismatchBetweenPoolAndState(t *testing.T) {
 		t.Fatalf("new assembler: %v", err)
 	}
 
-	executor, err := New(state, assembler)
+	executor, err := NewStateProcessor(state, assembler)
 	if err != nil {
 		t.Fatalf("new executor: %v", err)
 	}
 
-	_, err = executor.Execute(blockassembly.PayloadAttributes{
+	_, err = executor.Process(blockassembly.PayloadAttributes{
 		Timestamp:    123,
 		FeeRecipient: "SILA_fee_recipient_exec_mismatch",
 		Random:       "SILA_rand_exec_mismatch",

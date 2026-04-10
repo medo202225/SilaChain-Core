@@ -29,7 +29,7 @@ type Engine struct {
 	gasLimit uint64
 
 	assembler *blockassembly.Assembler
-	executor  *core.Executor
+	executor  *core.StateProcessor
 	importer  *blockimport.Importer
 	forkStore *forkchoice.Store
 	manager   *forkchoice.Manager
@@ -57,7 +57,7 @@ func New(state State, pool *txpool.Pool, gasLimit uint64) (*Engine, error) {
 		return nil, err
 	}
 
-	executor, err := core.New(state, assembler)
+	executor, err := core.NewStateProcessor(state, assembler)
 	if err != nil {
 		return nil, err
 	}

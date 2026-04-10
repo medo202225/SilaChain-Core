@@ -24,7 +24,7 @@ type State interface {
 }
 
 type Executor interface {
-	Execute(attrs blockassembly.PayloadAttributes) (core.Result, error)
+	Process(attrs blockassembly.PayloadAttributes) (core.Result, error)
 }
 
 type ImportRequest struct {
@@ -97,7 +97,7 @@ func (i *Importer) Import(req ImportRequest) (Result, error) {
 		)
 	}
 
-	executed, err := i.executor.Execute(req.Attributes)
+	executed, err := i.executor.Process(req.Attributes)
 	if err != nil {
 		return Result{}, err
 	}

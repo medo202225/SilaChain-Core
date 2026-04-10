@@ -22,7 +22,7 @@ type State interface {
 	ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error)
 }
 
-type Executor struct {
+type StateProcessor struct {
 	state     State
 	assembler *blockassembly.Assembler
 }
@@ -46,28 +46,28 @@ type Result struct {
 	TxCount            int
 }
 
-func New(state State, assembler *blockassembly.Assembler) (*Executor, error) {
+func NewStateProcessor(state State, assembler *blockassembly.Assembler) (*StateProcessor, error) {
 	if state == nil {
 		return nil, ErrNilState
 	}
 	if assembler == nil {
 		return nil, ErrNilAssembler
 	}
-	return &Executor{
+	return &StateProcessor{
 		state:     state,
 		assembler: assembler,
 	}, nil
 }
 
-func (e *Executor) Execute(attrs blockassembly.PayloadAttributes) (Result, error) {
-	if e == nil || e.state == nil {
+func (p *StateProcessor) Process(attrs blockassembly.PayloadAttributes) (Result, error) {
+	if p == nil || p.state == nil {
 		return Result{}, ErrNilState
 	}
-	if e.assembler == nil {
+	if p.assembler == nil {
 		return Result{}, ErrNilAssembler
 	}
 
-	assembled, err := e.assembler.Assemble(attrs)
+	assembled, err := p.assembler.Assemble(attrs)
 	if err != nil {
 		return Result{}, err
 	}
@@ -94,7 +94,7 @@ func (e *Executor) Execute(attrs blockassembly.PayloadAttributes) (Result, error
 		})
 	}
 
-	executed, err := e.state.ExecuteBlock(executionstate.BlockExecutionRequest{
+	executed, err := p.state.ExecuteBlock(executionstate.BlockExecutionRequest{
 		Block: executionstate.ImportedBlock{
 			Number:     assembled.BlockNumber,
 			Hash:       blockHash,

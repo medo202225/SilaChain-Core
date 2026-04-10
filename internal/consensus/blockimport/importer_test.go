@@ -30,11 +30,11 @@ type stubExecutor struct {
 	err    error
 }
 
-func (s *stubExecutor) Execute(attrs blockassembly.PayloadAttributes) (core.Result, error) {
-	if s.err != nil {
-		return core.Result{}, s.err
+func (e *stubExecutor) Process(attrs blockassembly.PayloadAttributes) (core.Result, error) {
+	if e.err != nil {
+		return core.Result{}, e.err
 	}
-	return s.result, nil
+	return e.result, nil
 }
 
 func TestImport_SucceedsWithExpectedParentAndBlockNumber(t *testing.T) {
