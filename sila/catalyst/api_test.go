@@ -218,3 +218,49 @@ func TestNewPayloadReturnsValid(t *testing.T) {
 		t.Fatalf("unexpected latest valid hash")
 	}
 }
+
+func TestGetPayloadV1Unknown(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	_, err := api.GetPayloadV1(beaconengine.PayloadID{1, 2, 3, 4, 5, 6, 7, 8})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestGetPayloadReturnsStoredEnvelope(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	id := beaconengine.PayloadID{byte(beaconengine.PayloadV1), 1, 2, 3, 4, 5, 6, 7}
+	env := &beaconengine.ExecutionPayloadEnvelope{
+		ExecutionPayload: &beaconengine.ExecutableData{
+			BlockHash: "0xstored",
+		},
+	}
+	api.localBlocks.put(id, env, false)
+
+	got, err := api.GetPayloadV2(id)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got == nil || got.ExecutionPayload == nil {
+		t.Fatal("expected payload envelope")
+	}
+	if got.ExecutionPayload.BlockHash != "0xstored" {
+		t.Fatalf("unexpected block hash: %s", got.ExecutionPayload.BlockHash)
+	}
+}
+
+func TestGetPayloadRejectsWrongVersion(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	id := beaconengine.PayloadID{byte(beaconengine.PayloadV1), 1, 2, 3, 4, 5, 6, 7}
+	env := &beaconengine.ExecutionPayloadEnvelope{
+		ExecutionPayload: &beaconengine.ExecutableData{
+			BlockHash: "0xstored",
+		},
+	}
+	api.localBlocks.put(id, env, false)
+
+	_, err := api.GetPayloadV3(id)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}

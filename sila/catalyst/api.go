@@ -38,10 +38,51 @@ func newHeaderQueue() *headerQueue {
 	return &headerQueue{}
 }
 
-type payloadQueue struct{}
+type storedPayload struct {
+	envelope *beaconengine.ExecutionPayloadEnvelope
+	full     bool
+}
+
+type payloadQueue struct {
+	items map[string]storedPayload
+}
 
 func newPayloadQueue() *payloadQueue {
-	return &payloadQueue{}
+	return &payloadQueue{
+		items: make(map[string]storedPayload),
+	}
+}
+
+func (q *payloadQueue) has(id beaconengine.PayloadID) bool {
+	if q == nil {
+		return false
+	}
+	_, ok := q.items[id.String()]
+	return ok
+}
+
+func (q *payloadQueue) put(id beaconengine.PayloadID, env *beaconengine.ExecutionPayloadEnvelope, full bool) {
+	if q == nil {
+		return
+	}
+	q.items[id.String()] = storedPayload{
+		envelope: env,
+		full:     full,
+	}
+}
+
+func (q *payloadQueue) get(id beaconengine.PayloadID, full bool) *beaconengine.ExecutionPayloadEnvelope {
+	if q == nil {
+		return nil
+	}
+	item, ok := q.items[id.String()]
+	if !ok {
+		return nil
+	}
+	if full && !item.full {
+		return nil
+	}
+	return item.envelope
 }
 
 type ConsensusAPI struct {
@@ -93,8 +134,6 @@ func newConsensusAPIWithoutHeartbeat(backend Backend) *ConsensusAPI {
 	return api
 }
 
-// ForkchoiceUpdatedV1 mirrors the first engine API forkchoice entrypoint.
-// V1 allows neither withdrawals nor beacon root.
 func (api *ConsensusAPI) ForkchoiceUpdatedV1(ctx context.Context, update beaconengine.ForkchoiceStateV1, payloadAttributes *beaconengine.PayloadAttributes) (beaconengine.ForkChoiceResponse, error) {
 	if payloadAttributes != nil {
 		switch {
@@ -107,7 +146,6 @@ func (api *ConsensusAPI) ForkchoiceUpdatedV1(ctx context.Context, update beacone
 	return api.forkchoiceUpdated(ctx, update, payloadAttributes, beaconengine.PayloadV1, false)
 }
 
-// ForkchoiceUpdatedV2 allows withdrawals on/after shanghai, but not beacon root.
 func (api *ConsensusAPI) ForkchoiceUpdatedV2(ctx context.Context, update beaconengine.ForkchoiceStateV1, params *beaconengine.PayloadAttributes) (beaconengine.ForkChoiceResponse, error) {
 	if params != nil {
 		switch {
@@ -124,7 +162,6 @@ func (api *ConsensusAPI) ForkchoiceUpdatedV2(ctx context.Context, update beacone
 	return api.forkchoiceUpdated(ctx, update, params, beaconengine.PayloadV2, false)
 }
 
-// ForkchoiceUpdatedV3 requires withdrawals + beacon root.
 func (api *ConsensusAPI) ForkchoiceUpdatedV3(ctx context.Context, update beaconengine.ForkchoiceStateV1, params *beaconengine.PayloadAttributes) (beaconengine.ForkChoiceResponse, error) {
 	if params != nil {
 		switch {
@@ -139,7 +176,6 @@ func (api *ConsensusAPI) ForkchoiceUpdatedV3(ctx context.Context, update beacone
 	return api.forkchoiceUpdated(ctx, update, params, beaconengine.PayloadV3, false)
 }
 
-// ForkchoiceUpdatedV4 requires withdrawals + beacon root + slot number.
 func (api *ConsensusAPI) ForkchoiceUpdatedV4(ctx context.Context, update beaconengine.ForkchoiceStateV1, params *beaconengine.PayloadAttributes) (beaconengine.ForkChoiceResponse, error) {
 	if params != nil {
 		switch {
@@ -289,10 +325,67 @@ func (api *ConsensusAPI) newPayload(ctx context.Context, params beaconengine.Exe
 			Status: beaconengine.INVALID,
 		}, paramsErr("empty block hash")
 	}
+
+	id := beaconengine.PayloadID{byte(beaconengine.PayloadV1), 1, 2, 3, 4, 5, 6, 7}
+	if params.SlotNumber != nil {
+		id[0] = byte(beaconengine.PayloadV4)
+	} else if beaconRoot != nil {
+		id[0] = byte(beaconengine.PayloadV3)
+	} else if params.Withdrawals != nil {
+		id[0] = byte(beaconengine.PayloadV2)
+	}
+
+	env := &beaconengine.ExecutionPayloadEnvelope{
+		ExecutionPayload: &params,
+		BlockValue:       0,
+		Override:         false,
+		Requests:         requests,
+	}
+	api.localBlocks.put(id, env, false)
+
 	return beaconengine.PayloadStatusV1{
 		Status:          beaconengine.VALID,
 		LatestValidHash: &hash,
 	}, nil
+}
+
+func (api *ConsensusAPI) GetPayloadV1(payloadID beaconengine.PayloadID) (*beaconengine.ExecutableData, error) {
+	data, err := api.getPayload(payloadID, false, []beaconengine.PayloadVersion{beaconengine.PayloadV1})
+	if err != nil {
+		return nil, err
+	}
+	return data.ExecutionPayload, nil
+}
+
+func (api *ConsensusAPI) GetPayloadV2(payloadID beaconengine.PayloadID) (*beaconengine.ExecutionPayloadEnvelope, error) {
+	return api.getPayload(payloadID, false, []beaconengine.PayloadVersion{beaconengine.PayloadV1, beaconengine.PayloadV2})
+}
+
+func (api *ConsensusAPI) GetPayloadV3(payloadID beaconengine.PayloadID) (*beaconengine.ExecutionPayloadEnvelope, error) {
+	return api.getPayload(payloadID, false, []beaconengine.PayloadVersion{beaconengine.PayloadV3})
+}
+
+func (api *ConsensusAPI) GetPayloadV4(payloadID beaconengine.PayloadID) (*beaconengine.ExecutionPayloadEnvelope, error) {
+	return api.getPayload(payloadID, false, []beaconengine.PayloadVersion{beaconengine.PayloadV3})
+}
+
+func (api *ConsensusAPI) GetPayloadV5(payloadID beaconengine.PayloadID) (*beaconengine.ExecutionPayloadEnvelope, error) {
+	return api.getPayload(payloadID, false, []beaconengine.PayloadVersion{beaconengine.PayloadV3})
+}
+
+func (api *ConsensusAPI) GetPayloadV6(payloadID beaconengine.PayloadID) (*beaconengine.ExecutionPayloadEnvelope, error) {
+	return api.getPayload(payloadID, false, []beaconengine.PayloadVersion{beaconengine.PayloadV4})
+}
+
+func (api *ConsensusAPI) getPayload(payloadID beaconengine.PayloadID, full bool, versions []beaconengine.PayloadVersion) (*beaconengine.ExecutionPayloadEnvelope, error) {
+	if versions != nil && !payloadID.Is(versions...) {
+		return nil, beaconengine.UnsupportedFork
+	}
+	data := api.localBlocks.get(payloadID, full)
+	if data == nil {
+		return nil, beaconengine.UnknownPayload
+	}
+	return data, nil
 }
 
 func (api *ConsensusAPI) setInvalidAncestor(invalidHash string, originHash string) {
