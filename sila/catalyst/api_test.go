@@ -1,6 +1,11 @@
 package catalyst
 
-import "testing"
+import (
+	"context"
+	"testing"
+
+	beaconengine "silachain/beacon/engine"
+)
 
 type testBackend struct {
 	callback func(invalidHash string, originHash string)
@@ -70,5 +75,82 @@ func TestSetInvalidAncestor(t *testing.T) {
 	}
 	if api.invalidBlocksHits["0xbad"] != 1 {
 		t.Fatalf("unexpected invalid block hit count: got=%d want=1", api.invalidBlocksHits["0xbad"])
+	}
+}
+
+func TestForkchoiceUpdatedV1RejectsWithdrawals(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	withdrawals := []string{"w1"}
+
+	_, err := api.ForkchoiceUpdatedV1(context.Background(), beaconengine.ForkchoiceStateV1{
+		HeadBlockHash: "0xhead",
+	}, &beaconengine.PayloadAttributes{
+		Timestamp:   100,
+		Withdrawals: withdrawals,
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestForkchoiceUpdatedV2RequiresWithdrawalsAtShanghai(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+
+	_, err := api.ForkchoiceUpdatedV2(context.Background(), beaconengine.ForkchoiceStateV1{
+		HeadBlockHash: "0xhead",
+	}, &beaconengine.PayloadAttributes{
+		Timestamp: 300,
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestForkchoiceUpdatedV3RequiresBeaconRoot(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	withdrawals := []string{"w1"}
+
+	_, err := api.ForkchoiceUpdatedV3(context.Background(), beaconengine.ForkchoiceStateV1{
+		HeadBlockHash: "0xhead",
+	}, &beaconengine.PayloadAttributes{
+		Timestamp:   400,
+		Withdrawals: withdrawals,
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestForkchoiceUpdatedV4RequiresSlotNumber(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+	withdrawals := []string{"w1"}
+	root := "0xbeacon"
+
+	_, err := api.ForkchoiceUpdatedV4(context.Background(), beaconengine.ForkchoiceStateV1{
+		HeadBlockHash: "0xhead",
+	}, &beaconengine.PayloadAttributes{
+		Timestamp:   500,
+		Withdrawals: withdrawals,
+		BeaconRoot:  &root,
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+}
+
+func TestForkchoiceUpdatedReturnsValid(t *testing.T) {
+	api := newConsensusAPIWithoutHeartbeat(&testBackend{})
+
+	res, err := api.ForkchoiceUpdatedV1(context.Background(), beaconengine.ForkchoiceStateV1{
+		HeadBlockHash: "0xhead",
+	}, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res.PayloadStatus.Status != beaconengine.VALID {
+		t.Fatalf("unexpected status: got=%s want=%s", res.PayloadStatus.Status, beaconengine.VALID)
+	}
+	if res.PayloadStatus.LatestValidHash == nil || *res.PayloadStatus.LatestValidHash != "0xhead" {
+		t.Fatalf("unexpected latest valid hash")
 	}
 }
