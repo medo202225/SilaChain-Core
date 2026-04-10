@@ -1,0 +1,7 @@
+{
+  "_comment": "legacy non-canonical config path; canonical network config lives under config/networks/mainnet",
+  "listen_address": "127.0.0.1:8091",
+  "data_dir": "data/node2",
+  "auto_mine_interval_seconds": 5,
+  "min_validator_stake": 1
+}

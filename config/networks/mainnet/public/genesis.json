@@ -1,0 +1,20 @@
+{
+  "chain_id": 1001,
+  "network_name": "Sila Mainnet",
+  "symbol": "SILA",
+  "genesis_time": 1774089812,
+  "accounts": [
+    {
+      "address": "SILA_9502d77262d087f20e2270a9a9d5d024650141d8",
+      "public_key": "04795caa7f9335d12e5d8b20eba4c33c36994e2ff33bc629e28880b0ad16f0ebae33926abef021bbd2b8413128785a94208e6e97fe9d53809d368aeb24f8f2fda5",
+      "balance": 1000,
+      "nonce": 0
+    },
+    {
+      "address": "SILA_1bec0c418a57d54d7a085fc81dccf23a437bd4c3",
+      "public_key": "04bf903305cd6c2e75de930d19125dc56d5c9cf4d4005620a6637f23920555cf95fcb41352a6fbe7c9f3b9f38c167de3e3150961216bbbc1d841ed243e37797236",
+      "balance": 0,
+      "nonce": 0
+    }
+  ]
+}

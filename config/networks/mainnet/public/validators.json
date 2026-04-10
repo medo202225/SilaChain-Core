@@ -1,0 +1,20 @@
+[
+  {
+    "public_key": "a1c1d625ca713e3b68197efb6ee291be3bd738689b6ab9131ffabea47686ee73f720412d7179c123dab179ea361439dc",
+    "withdrawal_public_key": "899e609743f93fb21e5dfa4cfddd822b49e67733bdcf5c71cc2834797a60d3bba01775984644c46cff7b7e02c0915501",
+    "effective_balance": 32000000000,
+    "slashed": false,
+    "activation_epoch": 0,
+    "exit_epoch": 18446744073709551615,
+    "withdrawable_epoch": 18446744073709551615
+  },
+  {
+    "public_key": "99582a476b253cedf1d494e71fc8099e94017af5788eb9baf85bd98d9de2c748a132b024615fe4112f7d0c028bd037a0",
+    "withdrawal_public_key": "970c53db52ce049aaffc328ae106b9009352b0c16ba11242ddde0da841bc75672026439a38792e1f4e41ea4f8658019f",
+    "effective_balance": 32000000000,
+    "slashed": false,
+    "activation_epoch": 0,
+    "exit_epoch": 18446744073709551615,
+    "withdrawable_epoch": 18446744073709551615
+  }
+]

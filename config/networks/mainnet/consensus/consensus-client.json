@@ -1,0 +1,8 @@
+{
+  "listen_address": "127.0.0.1:5052",
+  "engine_endpoint": "http://127.0.0.1:8551",
+  "engine_jwt_secret_path": "runtime/execution/node1/engine.jwt",
+  "validator_endpoint": "http://127.0.0.1:5062",
+  "slots_per_epoch": 32,
+  "slot_duration_seconds": 12
+}

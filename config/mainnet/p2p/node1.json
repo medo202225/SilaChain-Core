@@ -1,0 +1,13 @@
+{
+  "_comment": "legacy non-canonical config path; canonical network config lives under config/networks/mainnet",
+  "enabled": true,
+  "network_name": "sila-mainnet",
+  "listen_ip": "0.0.0.0",
+  "tcp_port": 9000,
+  "udp_port": 9000,
+  "max_peers": 50,
+  "key_file": "runtime/p2p/node1/nodekey.json",
+  "bootnodes": [],
+  "execution_network_id": 919191,
+  "genesis_hash": "0x1111111111111111111111111111111111111111111111111111111111111111"
+}

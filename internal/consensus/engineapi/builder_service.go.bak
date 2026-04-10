@@ -1,0 +1,562 @@
+package engineapi
+
+import (
+	"errors"
+	"fmt"
+
+	"silachain/internal/consensus/blockassembly"
+	"silachain/internal/consensus/txpool"
+)
+
+var (
+	ErrNilBuilder                = errors.New("engineapi: nil payload builder")
+	ErrPayloadAttributesRequired = errors.New("engineapi: payload attributes required")
+	ErrUnknownPayloadID          = errors.New("engineapi: unknown payload id")
+)
+
+type PayloadBuilder interface {
+	Assemble(attrs blockassembly.PayloadAttributes) (blockassembly.Result, error)
+}
+
+type GetPayloadResult struct {
+	PayloadID   string `json:"payloadID"`
+	BlockNumber uint64 `json:"blockNumber"`
+	BlockHash   string `json:"blockHash"`
+	ParentHash  string `json:"parentHash"`
+	StateRoot   string `json:"stateRoot"`
+	BaseFee     uint64 `json:"baseFee"`
+	GasLimit    uint64 `json:"gasLimit"`
+	GasUsed     uint64 `json:"gasUsed"`
+	TxCount     int    `json:"txCount"`
+}
+
+type PayloadMetadata struct {
+	PayloadID             string      `json:"payloadID"`
+	BlockNumber           uint64      `json:"blockNumber"`
+	BlockHash             string      `json:"blockHash"`
+	ParentHash            string      `json:"parentHash"`
+	ParentStateRoot       string      `json:"parentStateRoot"`
+	BaseFee               uint64      `json:"baseFee"`
+	GasLimit              uint64      `json:"gasLimit"`
+	GasUsed               uint64      `json:"gasUsed"`
+	TxCount               int         `json:"txCount"`
+	BuildSequence         uint64      `json:"buildSequence"`
+	SubmittedToNewPayload bool        `json:"submittedToNewPayload"`
+	Canonical             bool        `json:"canonical"`
+	LatestStatus          string      `json:"latestStatus"`
+	Transactions          []txpool.Tx `json:"transactions"`
+}
+
+type Log struct {
+	TxHash      string   `json:"txHash"`
+	BlockHash   string   `json:"blockHash"`
+	BlockNumber uint64   `json:"blockNumber"`
+	LogIndex    uint64   `json:"logIndex"`
+	Address     string   `json:"address"`
+	Topics      []string `json:"topics"`
+	Data        string   `json:"data"`
+}
+
+type Receipt struct {
+	TxHash      string `json:"txHash"`
+	BlockHash   string `json:"blockHash"`
+	BlockNumber uint64 `json:"blockNumber"`
+	GasUsed     uint64 `json:"gasUsed"`
+	Success     bool   `json:"success"`
+	Logs        []Log  `json:"logs"`
+}
+
+type ForkchoiceUpdatedWithAttributesResult struct {
+	ForkchoiceUpdatedResult
+	PayloadID string `json:"payloadID"`
+}
+
+type cachedPayload struct {
+	id       string
+	built    blockassembly.Result
+	metadata PayloadMetadata
+}
+
+type PersistedPayloadMetadata struct {
+	Metadata       []PayloadMetadata `json:"metadata"`
+	BlockToPayload map[string]string `json:"blockToPayload"`
+}
+
+// BuilderService keeps canonical payload metadata in memory only.
+// This cache is not persisted or rehydrated across restart.
+// Runtime introspection paths that depend on this metadata are therefore not restart-stable yet.
+
+type BuilderService struct {
+	*Service
+	builder        PayloadBuilder
+	cache          map[string]cachedPayload
+	blockToPayload map[string]string
+	buildSequence  uint64
+}
+
+func NewBuilderService(store ForkchoiceStore, builder PayloadBuilder) (*BuilderService, error) {
+	if store == nil {
+		return nil, ErrNilStore
+	}
+	if builder == nil {
+		return nil, ErrNilBuilder
+	}
+
+	base, err := New(store)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BuilderService{
+		Service:        base,
+		builder:        builder,
+		cache:          make(map[string]cachedPayload),
+		blockToPayload: make(map[string]string),
+	}, nil
+}
+
+func (s *BuilderService) ForkchoiceUpdatedWithAttributes(
+	state ForkchoiceState,
+	attrs *blockassembly.PayloadAttributes,
+) (ForkchoiceUpdatedWithAttributesResult, error) {
+	if s == nil || s.Service == nil {
+		return ForkchoiceUpdatedWithAttributesResult{}, ErrNilStore
+	}
+
+	baseResult, err := s.ForkchoiceUpdated(state)
+	if err != nil {
+		return ForkchoiceUpdatedWithAttributesResult{}, err
+	}
+
+	if attrs == nil {
+		return ForkchoiceUpdatedWithAttributesResult{
+			ForkchoiceUpdatedResult: baseResult,
+			PayloadID:               "",
+		}, nil
+	}
+
+	built, err := s.builder.Assemble(*attrs)
+	if err != nil {
+		return ForkchoiceUpdatedWithAttributesResult{}, err
+	}
+
+	payloadID := s.makePayloadID(built)
+	blockHash := derivePayloadBlockHash(built)
+
+	s.buildSequence++
+
+	txs := make([]txpool.Tx, len(built.Selection.Transactions))
+	copy(txs, built.Selection.Transactions)
+
+	entry := cachedPayload{
+		id:    payloadID,
+		built: built,
+		metadata: PayloadMetadata{
+			PayloadID:             payloadID,
+			BlockNumber:           built.BlockNumber,
+			BlockHash:             blockHash,
+			ParentHash:            built.ParentHash,
+			ParentStateRoot:       built.ParentStateRoot,
+			BaseFee:               built.BaseFee,
+			GasLimit:              built.GasLimit,
+			GasUsed:               built.Selection.GasUsed,
+			TxCount:               len(built.Selection.Transactions),
+			BuildSequence:         s.buildSequence,
+			SubmittedToNewPayload: false,
+			Canonical:             false,
+			LatestStatus:          "BUILT",
+			Transactions:          txs,
+		},
+	}
+
+	s.cache[payloadID] = entry
+	s.blockToPayload[blockHash] = payloadID
+
+	return ForkchoiceUpdatedWithAttributesResult{
+		ForkchoiceUpdatedResult: baseResult,
+		PayloadID:               payloadID,
+	}, nil
+}
+
+func (s *BuilderService) GetPayload(payloadID string) (GetPayloadResult, error) {
+	if s == nil || s.Service == nil {
+		return GetPayloadResult{}, ErrNilStore
+	}
+	if payloadID == "" {
+		return GetPayloadResult{}, ErrUnknownPayloadID
+	}
+
+	cached, ok := s.cache[payloadID]
+	if !ok {
+		return GetPayloadResult{}, fmt.Errorf("%w: %s", ErrUnknownPayloadID, payloadID)
+	}
+
+	return GetPayloadResult{
+		PayloadID:   cached.id,
+		BlockNumber: cached.built.BlockNumber,
+		BlockHash:   cached.metadata.BlockHash,
+		ParentHash:  cached.built.ParentHash,
+		StateRoot:   cached.built.ParentStateRoot,
+		BaseFee:     cached.built.BaseFee,
+		GasLimit:    cached.built.GasLimit,
+		GasUsed:     cached.built.Selection.GasUsed,
+		TxCount:     len(cached.built.Selection.Transactions),
+	}, nil
+}
+
+func (s *BuilderService) GetPayloadMetadata(payloadID string) (PayloadMetadata, error) {
+	if s == nil || s.Service == nil {
+		return PayloadMetadata{}, ErrNilStore
+	}
+	if payloadID == "" {
+		return PayloadMetadata{}, ErrUnknownPayloadID
+	}
+
+	cached, ok := s.cache[payloadID]
+	if !ok {
+		return PayloadMetadata{}, fmt.Errorf("%w: %s", ErrUnknownPayloadID, payloadID)
+	}
+
+	return cached.metadata, nil
+}
+
+func (s *BuilderService) GetPayloadMetadataByBlockHash(blockHash string) (PayloadMetadata, bool) {
+	if s == nil || blockHash == "" {
+		return PayloadMetadata{}, false
+	}
+
+	payloadID, ok := s.blockToPayload[blockHash]
+	if !ok {
+		return PayloadMetadata{}, false
+	}
+
+	cached, ok := s.cache[payloadID]
+	if !ok {
+		return PayloadMetadata{}, false
+	}
+
+	return cached.metadata, true
+}
+
+func (s *BuilderService) SnapshotPayloadMetadata() PersistedPayloadMetadata {
+	out := PersistedPayloadMetadata{
+		Metadata:       make([]PayloadMetadata, 0),
+		BlockToPayload: make(map[string]string),
+	}
+
+	if s == nil {
+		return out
+	}
+
+	out.Metadata = make([]PayloadMetadata, 0, len(s.cache))
+	out.BlockToPayload = make(map[string]string, len(s.blockToPayload))
+
+	for _, cached := range s.cache {
+		out.Metadata = append(out.Metadata, cached.metadata)
+	}
+
+	for blockHash, payloadID := range s.blockToPayload {
+		out.BlockToPayload[blockHash] = payloadID
+	}
+
+	return out
+}
+
+func (s *BuilderService) RestorePayloadMetadata(snapshot PersistedPayloadMetadata) {
+	if s == nil {
+		return
+	}
+
+	s.cache = make(map[string]cachedPayload, len(snapshot.Metadata))
+	s.blockToPayload = make(map[string]string, len(snapshot.BlockToPayload))
+
+	for _, meta := range snapshot.Metadata {
+		s.cache[meta.PayloadID] = cachedPayload{
+			id:       meta.PayloadID,
+			metadata: meta,
+		}
+	}
+
+	for blockHash, payloadID := range snapshot.BlockToPayload {
+		s.blockToPayload[blockHash] = payloadID
+	}
+}
+
+func (s *BuilderService) GetCanonicalBlockTransactionsByHash(blockHash string) ([]txpool.Tx, bool) {
+	meta, ok := s.GetPayloadMetadataByBlockHash(blockHash)
+	if !ok || !meta.Canonical {
+		return nil, false
+	}
+
+	out := make([]txpool.Tx, len(meta.Transactions))
+	copy(out, meta.Transactions)
+	return out, true
+}
+
+func (s *BuilderService) GetCanonicalBlockTransactionsByNumber(number uint64) ([]txpool.Tx, bool) {
+	if s == nil {
+		return nil, false
+	}
+
+	for _, cached := range s.cache {
+		if !cached.metadata.Canonical {
+			continue
+		}
+		if cached.metadata.BlockNumber != number {
+			continue
+		}
+
+		out := make([]txpool.Tx, len(cached.metadata.Transactions))
+		copy(out, cached.metadata.Transactions)
+		return out, true
+	}
+
+	return nil, false
+}
+
+func (s *BuilderService) CanonicalTransactionByHash(hash string) (PayloadMetadata, txpool.Tx, bool) {
+	if s == nil || hash == "" {
+		return PayloadMetadata{}, txpool.Tx{}, false
+	}
+
+	for _, cached := range s.cache {
+		if !cached.metadata.Canonical {
+			continue
+		}
+		for _, tx := range cached.metadata.Transactions {
+			if tx.Hash == hash {
+				return cached.metadata, tx, true
+			}
+		}
+	}
+
+	return PayloadMetadata{}, txpool.Tx{}, false
+}
+
+func (s *BuilderService) CanonicalReceiptByTxHash(hash string) (Receipt, bool) {
+	meta, tx, ok := s.CanonicalTransactionByHash(hash)
+	if !ok {
+		return Receipt{}, false
+	}
+	return projectCanonicalReceipt(meta, tx), true
+}
+
+func (s *BuilderService) CanonicalReceiptsByBlockHash(hash string) ([]Receipt, bool) {
+	txs, ok := s.GetCanonicalBlockTransactionsByHash(hash)
+	if !ok {
+		return nil, false
+	}
+
+	meta, ok := s.GetPayloadMetadataByBlockHash(hash)
+	if !ok || !meta.Canonical {
+		return nil, false
+	}
+
+	out := make([]Receipt, 0, len(txs))
+	for _, tx := range txs {
+		out = append(out, projectCanonicalReceipt(meta, tx))
+	}
+	return out, true
+}
+
+func (s *BuilderService) CanonicalReceiptsByBlockNumber(number uint64) ([]Receipt, bool) {
+	txs, ok := s.GetCanonicalBlockTransactionsByNumber(number)
+	if !ok {
+		return nil, false
+	}
+
+	var meta PayloadMetadata
+	found := false
+	for _, cached := range s.cache {
+		if cached.metadata.Canonical && cached.metadata.BlockNumber == number {
+			meta = cached.metadata
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, false
+	}
+
+	out := make([]Receipt, 0, len(txs))
+	for _, tx := range txs {
+		out = append(out, projectCanonicalReceipt(meta, tx))
+	}
+	return out, true
+}
+
+func (s *BuilderService) CanonicalLogsByTxHash(hash string) ([]Log, bool) {
+	meta, tx, ok := s.CanonicalTransactionByHash(hash)
+	if !ok {
+		return nil, false
+	}
+	return projectCanonicalLogs(meta, tx), true
+}
+
+func (s *BuilderService) CanonicalLogsByBlockHash(hash string) ([]Log, bool) {
+	txs, ok := s.GetCanonicalBlockTransactionsByHash(hash)
+	if !ok {
+		return nil, false
+	}
+
+	meta, ok := s.GetPayloadMetadataByBlockHash(hash)
+	if !ok || !meta.Canonical {
+		return nil, false
+	}
+
+	out := make([]Log, 0, len(txs))
+	for _, tx := range txs {
+		out = append(out, projectCanonicalLogs(meta, tx)...)
+	}
+	return out, true
+}
+
+func (s *BuilderService) CanonicalLogsByBlockNumber(number uint64) ([]Log, bool) {
+	txs, ok := s.GetCanonicalBlockTransactionsByNumber(number)
+	if !ok {
+		return nil, false
+	}
+
+	var meta PayloadMetadata
+	found := false
+	for _, cached := range s.cache {
+		if cached.metadata.Canonical && cached.metadata.BlockNumber == number {
+			meta = cached.metadata
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil, false
+	}
+
+	out := make([]Log, 0, len(txs))
+	for _, tx := range txs {
+		out = append(out, projectCanonicalLogs(meta, tx)...)
+	}
+	return out, true
+}
+
+func (s *BuilderService) NewPayload(payload PayloadEnvelope) (PayloadStatus, error) {
+	if s == nil || s.Service == nil {
+		return PayloadStatus{}, ErrNilStore
+	}
+
+	status, err := s.Service.NewPayload(payload)
+	s.updateMetadataAfterNewPayload(payload.BlockHash, status)
+	return status, err
+}
+
+func (s *BuilderService) ForkchoiceUpdated(state ForkchoiceState) (ForkchoiceUpdatedResult, error) {
+	if s == nil || s.Service == nil {
+		return ForkchoiceUpdatedResult{}, ErrNilStore
+	}
+
+	result, err := s.Service.ForkchoiceUpdated(state)
+	if err == nil && result.PayloadStatus.Status == PayloadStatusValid {
+		s.updateMetadataAfterForkchoice(state.HeadBlockHash)
+	}
+	return result, err
+}
+
+func (s *BuilderService) makePayloadID(built blockassembly.Result) string {
+	return fmt.Sprintf("sila-payload-%d-%s-%d", built.BlockNumber, built.ParentHash, len(built.Selection.Transactions))
+}
+
+func derivePayloadBlockHash(built blockassembly.Result) string {
+	return fmt.Sprintf("sila-block-%d-%s-%d", built.BlockNumber, built.ParentHash, len(built.Selection.Transactions))
+}
+
+func (s *BuilderService) updateMetadataAfterNewPayload(blockHash string, status PayloadStatus) {
+	if s == nil {
+		return
+	}
+
+	payloadID, ok := s.blockToPayload[blockHash]
+	if !ok {
+		return
+	}
+
+	entry, ok := s.cache[payloadID]
+	if !ok {
+		return
+	}
+
+	entry.metadata.SubmittedToNewPayload = true
+	entry.metadata.LatestStatus = status.Status
+	s.cache[payloadID] = entry
+}
+
+func (s *BuilderService) updateMetadataAfterForkchoice(headHash string) {
+	if s == nil {
+		return
+	}
+
+	payloadID, ok := s.blockToPayload[headHash]
+	if !ok {
+		return
+	}
+
+	entry, ok := s.cache[payloadID]
+	if !ok {
+		return
+	}
+
+	entry.metadata.Canonical = true
+	entry.metadata.LatestStatus = "CANONICAL"
+	s.cache[payloadID] = entry
+}
+
+func projectCanonicalReceipt(meta PayloadMetadata, tx txpool.Tx) Receipt {
+	return Receipt{
+		TxHash:      tx.Hash,
+		BlockHash:   meta.BlockHash,
+		BlockNumber: meta.BlockNumber,
+		GasUsed:     tx.GasLimit,
+		Success:     true,
+		Logs:        projectCanonicalLogs(meta, tx),
+	}
+}
+
+func projectCanonicalLogs(meta PayloadMetadata, tx txpool.Tx) []Log {
+	return []Log{
+		{
+			TxHash:      tx.Hash,
+			BlockHash:   meta.BlockHash,
+			BlockNumber: meta.BlockNumber,
+			LogIndex:    0,
+			Address:     tx.From,
+			Topics:      []string{"0xsila_tx_included"},
+			Data:        tx.Hash,
+		},
+	}
+}
+func cloneLogs(in []Log) []Log {
+	out := make([]Log, 0, len(in))
+	for _, logEntry := range in {
+		topics := make([]string, len(logEntry.Topics))
+		copy(topics, logEntry.Topics)
+
+		out = append(out, Log{
+			TxHash:      logEntry.TxHash,
+			BlockHash:   logEntry.BlockHash,
+			BlockNumber: logEntry.BlockNumber,
+			LogIndex:    logEntry.LogIndex,
+			Address:     logEntry.Address,
+			Topics:      topics,
+			Data:        logEntry.Data,
+		})
+	}
+	return out
+}
+
+func cloneReceipt(in Receipt) Receipt {
+	return Receipt{
+		TxHash:      in.TxHash,
+		BlockHash:   in.BlockHash,
+		BlockNumber: in.BlockNumber,
+		GasUsed:     in.GasUsed,
+		Success:     in.Success,
+		Logs:        cloneLogs(in.Logs),
+	}
+}

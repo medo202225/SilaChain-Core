@@ -1,0 +1,9 @@
+{
+    "block_reward":  10,
+    "unbonding_delay":  3,
+    "min_validator_stake":  1,
+    "validator_commission_bps":  1000,
+    "genesis_time_unix":  1774443949,
+    "slot_duration_seconds":  12,
+    "slots_per_epoch":  32
+}

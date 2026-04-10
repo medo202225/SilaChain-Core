@@ -1,0 +1,1 @@
+go run ./cmd/sila-node config/mainnet/node2.json

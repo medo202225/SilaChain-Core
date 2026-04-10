@@ -1,0 +1,6 @@
+{
+  "slot_duration_seconds": 12,
+  "validator_voting_public_key": "a1c1d625ca713e3b68197efb6ee291be3bd738689b6ab9131ffabea47686ee73f720412d7179c123dab179ea361439dc",
+  "validator_voting_keystore_path": "runtime/validators/node1/keystores/voting-keystore.json",
+  "validator_voting_secret_path": "runtime/validators/node1/secrets/voting-keystore.pass"
+}
