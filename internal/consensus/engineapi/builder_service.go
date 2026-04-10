@@ -23,15 +23,16 @@ type PayloadBuilder interface {
 }
 
 type GetPayloadResult struct {
-	PayloadID   string `json:"payloadID"`
-	BlockNumber uint64 `json:"blockNumber"`
-	BlockHash   string `json:"blockHash"`
-	ParentHash  string `json:"parentHash"`
-	StateRoot   string `json:"stateRoot"`
-	BaseFee     uint64 `json:"baseFee"`
-	GasLimit    uint64 `json:"gasLimit"`
-	GasUsed     uint64 `json:"gasUsed"`
-	TxCount     int    `json:"txCount"`
+	PayloadID       string `json:"payloadID"`
+	BlockNumber     uint64 `json:"blockNumber"`
+	BlockHash       string `json:"blockHash"`
+	ParentHash      string `json:"parentHash"`
+	ParentStateRoot string `json:"parentStateRoot"`
+	StateRoot       string `json:"stateRoot"`
+	BaseFee         uint64 `json:"baseFee"`
+	GasLimit        uint64 `json:"gasLimit"`
+	GasUsed         uint64 `json:"gasUsed"`
+	TxCount         int    `json:"txCount"`
 }
 
 type PayloadMetadata struct {
@@ -195,15 +196,16 @@ func (s *BuilderService) GetPayload(payloadID string) (GetPayloadResult, error) 
 	}
 
 	return GetPayloadResult{
-		PayloadID:   cached.id,
-		BlockNumber: cached.built.BlockNumber,
-		BlockHash:   cached.metadata.BlockHash,
-		ParentHash:  cached.built.ParentHash,
-		StateRoot:   cached.built.ParentStateRoot,
-		BaseFee:     cached.built.BaseFee,
-		GasLimit:    cached.built.GasLimit,
-		GasUsed:     cached.built.Selection.GasUsed,
-		TxCount:     len(cached.built.Selection.Transactions),
+		PayloadID:       cached.id,
+		BlockNumber:     cached.built.BlockNumber,
+		BlockHash:       cached.metadata.BlockHash,
+		ParentHash:      cached.built.ParentHash,
+		ParentStateRoot: cached.built.ParentStateRoot,
+		StateRoot:       cached.built.ParentStateRoot,
+		BaseFee:         cached.built.BaseFee,
+		GasLimit:        cached.built.GasLimit,
+		GasUsed:         cached.built.Selection.GasUsed,
+		TxCount:         len(cached.built.Selection.Transactions),
 	}, nil
 }
 
