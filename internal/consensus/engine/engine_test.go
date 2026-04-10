@@ -1,9 +1,11 @@
 package engine
 
 import (
+	"fmt"
 	"testing"
 
 	"silachain/internal/consensus/blockassembly"
+	"silachain/internal/consensus/executionstate"
 	"silachain/internal/consensus/txpool"
 )
 
@@ -35,6 +37,69 @@ func (s *testState) SetSenderNonce(sender string, nonce uint64) error {
 
 func (s *testState) SenderNonce(sender string) uint64 {
 	return s.nonces[sender]
+}
+
+func (s *testState) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
+	execState := executionstate.NewState("0xgenesis")
+
+	for i := uint64(1); i <= req.Block.Number-1; i++ {
+		hash := fmt.Sprintf("0xseed-engine-block-%d", i)
+		if i == req.Block.Number-1 {
+			hash = req.Block.ParentHash
+		}
+		parentHash := "0xgenesis"
+		if i > 1 {
+			parentHash = fmt.Sprintf("0xseed-engine-block-%d", i-1)
+		}
+		if err := execState.ImportBlock(executionstate.ImportedBlock{
+			Number:     i,
+			Hash:       hash,
+			ParentHash: parentHash,
+			Timestamp:  i,
+			TxHashes:   nil,
+		}); err != nil {
+			return executionstate.BlockExecutionResult{}, err
+		}
+	}
+
+	for sender, nonce := range s.nonces {
+		execState.SetBalance(sender, 1000000000)
+		for i := uint64(0); i < nonce; i++ {
+			seedHash := fmt.Sprintf("seed-%s-%d", sender, i)
+			_ = execState.AddPendingTx(executionstate.PendingTx{
+				Hash:  seedHash,
+				From:  sender,
+				To:    "SILA_BLOCK_FEE_SINK",
+				Value: 0,
+				Nonce: i,
+				Fee:   1,
+			})
+			_ = execState.ApplyTransaction(executionstate.PendingTx{
+				Hash:  seedHash,
+				From:  sender,
+				To:    "SILA_BLOCK_FEE_SINK",
+				Value: 0,
+				Nonce: i,
+				Fee:   1,
+			})
+		}
+	}
+
+	result, err := execState.ExecuteBlock(req)
+	if err != nil {
+		return executionstate.BlockExecutionResult{}, err
+	}
+
+	s.head = blockassembly.Head{
+		Number:    result.BlockNumber,
+		Hash:      result.BlockHash,
+		StateRoot: result.StateRoot,
+		BaseFee:   s.head.BaseFee,
+	}
+	for _, tx := range req.Txs {
+		s.nonces[tx.From] = tx.Nonce + 1
+	}
+	return result, nil
 }
 
 func TestProduceBlock_RunsFullConsensusFlow(t *testing.T) {

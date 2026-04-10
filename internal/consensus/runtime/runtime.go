@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"silachain/internal/consensus/engine"
 	"silachain/internal/consensus/engineapi"
 	"silachain/internal/consensus/engineapiserver"
+	"silachain/internal/consensus/executionstate"
 	"silachain/internal/consensus/txpool"
 	"silachain/internal/consensus/txpoolapi"
 	"silachain/internal/consensus/vmstate"
@@ -31,12 +33,14 @@ type Config struct {
 type State struct {
 	head blockassembly.Head
 	vm   *vmstate.State
+	exec *executionstate.State
 }
 
 func NewState(head blockassembly.Head) *State {
 	return &State{
 		head: head,
 		vm:   vmstate.New(),
+		exec: executionstate.NewState(head.Hash),
 	}
 }
 
@@ -247,4 +251,50 @@ func (r *Runtime) Shutdown(ctx context.Context) error {
 		return ErrNilHTTPServer
 	}
 	return r.httpServer.Shutdown(ctx)
+}
+
+func (s *State) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
+	if s == nil {
+		return executionstate.BlockExecutionResult{}, errors.New("runtime: nil state")
+	}
+	if s.exec == nil {
+		s.exec = executionstate.NewState(s.head.Hash)
+	}
+
+	for i := uint64(s.exec.HeadNumber() + 1); i <= req.Block.Number-1; i++ {
+		hash := "0xseed-runtime-block"
+		if i == req.Block.Number-1 {
+			hash = req.Block.ParentHash
+		} else {
+			hash = fmt.Sprintf("0xseed-runtime-block-%d", i)
+		}
+
+		parentHash := s.exec.HeadHash()
+		if err := s.exec.ImportBlock(executionstate.ImportedBlock{
+			Number:     i,
+			Hash:       hash,
+			ParentHash: parentHash,
+			Timestamp:  i,
+			TxHashes:   nil,
+		}); err != nil {
+			return executionstate.BlockExecutionResult{}, err
+		}
+	}
+
+	for _, tx := range req.Txs {
+		s.exec.SetBalance(tx.From, 1000000000)
+	}
+
+	result, err := s.exec.ExecuteBlock(req)
+	if err != nil {
+		return executionstate.BlockExecutionResult{}, err
+	}
+
+	s.head = blockassembly.Head{
+		Number:    result.BlockNumber,
+		Hash:      result.BlockHash,
+		StateRoot: result.StateRoot,
+		BaseFee:   s.head.BaseFee,
+	}
+	return result, nil
 }

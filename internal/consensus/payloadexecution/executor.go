@@ -19,6 +19,7 @@ var (
 
 type State interface {
 	Head() blockassembly.Head
+	ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error)
 }
 
 type Executor struct {
@@ -77,26 +78,54 @@ func (e *Executor) Execute(attrs blockassembly.PayloadAttributes) (Result, error
 		return Result{}, fmt.Errorf("%w: parent=%d block=%d", ErrInvalidBlockNum, assembled.ParentNumber, assembled.BlockNumber)
 	}
 
-	receipts := make([]Receipt, 0, len(assembled.Selection.Transactions))
+	blockHash := deriveBlockHash(assembled)
+
+	execTxs := make([]executionstate.PendingTx, 0, len(assembled.Selection.Transactions))
 	for _, tx := range assembled.Selection.Transactions {
-		receipts = append(receipts, Receipt{
-			TxHash:  tx.Hash,
-			From:    tx.From,
-			Nonce:   tx.Nonce,
-			GasUsed: executionstate.IntrinsicGas(executionstate.PendingTx{Hash: tx.Hash, From: tx.From, Nonce: tx.Nonce, GasLimit: tx.GasLimit}),
-			Success: true,
+		execTxs = append(execTxs, executionstate.PendingTx{
+			Hash:     tx.Hash,
+			From:     tx.From,
+			To:       "SILA_BLOCK_FEE_SINK",
+			Value:    0,
+			Nonce:    tx.Nonce,
+			Data:     "",
+			Fee:      tx.EffectiveFee(assembled.BaseFee),
+			GasLimit: tx.GasLimit,
 		})
 	}
 
-	blockHash := deriveBlockHash(assembled)
+	executed, err := e.state.ExecuteBlock(executionstate.BlockExecutionRequest{
+		Block: executionstate.ImportedBlock{
+			Number:     assembled.BlockNumber,
+			Hash:       blockHash,
+			ParentHash: assembled.ParentHash,
+			Timestamp:  attrs.Timestamp,
+			TxHashes:   collectTxHashes(assembled.Selection.Transactions),
+		},
+		Txs: execTxs,
+	})
+	if err != nil {
+		return Result{}, err
+	}
+
+	receipts := make([]Receipt, 0, len(executed.Receipts))
+	for _, receipt := range executed.Receipts {
+		receipts = append(receipts, Receipt{
+			TxHash:  receipt.TxHash,
+			From:    receipt.From,
+			Nonce:   findTxNonce(assembled.Selection.Transactions, receipt.TxHash),
+			GasUsed: receipt.GasUsed,
+			Success: receipt.Success,
+		})
+	}
 
 	return Result{
 		BlockNumber:        assembled.BlockNumber,
 		BlockHash:          blockHash,
 		ParentHash:         assembled.ParentHash,
-		ExecutionStateRoot: "",
+		ExecutionStateRoot: executed.StateRoot,
 		BaseFee:            assembled.BaseFee,
-		GasUsed:            assembled.Selection.GasUsed,
+		GasUsed:            executed.GasUsed,
 		Receipts:           receipts,
 		TxCount:            len(receipts),
 	}, nil
@@ -126,4 +155,21 @@ func TxToPoolTx(hash, from string, nonce, gasLimit, maxFeePerGas, maxPriorityFee
 		MaxPriorityFeePerGas: maxPriorityFeePerGas,
 		Timestamp:            timestamp,
 	}
+}
+
+func collectTxHashes(txs []txpool.Tx) []string {
+	out := make([]string, 0, len(txs))
+	for _, tx := range txs {
+		out = append(out, tx.Hash)
+	}
+	return out
+}
+
+func findTxNonce(txs []txpool.Tx, hash string) uint64 {
+	for _, tx := range txs {
+		if tx.Hash == hash {
+			return tx.Nonce
+		}
+	}
+	return 0
 }
