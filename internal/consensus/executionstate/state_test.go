@@ -203,6 +203,9 @@ func TestExecuteBlockProducesReceiptsAndGasUsage(t *testing.T) {
 	if result.GasUsed != IntrinsicGas(tx) {
 		t.Fatalf("unexpected gas used: %d", result.GasUsed)
 	}
+	if result.StateRoot != "0x82756f49c93f9217a27d86f65de1026f5702ee27abd55f0b7224d576b2ddd4fb" {
+		t.Fatalf("unexpected state root: got=%s want=%s", result.StateRoot, "0x82756f49c93f9217a27d86f65de1026f5702ee27abd55f0b7224d576b2ddd4fb")
+	}
 
 	receipt, ok := s.GetReceipt("0xtx1")
 	if !ok {

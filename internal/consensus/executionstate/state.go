@@ -1,7 +1,10 @@
 package executionstate
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"sort"
 	"sync"
 )
 
@@ -56,6 +59,7 @@ type BlockExecutionRequest struct {
 type BlockExecutionResult struct {
 	BlockHash   string
 	BlockNumber uint64
+	StateRoot   string
 	GasUsed     uint64
 	Receipts    []Receipt
 }
@@ -307,14 +311,32 @@ func (s *State) ExecuteBlock(req BlockExecutionRequest) (BlockExecutionResult, e
 
 	s.mu.Lock()
 	s.lastBlockGas = totalGasUsed
+	stateRoot := s.computeStateRootLocked()
 	s.mu.Unlock()
 
 	return BlockExecutionResult{
 		BlockHash:   req.Block.Hash,
 		BlockNumber: req.Block.Number,
+		StateRoot:   stateRoot,
 		GasUsed:     totalGasUsed,
 		Receipts:    receipts,
 	}, nil
+}
+
+func (s *State) computeStateRootLocked() string {
+	addresses := make([]string, 0, len(s.accounts))
+	for address := range s.accounts {
+		addresses = append(addresses, address)
+	}
+	sort.Strings(addresses)
+
+	h := sha256.New()
+	for _, address := range addresses {
+		account := s.accounts[address]
+		_, _ = h.Write([]byte(fmt.Sprintf("%s|%d|%d;", address, account.Balance, account.Nonce)))
+	}
+
+	return "0x" + hex.EncodeToString(h.Sum(nil))
 }
 
 func (s *State) ImportBlock(block ImportedBlock) error {
