@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
+	"silachain/core"
 	"silachain/internal/consensus/blockassembly"
-	"silachain/internal/consensus/payloadexecution"
 )
 
 type stubState struct {
@@ -26,13 +26,13 @@ func (s *stubState) SetSenderNonce(sender string, nonce uint64) error {
 }
 
 type stubExecutor struct {
-	result payloadexecution.Result
+	result core.Result
 	err    error
 }
 
-func (s *stubExecutor) Execute(attrs blockassembly.PayloadAttributes) (payloadexecution.Result, error) {
+func (s *stubExecutor) Execute(attrs blockassembly.PayloadAttributes) (core.Result, error) {
 	if s.err != nil {
-		return payloadexecution.Result{}, s.err
+		return core.Result{}, s.err
 	}
 	return s.result, nil
 }
@@ -48,7 +48,7 @@ func TestImport_SucceedsWithExpectedParentAndBlockNumber(t *testing.T) {
 	}
 
 	executor := &stubExecutor{
-		result: payloadexecution.Result{
+		result: core.Result{
 			BlockNumber:        13,
 			BlockHash:          "sila-block-13-0xhead12-2",
 			ParentHash:         "0xhead12",
@@ -103,7 +103,7 @@ func TestImport_FailsOnParentHashMismatch(t *testing.T) {
 	}
 
 	executor := &stubExecutor{
-		result: payloadexecution.Result{
+		result: core.Result{
 			BlockNumber: 21,
 			BlockHash:   "sila-block-21",
 			ParentHash:  "0xactual-parent",
@@ -137,7 +137,7 @@ func TestImport_FailsOnBlockNumberMismatch(t *testing.T) {
 	}
 
 	executor := &stubExecutor{
-		result: payloadexecution.Result{
+		result: core.Result{
 			BlockNumber: 31,
 			BlockHash:   "sila-block-31",
 			ParentHash:  "0xparent30",
@@ -171,7 +171,7 @@ func TestImport_RejectsDuplicateImportedBlockHash(t *testing.T) {
 	}
 
 	executor := &stubExecutor{
-		result: payloadexecution.Result{
+		result: core.Result{
 			BlockNumber:        41,
 			BlockHash:          "sila-block-41-dup",
 			ParentHash:         "0xparent40",

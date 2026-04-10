@@ -3,10 +3,10 @@ package engine
 import (
 	"errors"
 
+	"silachain/core"
 	"silachain/internal/consensus/blockassembly"
 	"silachain/internal/consensus/blockimport"
 	"silachain/internal/consensus/forkchoice"
-	"silachain/internal/consensus/payloadexecution"
 	"silachain/internal/consensus/txpool"
 )
 
@@ -18,7 +18,7 @@ var (
 
 type State interface {
 	blockassembly.StateProvider
-	payloadexecution.State
+	core.State
 	SetHead(head blockassembly.Head) error
 	SetSenderNonce(sender string, nonce uint64) error
 }
@@ -29,7 +29,7 @@ type Engine struct {
 	gasLimit uint64
 
 	assembler *blockassembly.Assembler
-	executor  *payloadexecution.Executor
+	executor  *core.Executor
 	importer  *blockimport.Importer
 	forkStore *forkchoice.Store
 	manager   *forkchoice.Manager
@@ -57,7 +57,7 @@ func New(state State, pool *txpool.Pool, gasLimit uint64) (*Engine, error) {
 		return nil, err
 	}
 
-	executor, err := payloadexecution.New(state, assembler)
+	executor, err := core.New(state, assembler)
 	if err != nil {
 		return nil, err
 	}

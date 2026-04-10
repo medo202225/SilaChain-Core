@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"silachain/core"
 	"silachain/internal/consensus/blockassembly"
-	"silachain/internal/consensus/payloadexecution"
 )
 
 var (
@@ -24,7 +24,7 @@ type State interface {
 }
 
 type Executor interface {
-	Execute(attrs blockassembly.PayloadAttributes) (payloadexecution.Result, error)
+	Execute(attrs blockassembly.PayloadAttributes) (core.Result, error)
 }
 
 type ImportRequest struct {
