@@ -33,6 +33,31 @@ func TestPayloadID_MarshalUnmarshalText(t *testing.T) {
 	}
 }
 
+func TestDecodeTransactionsCopiesData(t *testing.T) {
+	in := [][]byte{[]byte{1, 2, 3}, []byte{4, 5}}
+	out, err := DecodeTransactions(in)
+	if err != nil {
+		t.Fatalf("decode transactions: %v", err)
+	}
+	if len(out) != 2 {
+		t.Fatalf("unexpected tx count: %d", len(out))
+	}
+	in[0][0] = 9
+	if out[0][0] != 1 {
+		t.Fatalf("expected copied transaction bytes")
+	}
+}
+
+func TestExecutableDataToBlockRejectsBadLogsBloomLength(t *testing.T) {
+	_, err := ExecutableDataToBlockNoHash(ExecutableData{
+		BlockHash: "0xblock",
+		LogsBloom: []byte{1, 2, 3},
+	})
+	if err == nil {
+		t.Fatal("expected logs bloom length error")
+	}
+}
+
 func TestExecutableDataToBlock(t *testing.T) {
 	data := ExecutableData{
 		ParentHash:    "0xparent",
@@ -46,7 +71,8 @@ func TestExecutableDataToBlock(t *testing.T) {
 		Timestamp:     123,
 		BaseFeePerGas: 10,
 		BlockHash:     "0xblock",
-		Transactions:  []string{"0xtx1", "0xtx2"},
+		Transactions:  [][]byte{[]byte("tx1"), []byte("tx2")},
+		LogsBloom:     make([]byte, 256),
 	}
 
 	block, err := ExecutableDataToBlock(data)
@@ -59,16 +85,27 @@ func TestExecutableDataToBlock(t *testing.T) {
 	if len(block.Transactions) != 2 {
 		t.Fatalf("unexpected tx count: got=%d want=2", len(block.Transactions))
 	}
+	data.Transactions[0][0] = 'X'
+	if string(block.Transactions[0]) != "tx1" {
+		t.Fatalf("expected copied transaction bytes")
+	}
 }
 
-func TestBlockToExecutableData(t *testing.T) {
-	data := ExecutableData{
+func TestBlockToExecutableDataClonesBundleAndRequests(t *testing.T) {
+	block := &ExecutableData{
 		BlockHash:    "0xblock9",
 		ParentHash:   "0xparent9",
-		Transactions: []string{"0xtx1"},
+		Transactions: [][]byte{[]byte("tx1")},
+		LogsBloom:    make([]byte, 256),
 	}
+	bundle := &BlobsBundle{
+		Commitments: [][]byte{[]byte("c1")},
+		Proofs:      [][]byte{[]byte("p1")},
+		Blobs:       [][]byte{[]byte("b1")},
+	}
+	requests := [][]byte{[]byte{1, 2}}
 
-	env := BlockToExecutableData(data, 55, nil, nil)
+	env := BlockToExecutableData(block, 55, bundle, requests)
 	if env == nil || env.ExecutionPayload == nil {
 		t.Fatalf("expected envelope with payload")
 	}
@@ -77,6 +114,20 @@ func TestBlockToExecutableData(t *testing.T) {
 	}
 	if env.ExecutionPayload.BlockHash != "0xblock9" {
 		t.Fatalf("unexpected block hash: got=%s want=0xblock9", env.ExecutionPayload.BlockHash)
+	}
+
+	block.Transactions[0][0] = 'X'
+	bundle.Blobs[0][0] = 'X'
+	requests[0][0] = 9
+
+	if string(env.ExecutionPayload.Transactions[0]) != "tx1" {
+		t.Fatalf("expected cloned transactions")
+	}
+	if string(env.BlobsBundle.Blobs[0]) != "b1" {
+		t.Fatalf("expected cloned blobs bundle")
+	}
+	if env.Requests[0][0] != 1 {
+		t.Fatalf("expected cloned requests")
 	}
 }
 
