@@ -12,11 +12,13 @@ import (
 type testState struct {
 	head   blockassembly.Head
 	nonces map[string]uint64
+	exec   *executionstate.State
 }
 
 func newTestState(head blockassembly.Head) *testState {
 	return &testState{
 		head:   head,
+		exec:   executionstate.NewState("0xgenesis"),
 		nonces: make(map[string]uint64),
 	}
 }
@@ -26,7 +28,7 @@ func (s *testState) Head() blockassembly.Head {
 }
 
 func (s *testState) ExecutionState() *executionstate.State {
-	return nil
+	return s.exec
 }
 
 func (s *testState) SetHead(head blockassembly.Head) error {
@@ -44,7 +46,7 @@ func (s *testState) SenderNonce(sender string) uint64 {
 }
 
 func (s *testState) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
-	execState := executionstate.NewState("0xgenesis")
+	execState := s.exec
 
 	for i := uint64(1); i <= req.Block.Number-1; i++ {
 		hash := fmt.Sprintf("0xseed-block-%d", i)

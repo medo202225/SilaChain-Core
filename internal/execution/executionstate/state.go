@@ -323,6 +323,19 @@ func (s *State) ExecuteBlock(req BlockExecutionRequest) (BlockExecutionResult, e
 	}, nil
 }
 
+func (s *State) FinalizeBlockExecution(block ImportedBlock, totalGasUsed uint64) (string, error) {
+	if err := s.ImportBlock(block); err != nil {
+		return "", err
+	}
+
+	s.mu.Lock()
+	s.lastBlockGas = totalGasUsed
+	stateRoot := s.computeStateRootLocked()
+	s.mu.Unlock()
+
+	return stateRoot, nil
+}
+
 func (s *State) computeStateRootLocked() string {
 	addresses := make([]string, 0, len(s.accounts))
 	for address := range s.accounts {

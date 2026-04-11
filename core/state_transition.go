@@ -75,3 +75,37 @@ func ReceiptsFromExecutionResult(executed executionstate.BlockExecutionResult, t
 	}
 	return receipts
 }
+
+func (st *StateTransition) ApplyBlockTransactions(block executionstate.ImportedBlock, txs []executionstate.PendingTx) ([]executionstate.Receipt, uint64, error) {
+	if st == nil || st.state == nil {
+		return nil, 0, ErrNilStateTransition
+	}
+	if len(block.TxHashes) != len(txs) {
+		return nil, 0, fmt.Errorf("execution state: tx count mismatch for block")
+	}
+
+	receipts := make([]executionstate.Receipt, 0, len(txs))
+	var totalGasUsed uint64
+
+	for i, tx := range txs {
+		if block.TxHashes[i] != tx.Hash {
+			return nil, 0, fmt.Errorf("execution state: tx hash mismatch at index %d", i)
+		}
+
+		tx = executionstate.NormalizeTx(tx)
+		gasUsed := executionstate.IntrinsicGas(tx)
+		if totalGasUsed+gasUsed > executionstate.DefaultBlockGasLimit {
+			return nil, 0, fmt.Errorf("execution state: block gas limit exceeded")
+		}
+
+		receipt, err := st.state.ApplyTransactionInBlock(tx, block.Number, block.Hash)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		totalGasUsed += receipt.GasUsed
+		receipts = append(receipts, receipt)
+	}
+
+	return receipts, totalGasUsed, nil
+}
