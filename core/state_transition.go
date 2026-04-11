@@ -61,3 +61,17 @@ func (st *StateTransition) ApplyTransactions(txs []executionstate.PendingTx) ([]
 
 	return receipts, gasUsed, nil
 }
+
+func ReceiptsFromExecutionResult(executed executionstate.BlockExecutionResult, txs []txpool.Tx) []Receipt {
+	receipts := make([]Receipt, 0, len(executed.Receipts))
+	for _, receipt := range executed.Receipts {
+		receipts = append(receipts, Receipt{
+			TxHash:  receipt.TxHash,
+			From:    receipt.From,
+			Nonce:   findTxNonce(txs, receipt.TxHash),
+			GasUsed: receipt.GasUsed,
+			Success: receipt.Success,
+		})
+	}
+	return receipts
+}

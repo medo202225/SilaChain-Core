@@ -96,16 +96,7 @@ func (p *StateProcessor) Process(attrs blockassembly.PayloadAttributes) (Result,
 		return Result{}, err
 	}
 
-	receipts := make([]Receipt, 0, len(executed.Receipts))
-	for _, receipt := range executed.Receipts {
-		receipts = append(receipts, Receipt{
-			TxHash:  receipt.TxHash,
-			From:    receipt.From,
-			Nonce:   findTxNonce(assembled.Selection.Transactions, receipt.TxHash),
-			GasUsed: receipt.GasUsed,
-			Success: receipt.Success,
-		})
-	}
+	receipts := ReceiptsFromExecutionResult(executed, assembled.Selection.Transactions)
 
 	return Result{
 		BlockNumber:        assembled.BlockNumber,
