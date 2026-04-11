@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	corestate "silachain/core/state"
 	"sort"
 	"sync"
 )
@@ -32,12 +33,6 @@ type PendingTx struct {
 	Data     string
 	Fee      uint64
 	GasLimit uint64
-}
-
-type Account struct {
-	Address string
-	Balance uint64
-	Nonce   uint64
 }
 
 type Receipt struct {
@@ -71,7 +66,7 @@ type State struct {
 	headHash       string
 	blocks         map[uint64]ImportedBlock
 	pendingTxs     map[string]PendingTx
-	accounts       map[string]*Account
+	accounts       map[string]*corestate.Account
 	receiptsByHash map[string]Receipt
 	lastBlockGas   uint64
 }
@@ -83,7 +78,7 @@ func NewState(genesisHash string) *State {
 		headHash:       genesisHash,
 		blocks:         make(map[uint64]ImportedBlock),
 		pendingTxs:     make(map[string]PendingTx),
-		accounts:       make(map[string]*Account),
+		accounts:       make(map[string]*corestate.Account),
 		receiptsByHash: make(map[string]Receipt),
 	}
 
@@ -148,12 +143,12 @@ func NormalizeTx(tx PendingTx) PendingTx {
 	return tx
 }
 
-func (s *State) ensureAccount(address string) *Account {
+func (s *State) ensureAccount(address string) *corestate.Account {
 	acc, ok := s.accounts[address]
 	if ok {
 		return acc
 	}
-	acc = &Account{
+	acc = &corestate.Account{
 		Address: address,
 		Balance: 0,
 		Nonce:   0,
