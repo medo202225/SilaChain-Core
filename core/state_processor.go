@@ -19,7 +19,6 @@ var (
 
 type State interface {
 	Head() blockassembly.Head
-	ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error)
 	ExecutionState() *executionstate.State
 }
 

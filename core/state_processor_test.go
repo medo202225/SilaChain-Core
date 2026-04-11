@@ -110,30 +110,6 @@ func (s *testState) SenderNonce(sender string) uint64 {
 	return s.nonces[sender]
 }
 
-func (s *testState) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
-	execState, err := s.buildExecutionStateForHead()
-	if err != nil {
-		return executionstate.BlockExecutionResult{}, err
-	}
-	s.exec = execState
-
-	result, err := execState.ExecuteBlock(req)
-	if err != nil {
-		return executionstate.BlockExecutionResult{}, err
-	}
-
-	s.head = blockassembly.Head{
-		Number:    result.BlockNumber,
-		Hash:      result.BlockHash,
-		StateRoot: result.StateRoot,
-		BaseFee:   s.head.BaseFee,
-	}
-	for _, tx := range req.Txs {
-		s.nonces[tx.From] = tx.Nonce + 1
-	}
-	return result, nil
-}
-
 func TestExecute_AppliesAssembledPayloadAndAdvancesHead(t *testing.T) {
 	head := blockassembly.Head{
 		Number:    5,
