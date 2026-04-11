@@ -25,6 +25,10 @@ func (s *testState) Head() blockassembly.Head {
 	return s.head
 }
 
+func (s *testState) ExecutionState() *executionstate.State {
+	return nil
+}
+
 func (s *testState) SetHead(head blockassembly.Head) error {
 	s.head = head
 	return nil
