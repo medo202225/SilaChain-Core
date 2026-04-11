@@ -23,35 +23,13 @@ func newTestState(head blockassembly.Head) *testState {
 	}
 }
 
-func (s *testState) Head() blockassembly.Head {
-	return s.head
-}
+func (s *testState) buildExecutionStateForHead() (*executionstate.State, error) {
+	execState := executionstate.NewState("0xgenesis")
 
-func (s *testState) ExecutionState() *executionstate.State {
-	return s.exec
-}
-
-func (s *testState) SetHead(head blockassembly.Head) error {
-	s.head = head
-	return nil
-}
-
-func (s *testState) SetSenderNonce(sender string, nonce uint64) error {
-	s.nonces[sender] = nonce
-	return nil
-}
-
-func (s *testState) SenderNonce(sender string) uint64 {
-	return s.nonces[sender]
-}
-
-func (s *testState) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
-	execState := s.exec
-
-	for i := uint64(1); i <= req.Block.Number-1; i++ {
+	for i := uint64(1); i <= s.head.Number; i++ {
 		hash := fmt.Sprintf("0xseed-block-%d", i)
-		if i == req.Block.Number-1 {
-			hash = req.Block.ParentHash
+		if i == s.head.Number {
+			hash = s.head.Hash
 		}
 		parentHash := "0xgenesis"
 		if i > 1 {
@@ -64,7 +42,7 @@ func (s *testState) ExecuteBlock(req executionstate.BlockExecutionRequest) (exec
 			Timestamp:  i,
 			TxHashes:   nil,
 		}); err != nil {
-			return executionstate.BlockExecutionResult{}, err
+			return nil, err
 		}
 	}
 
@@ -90,6 +68,43 @@ func (s *testState) ExecuteBlock(req executionstate.BlockExecutionRequest) (exec
 			})
 		}
 	}
+
+	return execState, nil
+}
+
+func (s *testState) Head() blockassembly.Head {
+	return s.head
+}
+
+func (s *testState) ExecutionState() *executionstate.State {
+	execState, err := s.buildExecutionStateForHead()
+	if err != nil {
+		return nil
+	}
+	s.exec = execState
+	return s.exec
+}
+
+func (s *testState) SetHead(head blockassembly.Head) error {
+	s.head = head
+	return nil
+}
+
+func (s *testState) SetSenderNonce(sender string, nonce uint64) error {
+	s.nonces[sender] = nonce
+	return nil
+}
+
+func (s *testState) SenderNonce(sender string) uint64 {
+	return s.nonces[sender]
+}
+
+func (s *testState) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
+	execState, err := s.buildExecutionStateForHead()
+	if err != nil {
+		return executionstate.BlockExecutionResult{}, err
+	}
+	s.exec = execState
 
 	result, err := execState.ExecuteBlock(req)
 	if err != nil {

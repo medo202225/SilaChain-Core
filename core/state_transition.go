@@ -109,3 +109,58 @@ func (st *StateTransition) ApplyBlockTransactions(block executionstate.ImportedB
 
 	return receipts, totalGasUsed, nil
 }
+
+func (st *StateTransition) ExecuteBlock(req executionstate.BlockExecutionRequest) (executionstate.BlockExecutionResult, error) {
+	if st == nil || st.state == nil {
+		return executionstate.BlockExecutionResult{}, ErrNilStateTransition
+	}
+
+	s := st.state
+
+	if err := executionstate.ValidateBlock(s.HeadHash(), s.HeadNumber(), req.Block); err != nil {
+		return executionstate.BlockExecutionResult{}, err
+	}
+	if len(req.Block.TxHashes) != len(req.Txs) {
+		return executionstate.BlockExecutionResult{}, fmt.Errorf("execution state: tx count mismatch for block")
+	}
+
+	var totalGasUsed uint64
+	receipts := make([]executionstate.Receipt, 0, len(req.Txs))
+
+	for i, tx := range req.Txs {
+		if req.Block.TxHashes[i] != tx.Hash {
+			return executionstate.BlockExecutionResult{}, fmt.Errorf("execution state: tx hash mismatch at index %d", i)
+		}
+
+		tx = executionstate.NormalizeTx(tx)
+		gasUsed := executionstate.IntrinsicGas(tx)
+		if totalGasUsed+gasUsed > executionstate.DefaultBlockGasLimit {
+			return executionstate.BlockExecutionResult{}, fmt.Errorf("execution state: block gas limit exceeded")
+		}
+
+		receipt, err := s.ApplyTransactionInBlock(tx, req.Block.Number, req.Block.Hash)
+		if err != nil {
+			return executionstate.BlockExecutionResult{}, err
+		}
+
+		totalGasUsed += receipt.GasUsed
+		receipts = append(receipts, receipt)
+	}
+
+	if err := s.ImportBlock(req.Block); err != nil {
+		return executionstate.BlockExecutionResult{}, err
+	}
+
+	stateRoot, err := s.FinalizeBlockExecution(req.Block, totalGasUsed)
+	if err != nil {
+		return executionstate.BlockExecutionResult{}, err
+	}
+
+	return executionstate.BlockExecutionResult{
+		BlockHash:   req.Block.Hash,
+		BlockNumber: req.Block.Number,
+		StateRoot:   stateRoot,
+		GasUsed:     totalGasUsed,
+		Receipts:    receipts,
+	}, nil
+}
