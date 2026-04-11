@@ -80,19 +80,7 @@ func (p *StateProcessor) Process(attrs blockassembly.PayloadAttributes) (Result,
 
 	blockHash := deriveBlockHash(assembled)
 
-	execTxs := make([]executionstate.PendingTx, 0, len(assembled.Selection.Transactions))
-	for _, tx := range assembled.Selection.Transactions {
-		execTxs = append(execTxs, executionstate.PendingTx{
-			Hash:     tx.Hash,
-			From:     tx.From,
-			To:       "SILA_BLOCK_FEE_SINK",
-			Value:    0,
-			Nonce:    tx.Nonce,
-			Data:     "",
-			Fee:      tx.EffectiveFee(assembled.BaseFee),
-			GasLimit: tx.GasLimit,
-		})
-	}
+	execTxs := PendingTxsFromPoolTxs(assembled.Selection.Transactions, assembled.BaseFee)
 
 	executed, err := p.state.ExecuteBlock(executionstate.BlockExecutionRequest{
 		Block: executionstate.ImportedBlock{
