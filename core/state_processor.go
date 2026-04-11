@@ -83,7 +83,8 @@ func (p *StateProcessor) Process(attrs blockassembly.PayloadAttributes) (Result,
 
 	execTxs := PendingTxsFromPoolTxs(assembled.Selection.Transactions, assembled.BaseFee)
 
-	executed, err := p.state.ExecuteBlock(executionstate.BlockExecutionRequest{
+	st := NewStateTransition(p.state.ExecutionState())
+	executed, err := st.ExecuteBlock(executionstate.BlockExecutionRequest{
 		Block: executionstate.ImportedBlock{
 			Number:     assembled.BlockNumber,
 			Hash:       blockHash,

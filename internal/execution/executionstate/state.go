@@ -397,3 +397,13 @@ func (s *State) HeadHash() string {
 	defer s.mu.RUnlock()
 	return s.headHash
 }
+
+func (s *State) AccountNonce(address string) uint64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	account, ok := s.accounts[address]
+	if !ok || account == nil {
+		return 0
+	}
+	return account.Nonce
+}

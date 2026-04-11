@@ -18,7 +18,7 @@ type testState struct {
 func newTestState(head blockassembly.Head) *testState {
 	return &testState{
 		head:   head,
-		exec:   executionstate.NewState("0xgenesis"),
+		exec:   nil,
 		nonces: make(map[string]uint64),
 	}
 }
@@ -73,6 +73,14 @@ func (s *testState) buildExecutionStateForHead() (*executionstate.State, error) 
 }
 
 func (s *testState) Head() blockassembly.Head {
+	if s.exec != nil {
+		return blockassembly.Head{
+			Number:    s.exec.HeadNumber(),
+			Hash:      s.exec.HeadHash(),
+			StateRoot: s.head.StateRoot,
+			BaseFee:   s.head.BaseFee,
+		}
+	}
 	return s.head
 }
 
@@ -96,6 +104,9 @@ func (s *testState) SetSenderNonce(sender string, nonce uint64) error {
 }
 
 func (s *testState) SenderNonce(sender string) uint64 {
+	if s.exec != nil {
+		return s.exec.AccountNonce(sender)
+	}
 	return s.nonces[sender]
 }
 
