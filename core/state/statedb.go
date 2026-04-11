@@ -13,7 +13,10 @@ func NewStateDB() *StateDB {
 	}
 }
 
-func (s *StateDB) ensureAccount(address string) *Account {
+func (s *StateDB) EnsureAccount(address string) *Account {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	acc, ok := s.accounts[address]
 	if ok {
 		return acc
@@ -32,7 +35,15 @@ func (s *StateDB) SetBalance(address string, balance uint64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	acc := s.ensureAccount(address)
+	acc, ok := s.accounts[address]
+	if !ok {
+		acc = &Account{
+			Address: address,
+			Balance: 0,
+			Nonce:   0,
+		}
+		s.accounts[address] = acc
+	}
 	acc.Balance = balance
 }
 
@@ -58,6 +69,36 @@ func (s *StateDB) GetNonce(address string) uint64 {
 	return acc.Nonce
 }
 
+func (s *StateDB) SetNonce(address string, nonce uint64) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	acc, ok := s.accounts[address]
+	if !ok {
+		acc = &Account{
+			Address: address,
+			Balance: 0,
+			Nonce:   0,
+		}
+		s.accounts[address] = acc
+	}
+	acc.Nonce = nonce
+}
+
 func (s *StateDB) AccountNonce(address string) uint64 {
 	return s.GetNonce(address)
+}
+
+func (s *StateDB) SnapshotAccounts() map[string]Account {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	out := make(map[string]Account, len(s.accounts))
+	for address, account := range s.accounts {
+		if account == nil {
+			continue
+		}
+		out[address] = *account
+	}
+	return out
 }

@@ -66,7 +66,7 @@ type State struct {
 	headHash       string
 	blocks         map[uint64]ImportedBlock
 	pendingTxs     map[string]PendingTx
-	accounts       map[string]*corestate.Account
+	db             *corestate.StateDB
 	receiptsByHash map[string]Receipt
 	lastBlockGas   uint64
 }
@@ -78,7 +78,7 @@ func NewState(genesisHash string) *State {
 		headHash:       genesisHash,
 		blocks:         make(map[uint64]ImportedBlock),
 		pendingTxs:     make(map[string]PendingTx),
-		accounts:       make(map[string]*corestate.Account),
+		db:             corestate.NewStateDB(),
 		receiptsByHash: make(map[string]Receipt),
 	}
 
@@ -144,44 +144,31 @@ func NormalizeTx(tx PendingTx) PendingTx {
 }
 
 func (s *State) ensureAccount(address string) *corestate.Account {
-	acc, ok := s.accounts[address]
-	if ok {
-		return acc
+	if s.db == nil {
+		return nil
 	}
-	acc = &corestate.Account{
-		Address: address,
-		Balance: 0,
-		Nonce:   0,
-	}
-	s.accounts[address] = acc
-	return acc
+	return s.db.EnsureAccount(address)
 }
 
 func (s *State) SetBalance(address string, balance uint64) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	acc := s.ensureAccount(address)
-	acc.Balance = balance
+	if s.db == nil {
+		return
+	}
+	s.db.SetBalance(address, balance)
 }
 
 func (s *State) GetBalance(address string) uint64 {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	acc, ok := s.accounts[address]
-	if !ok {
+	if s.db == nil {
 		return 0
 	}
-	return acc.Balance
+	return s.db.GetBalance(address)
 }
 
 func (s *State) GetNonce(address string) uint64 {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	acc, ok := s.accounts[address]
-	if !ok {
+	if s.db == nil {
 		return 0
 	}
-	return acc.Nonce
+	return s.db.GetNonce(address)
 }
 
 func (s *State) AddPendingTx(tx PendingTx) bool {
@@ -233,22 +220,28 @@ func (s *State) ApplyTransactionInBlock(tx PendingTx, blockNumber uint64, blockH
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	from := s.ensureAccount(tx.From)
-	to := s.ensureAccount(tx.To)
+	if s.db == nil {
+		return Receipt{}, fmt.Errorf("execution state: nil state db")
+	}
 
-	if from.Nonce != tx.Nonce {
+	fromNonce := s.db.GetNonce(tx.From)
+	if fromNonce != tx.Nonce {
 		return Receipt{}, fmt.Errorf("execution state: invalid nonce for %s", tx.From)
 	}
 
 	effectiveGasFee := gasUsed * tx.Fee
 	totalCost := tx.Value + effectiveGasFee
-	if from.Balance < totalCost {
+
+	fromBalance := s.db.GetBalance(tx.From)
+	if fromBalance < totalCost {
 		return Receipt{}, fmt.Errorf("execution state: insufficient balance for %s", tx.From)
 	}
 
-	from.Balance -= totalCost
-	from.Nonce++
-	to.Balance += tx.Value
+	toBalance := s.db.GetBalance(tx.To)
+
+	s.db.SetBalance(tx.From, fromBalance-totalCost)
+	s.db.SetNonce(tx.From, fromNonce+1)
+	s.db.SetBalance(tx.To, toBalance+tx.Value)
 
 	delete(s.pendingTxs, tx.Hash)
 
@@ -263,9 +256,7 @@ func (s *State) ApplyTransactionInBlock(tx PendingTx, blockNumber uint64, blockH
 		Success:         true,
 	}
 
-	if blockHash != "" {
-		s.receiptsByHash[tx.Hash] = receipt
-	}
+	s.receiptsByHash[tx.Hash] = receipt
 	return receipt, nil
 }
 
@@ -332,15 +323,20 @@ func (s *State) FinalizeBlockExecution(block ImportedBlock, totalGasUsed uint64)
 }
 
 func (s *State) computeStateRootLocked() string {
-	addresses := make([]string, 0, len(s.accounts))
-	for address := range s.accounts {
+	snapshot := map[string]corestate.Account{}
+	if s.db != nil {
+		snapshot = s.db.SnapshotAccounts()
+	}
+
+	addresses := make([]string, 0, len(snapshot))
+	for address := range snapshot {
 		addresses = append(addresses, address)
 	}
 	sort.Strings(addresses)
 
 	h := sha256.New()
 	for _, address := range addresses {
-		account := s.accounts[address]
+		account := snapshot[address]
 		_, _ = h.Write([]byte(fmt.Sprintf("%s|%d|%d;", address, account.Balance, account.Nonce)))
 	}
 
@@ -394,11 +390,8 @@ func (s *State) HeadHash() string {
 }
 
 func (s *State) AccountNonce(address string) uint64 {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	account, ok := s.accounts[address]
-	if !ok || account == nil {
+	if s.db == nil {
 		return 0
 	}
-	return account.Nonce
+	return s.db.AccountNonce(address)
 }
