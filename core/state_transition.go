@@ -1,0 +1,63 @@
+package core
+
+import (
+	"fmt"
+	"silachain/internal/consensus/txpool"
+
+	"silachain/internal/execution/executionstate"
+)
+
+var ErrNilStateTransition = fmt.Errorf("core: nil state transition")
+
+type StateTransition struct {
+	state *executionstate.State
+}
+
+func NewStateTransition(state *executionstate.State) *StateTransition {
+	return &StateTransition{
+		state: state,
+	}
+}
+
+func (st *StateTransition) ApplyTransaction(tx executionstate.PendingTx) (executionstate.Receipt, error) {
+	if st == nil || st.state == nil {
+		return executionstate.Receipt{}, ErrNilStateTransition
+	}
+
+	return st.state.ApplyTransactionInBlock(tx, 0, "")
+}
+func PendingTxFromPoolTx(tx txpool.Tx, baseFee uint64) executionstate.PendingTx {
+	return executionstate.PendingTx{
+		Hash:     tx.Hash,
+		From:     tx.From,
+		To:       "SILA_BLOCK_FEE_SINK",
+		Value:    0,
+		Nonce:    tx.Nonce,
+		Data:     "",
+		Fee:      tx.EffectiveFee(baseFee),
+		GasLimit: tx.GasLimit,
+	}
+}
+
+func PendingTxsFromPoolTxs(txs []txpool.Tx, baseFee uint64) []executionstate.PendingTx {
+	out := make([]executionstate.PendingTx, 0, len(txs))
+	for _, tx := range txs {
+		out = append(out, PendingTxFromPoolTx(tx, baseFee))
+	}
+	return out
+}
+func (st *StateTransition) ApplyTransactions(txs []executionstate.PendingTx) ([]executionstate.Receipt, uint64, error) {
+	receipts := make([]executionstate.Receipt, 0, len(txs))
+	var gasUsed uint64
+
+	for _, tx := range txs {
+		receipt, err := st.ApplyTransaction(tx)
+		if err != nil {
+			return nil, 0, err
+		}
+		gasUsed += receipt.GasUsed
+		receipts = append(receipts, receipt)
+	}
+
+	return receipts, gasUsed, nil
+}
