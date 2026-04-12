@@ -1,6 +1,0 @@
-audit-reports/
-*.log
-*.tmp
-runtime/
-temp_fix_create_test.ps1
-tools/audit_ethereum_parity.ps1

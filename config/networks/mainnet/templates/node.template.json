@@ -1,8 +1,0 @@
-{
-  "listen_address": "{{LISTEN_ADDRESS}}",
-  "data_dir": "runtime/execution/{{NODE_NAME}}",
-  "min_validator_stake": 1,
-  "peers_path": "config/networks/mainnet/public/peers.json",
-  "engine_listen_address": "{{ENGINE_LISTEN_ADDRESS}}",
-  "engine_jwt_secret_path": "runtime/execution/{{NODE_NAME}}/engine.jwt"
-}

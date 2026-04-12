@@ -1,2 +1,0 @@
-﻿legacy non-canonical network config path
-canonical network config path is: config/networks/mainnet

@@ -1,8 +1,0 @@
-{
-  "listen_address": "0.0.0.0:8090",
-  "data_dir": "runtime/execution/node1",
-  "min_validator_stake": 1,
-  "peers_path": "config/networks/mainnet/public/peers.json",
-  "engine_listen_address": "127.0.0.1:8551",
-  "engine_jwt_secret_path": "runtime/execution/node1/engine.jwt"
-}
