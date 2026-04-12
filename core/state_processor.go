@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	statecore "silachain/core/state"
 	"silachain/internal/consensus/blockassembly"
 	"silachain/internal/consensus/txpool"
-	"silachain/internal/execution/executionstate"
 )
 
 var (
@@ -15,35 +15,18 @@ var (
 	ErrNilAssembler    = errors.New("payloadexecution: nil assembler")
 	ErrEmptyParentHash = errors.New("payloadexecution: empty parent hash")
 	ErrInvalidBlockNum = errors.New("payloadexecution: invalid block number")
+	ErrBlockGasLimit   = errors.New("payloadexecution: block gas limit exceeded")
 )
 
 type State interface {
 	Head() blockassembly.Head
-	ExecutionState() *executionstate.State
+	StateDB() *statecore.StateDB
+	SetHead(head blockassembly.Head) error
 }
 
 type StateProcessor struct {
 	state     State
 	assembler *blockassembly.Assembler
-}
-
-type Receipt struct {
-	TxHash  string
-	From    string
-	Nonce   uint64
-	GasUsed uint64
-	Success bool
-}
-
-type Result struct {
-	BlockNumber        uint64
-	BlockHash          string
-	ParentHash         string
-	ExecutionStateRoot string
-	BaseFee            uint64
-	GasUsed            uint64
-	Receipts           []Receipt
-	TxCount            int
 }
 
 func NewStateProcessor(state State, assembler *blockassembly.Assembler) (*StateProcessor, error) {
@@ -78,37 +61,99 @@ func (p *StateProcessor) Process(attrs blockassembly.PayloadAttributes) (Result,
 		return Result{}, fmt.Errorf("%w: parent=%d block=%d", ErrInvalidBlockNum, assembled.ParentNumber, assembled.BlockNumber)
 	}
 
-	blockHash := deriveBlockHash(assembled)
+	db := p.state.StateDB()
+	if db == nil {
+		return Result{}, ErrNilStateDB
+	}
 
-	execTxs := PendingTxsFromPoolTxs(assembled.Selection.Transactions, assembled.BaseFee)
+	ctx := NewBlockContext(
+		assembled.BlockNumber,
+		deriveBlockHash(assembled),
+		assembled.ParentHash,
+		assembled.BaseFee,
+		assembled.GasLimit,
+		attrs.Timestamp,
+	)
 
-	st := NewStateTransition(p.state.ExecutionState())
-	executed, err := st.ExecuteBlock(executionstate.BlockExecutionRequest{
-		Block: executionstate.ImportedBlock{
-			Number:     assembled.BlockNumber,
-			Hash:       blockHash,
-			ParentHash: assembled.ParentHash,
-			Timestamp:  attrs.Timestamp,
-			TxHashes:   collectTxHashes(assembled.Selection.Transactions),
-		},
-		Txs: execTxs,
-	})
+	gp := NewGasPool(ctx.GasLimit)
+	receipts, totalGasUsed, successCount, failureCount, err := p.applyTransactions(ctx, db, gp, assembled.Selection.Transactions)
 	if err != nil {
 		return Result{}, err
 	}
 
-	receipts := ReceiptsFromExecutionResult(executed, assembled.Selection.Transactions)
+	stateRoot, err := db.Commit(false)
+	if err != nil {
+		return Result{}, err
+	}
+
+	newHead := blockassembly.Head{
+		Number:    ctx.BlockNumber,
+		Hash:      ctx.BlockHash,
+		StateRoot: stateRoot,
+		BaseFee:   ctx.BaseFee,
+	}
+	if err := p.state.SetHead(newHead); err != nil {
+		return Result{}, err
+	}
 
 	return Result{
-		BlockNumber:        assembled.BlockNumber,
-		BlockHash:          blockHash,
-		ParentHash:         assembled.ParentHash,
-		ExecutionStateRoot: executed.StateRoot,
-		BaseFee:            assembled.BaseFee,
-		GasUsed:            executed.GasUsed,
+		BlockNumber:        ctx.BlockNumber,
+		BlockHash:          ctx.BlockHash,
+		ParentHash:         ctx.ParentHash,
+		ExecutionStateRoot: stateRoot,
+		BaseFee:            ctx.BaseFee,
+		GasUsed:            totalGasUsed,
 		Receipts:           receipts,
 		TxCount:            len(receipts),
+		SuccessCount:       successCount,
+		FailureCount:       failureCount,
 	}, nil
+}
+
+func (p *StateProcessor) applyTransactions(
+	ctx BlockContext,
+	db *statecore.StateDB,
+	gp *GasPool,
+	txs []txpool.Tx,
+) ([]Receipt, uint64, int, int, error) {
+	receipts := make([]Receipt, 0, len(txs))
+	var totalGasUsed uint64
+	var successCount int
+	var failureCount int
+
+	for _, tx := range txs {
+		snapshot := db.Snapshot()
+
+		msg := PoolTxToMessage(
+			tx.Hash,
+			tx.From,
+			"SILA_BLOCK_FEE_SINK",
+			tx.Nonce,
+			0,
+			tx.GasLimit,
+			tx.EffectiveFee(ctx.BaseFee),
+			nil,
+		)
+
+		receipt, err := ApplyTransaction(ctx, db, gp, tx.Hash, msg)
+		if err != nil {
+			db.RevertToSnapshot(snapshot)
+			receipts = append(receipts, receipt)
+			failureCount++
+			continue
+		}
+
+		if totalGasUsed+receipt.GasUsed > ctx.GasLimit {
+			db.RevertToSnapshot(snapshot)
+			return nil, 0, 0, 0, ErrBlockGasLimit
+		}
+
+		totalGasUsed += receipt.GasUsed
+		receipts = append(receipts, receipt)
+		successCount++
+	}
+
+	return receipts, totalGasUsed, successCount, failureCount, nil
 }
 
 func deriveBlockHash(assembled blockassembly.Result) string {
@@ -135,21 +180,4 @@ func TxToPoolTx(hash, from string, nonce, gasLimit, maxFeePerGas, maxPriorityFee
 		MaxPriorityFeePerGas: maxPriorityFeePerGas,
 		Timestamp:            timestamp,
 	}
-}
-
-func collectTxHashes(txs []txpool.Tx) []string {
-	out := make([]string, 0, len(txs))
-	for _, tx := range txs {
-		out = append(out, tx.Hash)
-	}
-	return out
-}
-
-func findTxNonce(txs []txpool.Tx, hash string) uint64 {
-	for _, tx := range txs {
-		if tx.Hash == hash {
-			return tx.Nonce
-		}
-	}
-	return 0
 }

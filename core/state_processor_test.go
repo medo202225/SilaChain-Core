@@ -1,96 +1,31 @@
 package core
 
 import (
-	"fmt"
 	"testing"
 
+	statecore "silachain/core/state"
 	"silachain/internal/consensus/blockassembly"
 	"silachain/internal/consensus/txpool"
-	"silachain/internal/execution/executionstate"
 )
 
 type testState struct {
-	head   blockassembly.Head
-	nonces map[string]uint64
-	exec   *executionstate.State
+	head blockassembly.Head
+	db   *statecore.StateDB
 }
 
 func newTestState(head blockassembly.Head) *testState {
 	return &testState{
-		head:   head,
-		exec:   nil,
-		nonces: make(map[string]uint64),
+		head: head,
+		db:   statecore.NewStateDB(),
 	}
-}
-
-func (s *testState) buildExecutionStateForHead() (*executionstate.State, error) {
-	execState := executionstate.NewState("0xgenesis")
-
-	for i := uint64(1); i <= s.head.Number; i++ {
-		hash := fmt.Sprintf("0xseed-block-%d", i)
-		if i == s.head.Number {
-			hash = s.head.Hash
-		}
-		parentHash := "0xgenesis"
-		if i > 1 {
-			parentHash = fmt.Sprintf("0xseed-block-%d", i-1)
-		}
-		if err := execState.ImportBlock(executionstate.ImportedBlock{
-			Number:     i,
-			Hash:       hash,
-			ParentHash: parentHash,
-			Timestamp:  i,
-			TxHashes:   nil,
-		}); err != nil {
-			return nil, err
-		}
-	}
-
-	for sender, nonce := range s.nonces {
-		execState.SetBalance(sender, 1000000000)
-		for i := uint64(0); i < nonce; i++ {
-			seedHash := fmt.Sprintf("seed-%s-%d", sender, i)
-			_ = execState.AddPendingTx(executionstate.PendingTx{
-				Hash:  seedHash,
-				From:  sender,
-				To:    "SILA_BLOCK_FEE_SINK",
-				Value: 0,
-				Nonce: i,
-				Fee:   1,
-			})
-			_ = execState.ApplyTransaction(executionstate.PendingTx{
-				Hash:  seedHash,
-				From:  sender,
-				To:    "SILA_BLOCK_FEE_SINK",
-				Value: 0,
-				Nonce: i,
-				Fee:   1,
-			})
-		}
-	}
-
-	return execState, nil
 }
 
 func (s *testState) Head() blockassembly.Head {
-	if s.exec != nil {
-		return blockassembly.Head{
-			Number:    s.exec.HeadNumber(),
-			Hash:      s.exec.HeadHash(),
-			StateRoot: s.head.StateRoot,
-			BaseFee:   s.head.BaseFee,
-		}
-	}
 	return s.head
 }
 
-func (s *testState) ExecutionState() *executionstate.State {
-	execState, err := s.buildExecutionStateForHead()
-	if err != nil {
-		return nil
-	}
-	s.exec = execState
-	return s.exec
+func (s *testState) StateDB() *statecore.StateDB {
+	return s.db
 }
 
 func (s *testState) SetHead(head blockassembly.Head) error {
@@ -98,16 +33,13 @@ func (s *testState) SetHead(head blockassembly.Head) error {
 	return nil
 }
 
-func (s *testState) SetSenderNonce(sender string, nonce uint64) error {
-	s.nonces[sender] = nonce
-	return nil
+func (s *testState) SetSenderNonce(sender string, nonce uint64) {
+	s.db.SetNonce(sender, nonce)
+	s.db.SetBalance(sender, 1000000000)
 }
 
 func (s *testState) SenderNonce(sender string) uint64 {
-	if s.exec != nil {
-		return s.exec.AccountNonce(sender)
-	}
-	return s.nonces[sender]
+	return s.db.GetNonce(sender)
 }
 
 func TestExecute_AppliesAssembledPayloadAndAdvancesHead(t *testing.T) {
@@ -178,6 +110,12 @@ func TestExecute_AppliesAssembledPayloadAndAdvancesHead(t *testing.T) {
 	if result.TxCount != 2 {
 		t.Fatalf("unexpected tx count: got=%d want=2", result.TxCount)
 	}
+	if result.SuccessCount != 2 {
+		t.Fatalf("unexpected success count: got=%d want=2", result.SuccessCount)
+	}
+	if result.FailureCount != 0 {
+		t.Fatalf("unexpected failure count: got=%d want=0", result.FailureCount)
+	}
 	if len(result.Receipts) != 2 {
 		t.Fatalf("unexpected receipts count: got=%d want=2", len(result.Receipts))
 	}
@@ -201,16 +139,9 @@ func TestExecute_AppliesAssembledPayloadAndAdvancesHead(t *testing.T) {
 	if newHead.StateRoot == "" {
 		t.Fatalf("expected non-empty new head state root")
 	}
-
-	if state.SenderNonce("bob") != 1 {
-		t.Fatalf("unexpected bob nonce: got=%d want=1", state.SenderNonce("bob"))
-	}
-	if state.SenderNonce("alice") != 1 {
-		t.Fatalf("unexpected alice nonce: got=%d want=1", state.SenderNonce("alice"))
-	}
 }
 
-func TestExecute_FailsOnSenderNonceMismatchBetweenPoolAndState(t *testing.T) {
+func TestExecute_FailedReceiptCountsAsFailure(t *testing.T) {
 	head := blockassembly.Head{
 		Number:    9,
 		Hash:      "0xparent9",
@@ -241,12 +172,114 @@ func TestExecute_FailsOnSenderNonceMismatchBetweenPoolAndState(t *testing.T) {
 		t.Fatalf("new executor: %v", err)
 	}
 
-	_, err = executor.Process(blockassembly.PayloadAttributes{
+	result, err := executor.Process(blockassembly.PayloadAttributes{
 		Timestamp:    123,
 		FeeRecipient: "SILA_fee_recipient_exec_mismatch",
 		Random:       "SILA_rand_exec_mismatch",
 	})
-	if err == nil {
-		t.Fatalf("expected nonce mismatch error")
+	if err != nil {
+		t.Fatalf("execute should continue with failed receipt, got error: %v", err)
+	}
+	if result.SuccessCount != 0 {
+		t.Fatalf("unexpected success count: %d", result.SuccessCount)
+	}
+	if result.FailureCount != 1 {
+		t.Fatalf("unexpected failure count: %d", result.FailureCount)
+	}
+	if len(result.Receipts) != 1 {
+		t.Fatalf("unexpected receipts count: got=%d want=1", len(result.Receipts))
+	}
+	if result.Receipts[0].Success {
+		t.Fatalf("expected failed receipt")
+	}
+	if result.Receipts[0].ErrorText == "" {
+		t.Fatalf("expected error text")
+	}
+}
+
+func TestExecute_RevertsFailedTxAndContinuesNextTx(t *testing.T) {
+	head := blockassembly.Head{
+		Number:    3,
+		Hash:      "0xparent3",
+		StateRoot: "0xstate3",
+		BaseFee:   10,
+	}
+
+	state := newTestState(head)
+	state.SetSenderNonce("alice", 0)
+	state.SetSenderNonce("bob", 0)
+	state.db.SetBalance("alice", 0)
+
+	pool := txpool.NewPool(10)
+
+	if err := pool.SetSenderStateNonce("alice", state.SenderNonce("alice")); err != nil {
+		t.Fatalf("set alice pool nonce: %v", err)
+	}
+	if err := pool.SetSenderStateNonce("bob", state.SenderNonce("bob")); err != nil {
+		t.Fatalf("set bob pool nonce: %v", err)
+	}
+
+	if err := pool.Add(TxToPoolTx("alice-0", "alice", 0, 21000, 20, 2, 1)); err != nil {
+		t.Fatalf("add alice tx: %v", err)
+	}
+	if err := pool.Add(TxToPoolTx("bob-0", "bob", 0, 21000, 100, 50, 1)); err != nil {
+		t.Fatalf("add bob tx: %v", err)
+	}
+
+	assembler, err := blockassembly.New(state, pool, 42000)
+	if err != nil {
+		t.Fatalf("new assembler: %v", err)
+	}
+
+	executor, err := NewStateProcessor(state, assembler)
+	if err != nil {
+		t.Fatalf("new executor: %v", err)
+	}
+
+	result, err := executor.Process(blockassembly.PayloadAttributes{
+		Timestamp: 2000,
+	})
+	if err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+
+	if result.SuccessCount != 1 {
+		t.Fatalf("unexpected success count: %d", result.SuccessCount)
+	}
+	if result.FailureCount != 1 {
+		t.Fatalf("unexpected failure count: %d", result.FailureCount)
+	}
+	if len(result.Receipts) != 2 {
+		t.Fatalf("unexpected receipts count: %d", len(result.Receipts))
+	}
+
+	receiptsByHash := make(map[string]Receipt, len(result.Receipts))
+	for _, receipt := range result.Receipts {
+		receiptsByHash[receipt.TxHash] = receipt
+	}
+
+	aliceReceipt, ok := receiptsByHash["alice-0"]
+	if !ok {
+		t.Fatalf("missing alice receipt")
+	}
+	bobReceipt, ok := receiptsByHash["bob-0"]
+	if !ok {
+		t.Fatalf("missing bob receipt")
+	}
+
+	if aliceReceipt.Success {
+		t.Fatalf("expected alice receipt to fail")
+	}
+	if aliceReceipt.ErrorText == "" {
+		t.Fatalf("expected alice error text")
+	}
+	if !bobReceipt.Success {
+		t.Fatalf("expected bob receipt to succeed")
+	}
+	if state.SenderNonce("alice") != 0 {
+		t.Fatalf("alice nonce should remain 0, got=%d", state.SenderNonce("alice"))
+	}
+	if state.SenderNonce("bob") != 1 {
+		t.Fatalf("bob nonce should become 1, got=%d", state.SenderNonce("bob"))
 	}
 }
