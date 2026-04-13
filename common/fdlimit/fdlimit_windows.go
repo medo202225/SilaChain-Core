@@ -1,29 +1,50 @@
-// Copyright (c) 2026 SilaChain
-// All rights reserved.
-// Proprietary and confidential.
-// Use of this source code is governed by the SilaChain license.
+﻿// Copyright 2026 The SILA Authors
+// This file is part of the sila-library.
+//
+// The sila-library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The sila-library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the sila-library. If not, see <http://www.gnu.org/licenses/>.
 
 package fdlimit
 
 import "fmt"
 
-// silaHardLimit is the practical per-process file descriptor cap used on Windows.
-const silaHardLimit = 16384
+// hardlimit is the number of file descriptors allowed at max by the kernel.
+const hardlimit = 16384
 
-// Raise tries to raise the file descriptor allowance up to the requested maximum.
+// Raise tries to maximize the file descriptor allowance of this process
+// to the maximum hard-limit allowed by the OS.
 func Raise(max uint64) (uint64, error) {
-	if max > silaHardLimit {
-		return silaHardLimit, fmt.Errorf("file descriptor limit (%d) reached", silaHardLimit)
-	}
-	return max, nil
+// This method is NOP by design:
+//  * Linux/Darwin counterparts need to manually increase per process limits
+//  * On Windows Go uses the CreateFile API, which is limited to 16K files, non
+//    changeable from within a running process
+// This way we can always "request" raising the limits, which will either have
+// or not have effect based on the platform we're running on.
+if max > hardlimit {
+return hardlimit, fmt.Errorf("file descriptor limit (%d) reached", hardlimit)
+}
+return max, nil
 }
 
-// Current returns the current file descriptor allowance for this process.
+// Current retrieves the number of file descriptors allowed to be opened by this
+// process.
 func Current() (int, error) {
-	return silaHardLimit, nil
+// Please see Raise for the reason why we use hard coded 16K as the limit
+return hardlimit, nil
 }
 
-// Maximum returns the maximum file descriptor allowance this process can request.
+// Maximum retrieves the maximum number of file descriptors this process is
+// allowed to request for itself.
 func Maximum() (int, error) {
-	return Current()
+return Current()
 }

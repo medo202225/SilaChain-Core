@@ -16,34 +16,15 @@
 
 package common
 
-import (
-"errors"
-"io/fs"
-"os"
-"path/filepath"
-)
+import "time"
 
-// FileExist checks if a file exists at filePath.
-func FileExist(filePath string) bool {
-_, err := os.Stat(filePath)
-return !errors.Is(err, fs.ErrNotExist)
+// CalculateETA calculates the estimated remaining time based on the
+// number of finished task, remaining task, and the time cost for finished task.
+func CalculateETA(done, left uint64, elapsed time.Duration) time.Duration {
+if done == 0 || elapsed.Milliseconds() == 0 {
+return 0
 }
 
-// AbsolutePath returns datadir + filename, or filename if it is absolute.
-func AbsolutePath(datadir string, filename string) string {
-if filepath.IsAbs(filename) {
-return filename
-}
-return filepath.Join(datadir, filename)
-}
-
-// IsNonEmptyDir checks if a directory exists and is non-empty.
-func IsNonEmptyDir(dir string) bool {
-f, err := os.Open(dir)
-if err != nil {
-return false
-}
-defer f.Close()
-names, _ := f.Readdirnames(1)
-return len(names) > 0
+speed := float64(done) / float64(elapsed.Milliseconds())
+return time.Duration(float64(left)/speed) * time.Millisecond
 }

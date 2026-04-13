@@ -1,25 +1,32 @@
-// Copyright (c) 2026 SilaChain
-// All rights reserved.
-// Proprietary and confidential.
-// Use of this source code is governed by the SilaChain license.
+﻿// Copyright 2026 The SILA Authors
+// This file is part of the sila-library.
+//
+// The sila-library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The sila-library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the sila-library. If not, see <http://www.gnu.org/licenses/>.
 
 package common
 
 import (
-	"math/big"
-
-	"github.com/holiman/uint256"
+"math/big"
 )
 
-// Shared numeric values used across SilaChain.
+// Common big integers often used
 var (
-	SilaBigZero          = big.NewInt(0)
-	SilaBigOne           = big.NewInt(1)
-	SilaBigTwo           = big.NewInt(2)
-	SilaBigThree         = big.NewInt(3)
-	SilaBigThirtyTwo     = big.NewInt(32)
-	SilaBigTwoFiftySix   = big.NewInt(256)
-	SilaBigTwoFiftySeven = big.NewInt(257)
-
-	SilaUint256Zero = uint256.NewInt(0)
+Big1   = big.NewInt(1)
+Big2   = big.NewInt(2)
+Big3   = big.NewInt(3)
+Big0   = big.NewInt(0)
+Big32  = big.NewInt(32)
+Big256 = big.NewInt(256)
+Big257 = big.NewInt(257)
 )

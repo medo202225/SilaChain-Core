@@ -1,231 +1,233 @@
-// Copyright (c) 2026 SilaChain
-// All rights reserved.
-// Proprietary and confidential.
-// Use of this source code is governed by the SilaChain license.
+﻿// Copyright 2013 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Adapted for SILA from: https://go.dev/src/crypto/subtle/xor_test.go
 
 package bitutil
 
 import (
-	"bytes"
-	"testing"
+"bytes"
+"testing"
 )
 
 // Tests that bitwise XOR works for various alignments.
-func TestSilaXOR(t *testing.T) {
-	for alignP := 0; alignP < 2; alignP++ {
-		for alignQ := 0; alignQ < 2; alignQ++ {
-			for alignD := 0; alignD < 2; alignD++ {
-				p := make([]byte, 1023)[alignP:]
-				q := make([]byte, 1023)[alignQ:]
+func TestXOR(t *testing.T) {
+for alignP := 0; alignP < 2; alignP++ {
+for alignQ := 0; alignQ < 2; alignQ++ {
+for alignD := 0; alignD < 2; alignD++ {
+p := make([]byte, 1023)[alignP:]
+q := make([]byte, 1023)[alignQ:]
 
-				for i := 0; i < len(p); i++ {
-					p[i] = byte(i)
-				}
-				for i := 0; i < len(q); i++ {
-					q[i] = byte(len(q) - i)
-				}
+for i := 0; i < len(p); i++ {
+p[i] = byte(i)
+}
+for i := 0; i < len(q); i++ {
+q[i] = byte(len(q) - i)
+}
+d1 := make([]byte, 1023+alignD)[alignD:]
+d2 := make([]byte, 1023+alignD)[alignD:]
 
-				d1 := make([]byte, 1023+alignD)[alignD:]
-				d2 := make([]byte, 1023+alignD)[alignD:]
-
-				SilaXORBytes(d1, p, q)
-				silaNaiveXOR(d2, p, q)
-
-				if !bytes.Equal(d1, d2) {
-					t.Error("not equal", d1, d2)
-				}
-			}
-		}
-	}
+XORBytes(d1, p, q)
+naiveXOR(d2, p, q)
+if !bytes.Equal(d1, d2) {
+t.Error("not equal", d1, d2)
+}
+}
+}
+}
 }
 
-// silaNaiveXOR xors bytes one by one.
-func silaNaiveXOR(dst, a, b []byte) int {
-	n := len(a)
-	if len(b) < n {
-		n = len(b)
-	}
-	for i := 0; i < n; i++ {
-		dst[i] = a[i] ^ b[i]
-	}
-	return n
+// naiveXOR xors bytes one by one.
+func naiveXOR(dst, a, b []byte) int {
+n := len(a)
+if len(b) < n {
+n = len(b)
+}
+for i := 0; i < n; i++ {
+dst[i] = a[i] ^ b[i]
+}
+return n
 }
 
 // Tests that bitwise AND works for various alignments.
-func TestSilaAND(t *testing.T) {
-	for alignP := 0; alignP < 2; alignP++ {
-		for alignQ := 0; alignQ < 2; alignQ++ {
-			for alignD := 0; alignD < 2; alignD++ {
-				p := make([]byte, 1023)[alignP:]
-				q := make([]byte, 1023)[alignQ:]
+func TestAND(t *testing.T) {
+for alignP := 0; alignP < 2; alignP++ {
+for alignQ := 0; alignQ < 2; alignQ++ {
+for alignD := 0; alignD < 2; alignD++ {
+p := make([]byte, 1023)[alignP:]
+q := make([]byte, 1023)[alignQ:]
 
-				for i := 0; i < len(p); i++ {
-					p[i] = byte(i)
-				}
-				for i := 0; i < len(q); i++ {
-					q[i] = byte(len(q) - i)
-				}
+for i := 0; i < len(p); i++ {
+p[i] = byte(i)
+}
+for i := 0; i < len(q); i++ {
+q[i] = byte(len(q) - i)
+}
+d1 := make([]byte, 1023+alignD)[alignD:]
+d2 := make([]byte, 1023+alignD)[alignD:]
 
-				d1 := make([]byte, 1023+alignD)[alignD:]
-				d2 := make([]byte, 1023+alignD)[alignD:]
-
-				SilaANDBytes(d1, p, q)
-				silaSafeANDBytes(d2, p, q)
-
-				if !bytes.Equal(d1, d2) {
-					t.Error("not equal")
-				}
-			}
-		}
-	}
+ANDBytes(d1, p, q)
+safeANDBytes(d2, p, q)
+if !bytes.Equal(d1, d2) {
+t.Error("not equal")
+}
+}
+}
+}
 }
 
 // Tests that bitwise OR works for various alignments.
-func TestSilaOR(t *testing.T) {
-	for alignP := 0; alignP < 2; alignP++ {
-		for alignQ := 0; alignQ < 2; alignQ++ {
-			for alignD := 0; alignD < 2; alignD++ {
-				p := make([]byte, 1023)[alignP:]
-				q := make([]byte, 1023)[alignQ:]
+func TestOR(t *testing.T) {
+for alignP := 0; alignP < 2; alignP++ {
+for alignQ := 0; alignQ < 2; alignQ++ {
+for alignD := 0; alignD < 2; alignD++ {
+p := make([]byte, 1023)[alignP:]
+q := make([]byte, 1023)[alignQ:]
 
-				for i := 0; i < len(p); i++ {
-					p[i] = byte(i)
-				}
-				for i := 0; i < len(q); i++ {
-					q[i] = byte(len(q) - i)
-				}
+for i := 0; i < len(p); i++ {
+p[i] = byte(i)
+}
+for i := 0; i < len(q); i++ {
+q[i] = byte(len(q) - i)
+}
+d1 := make([]byte, 1023+alignD)[alignD:]
+d2 := make([]byte, 1023+alignD)[alignD:]
 
-				d1 := make([]byte, 1023+alignD)[alignD:]
-				d2 := make([]byte, 1023+alignD)[alignD:]
-
-				SilaORBytes(d1, p, q)
-				silaSafeORBytes(d2, p, q)
-
-				if !bytes.Equal(d1, d2) {
-					t.Error("not equal")
-				}
-			}
-		}
-	}
+ORBytes(d1, p, q)
+safeORBytes(d2, p, q)
+if !bytes.Equal(d1, d2) {
+t.Error("not equal")
+}
+}
+}
+}
 }
 
 // Tests that bit testing works for various alignments.
-func TestSilaTestBytes(t *testing.T) {
-	for align := 0; align < 2; align++ {
-		p := make([]byte, 1023)[align:]
-		p[100] = 1
+func TestTest(t *testing.T) {
+for align := 0; align < 2; align++ {
+// Test for bits set in the bulk part
+p := make([]byte, 1023)[align:]
+p[100] = 1
 
-		if SilaTestBytes(p) != silaSafeTestBytes(p) {
-			t.Error("not equal")
-		}
+if TestBytes(p) != safeTestBytes(p) {
+t.Error("not equal")
+}
+// Test for bits set in the tail part
+q := make([]byte, 1023)[align:]
+q[len(q)-1] = 1
 
-		q := make([]byte, 1023)[align:]
-		q[len(q)-1] = 1
-
-		if SilaTestBytes(q) != silaSafeTestBytes(q) {
-			t.Error("not equal")
-		}
-	}
+if TestBytes(q) != safeTestBytes(q) {
+t.Error("not equal")
+}
+}
 }
 
-// Benchmarks the optimized XOR performance.
-func BenchmarkSilaFastXOR1KB(b *testing.B) { silaBenchmarkFastXOR(b, 1024) }
-func BenchmarkSilaFastXOR2KB(b *testing.B) { silaBenchmarkFastXOR(b, 2048) }
-func BenchmarkSilaFastXOR4KB(b *testing.B) { silaBenchmarkFastXOR(b, 4096) }
+// Benchmarks the potentially optimized XOR performance.
+func BenchmarkFastXOR1KB(b *testing.B) { benchmarkFastXOR(b, 1024) }
+func BenchmarkFastXOR2KB(b *testing.B) { benchmarkFastXOR(b, 2048) }
+func BenchmarkFastXOR4KB(b *testing.B) { benchmarkFastXOR(b, 4096) }
 
-func silaBenchmarkFastXOR(b *testing.B, size int) {
-	p, q := make([]byte, size), make([]byte, size)
-	for i := 0; i < b.N; i++ {
-		SilaXORBytes(p, p, q)
-	}
+func benchmarkFastXOR(b *testing.B, size int) {
+p, q := make([]byte, size), make([]byte, size)
+
+for i := 0; i < b.N; i++ {
+XORBytes(p, p, q)
+}
 }
 
 // Benchmarks the baseline XOR performance.
-func BenchmarkSilaBaseXOR1KB(b *testing.B) { silaBenchmarkBaseXOR(b, 1024) }
-func BenchmarkSilaBaseXOR2KB(b *testing.B) { silaBenchmarkBaseXOR(b, 2048) }
-func BenchmarkSilaBaseXOR4KB(b *testing.B) { silaBenchmarkBaseXOR(b, 4096) }
+func BenchmarkBaseXOR1KB(b *testing.B) { benchmarkBaseXOR(b, 1024) }
+func BenchmarkBaseXOR2KB(b *testing.B) { benchmarkBaseXOR(b, 2048) }
+func BenchmarkBaseXOR4KB(b *testing.B) { benchmarkBaseXOR(b, 4096) }
 
-func silaBenchmarkBaseXOR(b *testing.B, size int) {
-	p, q := make([]byte, size), make([]byte, size)
-	for i := 0; i < b.N; i++ {
-		silaNaiveXOR(p, p, q)
-	}
+func benchmarkBaseXOR(b *testing.B, size int) {
+p, q := make([]byte, size), make([]byte, size)
+
+for i := 0; i < b.N; i++ {
+naiveXOR(p, p, q)
+}
 }
 
-// Benchmarks the optimized AND performance.
-func BenchmarkSilaFastAND1KB(b *testing.B) { silaBenchmarkFastAND(b, 1024) }
-func BenchmarkSilaFastAND2KB(b *testing.B) { silaBenchmarkFastAND(b, 2048) }
-func BenchmarkSilaFastAND4KB(b *testing.B) { silaBenchmarkFastAND(b, 4096) }
+// Benchmarks the potentially optimized AND performance.
+func BenchmarkFastAND1KB(b *testing.B) { benchmarkFastAND(b, 1024) }
+func BenchmarkFastAND2KB(b *testing.B) { benchmarkFastAND(b, 2048) }
+func BenchmarkFastAND4KB(b *testing.B) { benchmarkFastAND(b, 4096) }
 
-func silaBenchmarkFastAND(b *testing.B, size int) {
-	p, q := make([]byte, size), make([]byte, size)
-	for i := 0; i < b.N; i++ {
-		SilaANDBytes(p, p, q)
-	}
+func benchmarkFastAND(b *testing.B, size int) {
+p, q := make([]byte, size), make([]byte, size)
+
+for i := 0; i < b.N; i++ {
+ANDBytes(p, p, q)
+}
 }
 
 // Benchmarks the baseline AND performance.
-func BenchmarkSilaBaseAND1KB(b *testing.B) { silaBenchmarkBaseAND(b, 1024) }
-func BenchmarkSilaBaseAND2KB(b *testing.B) { silaBenchmarkBaseAND(b, 2048) }
-func BenchmarkSilaBaseAND4KB(b *testing.B) { silaBenchmarkBaseAND(b, 4096) }
+func BenchmarkBaseAND1KB(b *testing.B) { benchmarkBaseAND(b, 1024) }
+func BenchmarkBaseAND2KB(b *testing.B) { benchmarkBaseAND(b, 2048) }
+func BenchmarkBaseAND4KB(b *testing.B) { benchmarkBaseAND(b, 4096) }
 
-func silaBenchmarkBaseAND(b *testing.B, size int) {
-	p, q := make([]byte, size), make([]byte, size)
-	for i := 0; i < b.N; i++ {
-		silaSafeANDBytes(p, p, q)
-	}
+func benchmarkBaseAND(b *testing.B, size int) {
+p, q := make([]byte, size), make([]byte, size)
+
+for i := 0; i < b.N; i++ {
+safeANDBytes(p, p, q)
+}
 }
 
-// Benchmarks the optimized OR performance.
-func BenchmarkSilaFastOR1KB(b *testing.B) { silaBenchmarkFastOR(b, 1024) }
-func BenchmarkSilaFastOR2KB(b *testing.B) { silaBenchmarkFastOR(b, 2048) }
-func BenchmarkSilaFastOR4KB(b *testing.B) { silaBenchmarkFastOR(b, 4096) }
+// Benchmarks the potentially optimized OR performance.
+func BenchmarkFastOR1KB(b *testing.B) { benchmarkFastOR(b, 1024) }
+func BenchmarkFastOR2KB(b *testing.B) { benchmarkFastOR(b, 2048) }
+func BenchmarkFastOR4KB(b *testing.B) { benchmarkFastOR(b, 4096) }
 
-func silaBenchmarkFastOR(b *testing.B, size int) {
-	p, q := make([]byte, size), make([]byte, size)
-	for i := 0; i < b.N; i++ {
-		SilaORBytes(p, p, q)
-	}
+func benchmarkFastOR(b *testing.B, size int) {
+p, q := make([]byte, size), make([]byte, size)
+
+for i := 0; i < b.N; i++ {
+ORBytes(p, p, q)
+}
 }
 
 // Benchmarks the baseline OR performance.
-func BenchmarkSilaBaseOR1KB(b *testing.B) { silaBenchmarkBaseOR(b, 1024) }
-func BenchmarkSilaBaseOR2KB(b *testing.B) { silaBenchmarkBaseOR(b, 2048) }
-func BenchmarkSilaBaseOR4KB(b *testing.B) { silaBenchmarkBaseOR(b, 4096) }
+func BenchmarkBaseOR1KB(b *testing.B) { benchmarkBaseOR(b, 1024) }
+func BenchmarkBaseOR2KB(b *testing.B) { benchmarkBaseOR(b, 2048) }
+func BenchmarkBaseOR4KB(b *testing.B) { benchmarkBaseOR(b, 4096) }
 
-func silaBenchmarkBaseOR(b *testing.B, size int) {
-	p, q := make([]byte, size), make([]byte, size)
-	for i := 0; i < b.N; i++ {
-		silaSafeORBytes(p, p, q)
-	}
+func benchmarkBaseOR(b *testing.B, size int) {
+p, q := make([]byte, size), make([]byte, size)
+
+for i := 0; i < b.N; i++ {
+safeORBytes(p, p, q)
+}
 }
 
-var SilaGlobalBool bool
+var GloBool bool // Exported global will not be dead-code eliminated, at least not yet.
 
-// Benchmarks the optimized bit testing performance.
-func BenchmarkSilaFastTest1KB(b *testing.B) { silaBenchmarkFastTest(b, 1024) }
-func BenchmarkSilaFastTest2KB(b *testing.B) { silaBenchmarkFastTest(b, 2048) }
-func BenchmarkSilaFastTest4KB(b *testing.B) { silaBenchmarkFastTest(b, 4096) }
+// Benchmarks the potentially optimized bit testing performance.
+func BenchmarkFastTest1KB(b *testing.B) { benchmarkFastTest(b, 1024) }
+func BenchmarkFastTest2KB(b *testing.B) { benchmarkFastTest(b, 2048) }
+func BenchmarkFastTest4KB(b *testing.B) { benchmarkFastTest(b, 4096) }
 
-func silaBenchmarkFastTest(b *testing.B, size int) {
-	p := make([]byte, size)
-	a := false
-	for i := 0; i < b.N; i++ {
-		a = a != SilaTestBytes(p)
-	}
-	SilaGlobalBool = a
+func benchmarkFastTest(b *testing.B, size int) {
+p := make([]byte, size)
+a := false
+for i := 0; i < b.N; i++ {
+a = a != TestBytes(p)
+}
+GloBool = a // Use of benchmark "result" to prevent total dead code elimination.
 }
 
 // Benchmarks the baseline bit testing performance.
-func BenchmarkSilaBaseTest1KB(b *testing.B) { silaBenchmarkBaseTest(b, 1024) }
-func BenchmarkSilaBaseTest2KB(b *testing.B) { silaBenchmarkBaseTest(b, 2048) }
-func BenchmarkSilaBaseTest4KB(b *testing.B) { silaBenchmarkBaseTest(b, 4096) }
+func BenchmarkBaseTest1KB(b *testing.B) { benchmarkBaseTest(b, 1024) }
+func BenchmarkBaseTest2KB(b *testing.B) { benchmarkBaseTest(b, 2048) }
+func BenchmarkBaseTest4KB(b *testing.B) { benchmarkBaseTest(b, 4096) }
 
-func silaBenchmarkBaseTest(b *testing.B, size int) {
-	p := make([]byte, size)
-	a := false
-	for i := 0; i < b.N; i++ {
-		a = a != silaSafeTestBytes(p)
-	}
-	SilaGlobalBool = a
+func benchmarkBaseTest(b *testing.B, size int) {
+p := make([]byte, size)
+a := false
+for i := 0; i < b.N; i++ {
+a = a != safeTestBytes(p)
+}
+GloBool = a // Use of benchmark "result" to prevent total dead code elimination.
 }

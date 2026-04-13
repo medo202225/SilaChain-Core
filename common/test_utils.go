@@ -1,44 +1,53 @@
-// Copyright (c) 2026 SilaChain
-// All rights reserved.
-// Proprietary and confidential.
-// Use of this source code is governed by the SilaChain license.
+﻿// Copyright 2026 The SILA Authors
+// This file is part of the sila-library.
+//
+// The sila-library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The sila-library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the sila-library. If not, see <http://www.gnu.org/licenses/>.
 
 package common
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
+"encoding/json"
+"fmt"
+"os"
 )
 
-// LoadTestJSON reads a JSON file and unmarshals it into the provided target.
-func LoadTestJSON(file string, target interface{}) error {
-	content, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(content, target); err != nil {
-		if syntaxErr, ok := err.(*json.SyntaxError); ok {
-			line := findJSONLine(content, syntaxErr.Offset)
-			return fmt.Errorf("JSON syntax error at %v:%v: %v", file, line, err)
-		}
-		return fmt.Errorf("JSON unmarshal error in %v: %v", file, err)
-	}
-
-	return nil
+// LoadJSON reads the given file and unmarshals its content.
+func LoadJSON(file string, val interface{}) error {
+content, err := os.ReadFile(file)
+if err != nil {
+return err
+}
+if err := json.Unmarshal(content, val); err != nil {
+if syntaxerr, ok := err.(*json.SyntaxError); ok {
+line := findLine(content, syntaxerr.Offset)
+return fmt.Errorf("JSON syntax error at %v:%v: %v", file, line, err)
+}
+return fmt.Errorf("JSON unmarshal error in %v: %v", file, err)
+}
+return nil
 }
 
-// findJSONLine returns the line number for the given byte offset into data.
-func findJSONLine(data []byte, offset int64) (line int) {
-	line = 1
-	for i, r := range string(data) {
-		if int64(i) >= offset {
-			return
-		}
-		if r == '\n' {
-			line++
-		}
-	}
-	return
+// findLine returns the line number for the given offset into data.
+func findLine(data []byte, offset int64) (line int) {
+line = 1
+for i, r := range string(data) {
+if int64(i) >= offset {
+return
+}
+if r == '\n' {
+line++
+}
+}
+return
 }

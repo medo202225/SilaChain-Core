@@ -1,46 +1,52 @@
-// Copyright (c) 2026 SilaChain
-// All rights reserved.
-// Proprietary and confidential.
-// Use of this source code is governed by the SilaChain license.
+﻿// Copyright 2026 The SILA Authors
+// This file is part of the sila-library.
+//
+// The sila-library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The sila-library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the sila-library. If not, see <http://www.gnu.org/licenses/>.
 
 package common
 
 import (
-	"fmt"
-	"os"
-	"runtime"
-	"runtime/debug"
-	"strings"
+"fmt"
+"os"
+"runtime"
+"runtime/debug"
+"strings"
 )
 
-// ReportDiagnostic prints a diagnostic error report to stderr with caller details and a stack trace.
-func ReportDiagnostic(extra ...interface{}) {
-	fmt.Fprintln(os.Stderr, "SilaChain encountered a diagnostic fault that should be reported to the maintainers.")
-	if len(extra) > 0 {
-		fmt.Fprintln(os.Stderr, extra...)
-	}
+// Report gives off a warning requesting the user to submit an issue to the github tracker.
+func Report(extra ...interface{}) {
+fmt.Fprintln(os.Stderr, "You've encountered a sought after, hard to reproduce bug. Please report this to the developers <3 https://github.com/SILA/sila-chain/issues")
+fmt.Fprintln(os.Stderr, extra...)
 
-	_, file, line, ok := runtime.Caller(1)
-	if ok {
-		fmt.Fprintf(os.Stderr, "%s:%d\n", file, line)
-	}
+_, file, line, _ := runtime.Caller(1)
+fmt.Fprintf(os.Stderr, "%v:%v\n", file, line)
 
-	debug.PrintStack()
+debug.PrintStack()
 
-	fmt.Fprintln(os.Stderr, "#### SILACHAIN DIAGNOSTIC REPORT ####")
+fmt.Fprintln(os.Stderr, "#### BUG! PLEASE REPORT ####")
 }
 
-// PrintObsolescenceWarning prints a warning message inside a text box.
-func PrintObsolescenceWarning(message string) {
-	border := strings.Repeat("#", len(message)+4)
-	padding := strings.Repeat(" ", len(message))
+// PrintDeprecationWarning prints the given string in a box using fmt.Println.
+func PrintDeprecationWarning(str string) {
+line := strings.Repeat("#", len(str)+4)
+emptyLine := strings.Repeat(" ", len(str))
+fmt.Printf(`
+%s
+# %s #
+# %s #
+# %s #
+%s
 
-	fmt.Printf(
-		"\n%s\n# %s #\n# %s #\n# %s #\n%s\n\n",
-		border,
-		padding,
-		message,
-		padding,
-		border,
-	)
+`, line, emptyLine, str, emptyLine, line)
 }

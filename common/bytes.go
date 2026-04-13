@@ -1,150 +1,151 @@
-// Copyright (c) 2026 SilaChain
-// All rights reserved.
-// Proprietary and confidential.
-// Use of this source code is governed by the SilaChain license.
+﻿// Copyright 2026 The SILA Authors
+// This file is part of the sila-library.
+//
+// The sila-library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The sila-library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the sila-library. If not, see <http://www.gnu.org/licenses/>.
 
+// Package common contains various helper functions.
 package common
 
 import (
-	"encoding/hex"
-	"fmt"
-	"strings"
+"encoding/hex"
+"errors"
+
+"github.com/SILA/sila-chain/common/hexutil"
 )
 
-// DecodeHexBytes converts a hex string into bytes.
-// It accepts values with or without a 0x prefix.
-// Odd-length hex strings are left-padded with a zero nibble.
-func DecodeHexBytes(input string) ([]byte, error) {
-	normalized := strings.TrimSpace(input)
-	if strings.HasPrefix(normalized, "0x") || strings.HasPrefix(normalized, "0X") {
-		normalized = normalized[2:]
-	}
-	if normalized == "" {
-		return []byte{}, nil
-	}
-	if len(normalized)%2 != 0 {
-		normalized = "0" + normalized
-	}
-	decoded, err := hex.DecodeString(normalized)
-	if err != nil {
-		return nil, fmt.Errorf("decode hex bytes: %w", err)
-	}
-	return decoded, nil
+// FromHex returns the bytes represented by the hexadecimal string s.
+// s may be prefixed with "0x".
+func FromHex(s string) []byte {
+if has0xPrefix(s) {
+s = s[2:]
+}
+if len(s)%2 == 1 {
+s = "0" + s
+}
+return Hex2Bytes(s)
 }
 
-// MustDecodeHexBytes converts a hex string into bytes and returns nil on failure.
-func MustDecodeHexBytes(input string) []byte {
-	decoded, err := DecodeHexBytes(input)
-	if err != nil {
-		return nil
-	}
-	return decoded
+// CopyBytes returns an exact copy of the provided bytes.
+func CopyBytes(b []byte) (copiedBytes []byte) {
+if b == nil {
+return nil
+}
+copiedBytes = make([]byte, len(b))
+copy(copiedBytes, b)
+
+return
 }
 
-// CloneBytes returns a copy of the provided byte slice.
-func CloneBytes(input []byte) []byte {
-	if input == nil {
-		return nil
-	}
-	cloned := make([]byte, len(input))
-	copy(cloned, input)
-	return cloned
+// has0xPrefix validates str begins with '0x' or '0X'.
+func has0xPrefix(str string) bool {
+return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
 }
 
-// HasHexPrefix reports whether the string begins with 0x or 0X.
-func HasHexPrefix(input string) bool {
-	return len(input) >= 2 && input[0] == '0' && (input[1] == 'x' || input[1] == 'X')
+// isHexCharacter returns bool of c being a valid hexadecimal.
+func isHexCharacter(c byte) bool {
+return ('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F')
 }
 
-// IsHexDigit reports whether b is a valid hexadecimal digit.
-func IsHexDigit(b byte) bool {
-	return ('0' <= b && b <= '9') || ('a' <= b && b <= 'f') || ('A' <= b && b <= 'F')
+// isHex validates whether each byte is valid hexadecimal string.
+func isHex(str string) bool {
+if len(str)%2 != 0 {
+return false
+}
+for _, c := range []byte(str) {
+if !isHexCharacter(c) {
+return false
+}
+}
+return true
 }
 
-// IsEvenLengthHex reports whether the full string is valid even-length hexadecimal.
-func IsEvenLengthHex(input string) bool {
-	if len(input)%2 != 0 {
-		return false
-	}
-	for i := 0; i < len(input); i++ {
-		if !IsHexDigit(input[i]) {
-			return false
-		}
-	}
-	return true
+// Bytes2Hex returns the hexadecimal encoding of d.
+func Bytes2Hex(d []byte) string {
+return hex.EncodeToString(d)
 }
 
-// EncodeHexBytes returns the lowercase hexadecimal form of the provided bytes.
-func EncodeHexBytes(input []byte) string {
-	return hex.EncodeToString(input)
+// Hex2Bytes returns the bytes represented by the hexadecimal string str.
+func Hex2Bytes(str string) []byte {
+h, _ := hex.DecodeString(str)
+return h
 }
 
-// DecodeHexBytesFixed converts a hex string into a fixed-length byte slice.
-// If decoded bytes are longer than size, the rightmost bytes are kept.
-// If shorter, the result is left-padded with zeroes.
-func DecodeHexBytesFixed(input string, size int) ([]byte, error) {
-	if size < 0 {
-		return nil, fmt.Errorf("fixed size must be non-negative")
-	}
-	decoded, err := DecodeHexBytes(input)
-	if err != nil {
-		return nil, err
-	}
-	if len(decoded) == size {
-		return decoded, nil
-	}
-	if len(decoded) > size {
-		return decoded[len(decoded)-size:], nil
-	}
-	out := make([]byte, size)
-	copy(out[size-len(decoded):], decoded)
-	return out, nil
+// Hex2BytesFixed returns bytes of a specified fixed length flen.
+func Hex2BytesFixed(str string, flen int) []byte {
+h, _ := hex.DecodeString(str)
+if len(h) == flen {
+return h
+}
+if len(h) > flen {
+return h[len(h)-flen:]
+}
+hh := make([]byte, flen)
+copy(hh[flen-len(h):flen], h)
+return hh
 }
 
-// ParseHexOrRawBytes decodes a 0x-prefixed value as hex.
-// Without the prefix, it returns the raw UTF-8 bytes of the input string.
-func ParseHexOrRawBytes(input string) ([]byte, error) {
-	trimmed := strings.TrimSpace(input)
-	if HasHexPrefix(trimmed) {
-		return DecodeHexBytes(trimmed)
-	}
-	return []byte(trimmed), nil
+// ParseHexOrString tries to hexdecode b, but if the prefix is missing, it instead just returns the raw bytes
+func ParseHexOrString(str string) ([]byte, error) {
+b, err := hexutil.Decode(str)
+if errors.Is(err, hexutil.ErrMissingPrefix) {
+return []byte(str), nil
+}
+return b, err
 }
 
-// RightPadZeroBytes pads the slice with zero bytes on the right up to size.
-func RightPadZeroBytes(input []byte, size int) []byte {
-	if size <= len(input) {
-		return CloneBytes(input)
-	}
-	out := make([]byte, size)
-	copy(out, input)
-	return out
+// RightPadBytes zero-pads slice to the right up to length l.
+func RightPadBytes(slice []byte, l int) []byte {
+if l <= len(slice) {
+return slice
 }
 
-// LeftPadZeroBytes pads the slice with zero bytes on the left up to size.
-func LeftPadZeroBytes(input []byte, size int) []byte {
-	if size <= len(input) {
-		return CloneBytes(input)
-	}
-	out := make([]byte, size)
-	copy(out[size-len(input):], input)
-	return out
+padded := make([]byte, l)
+copy(padded, slice)
+
+return padded
 }
 
-// TrimLeadingZeroBytes removes leading zero bytes.
-func TrimLeadingZeroBytes(input []byte) []byte {
-	index := 0
-	for index < len(input) && input[index] == 0 {
-		index++
-	}
-	return input[index:]
+// LeftPadBytes zero-pads slice to the left up to length l.
+func LeftPadBytes(slice []byte, l int) []byte {
+if l <= len(slice) {
+return slice
 }
 
-// TrimTrailingZeroBytes removes trailing zero bytes.
-func TrimTrailingZeroBytes(input []byte) []byte {
-	index := len(input)
-	for index > 0 && input[index-1] == 0 {
-		index--
-	}
-	return input[:index]
+padded := make([]byte, l)
+copy(padded[l-len(slice):], slice)
+
+return padded
+}
+
+// TrimLeftZeroes returns a subslice of s without leading zeroes
+func TrimLeftZeroes(s []byte) []byte {
+idx := 0
+for ; idx < len(s); idx++ {
+if s[idx] != 0 {
+break
+}
+}
+return s[idx:]
+}
+
+// TrimRightZeroes returns a subslice of s without trailing zeroes
+func TrimRightZeroes(s []byte) []byte {
+idx := len(s)
+for ; idx > 0; idx-- {
+if s[idx-1] != 0 {
+break
+}
+}
+return s[:idx]
 }
