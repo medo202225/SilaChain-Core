@@ -1,0 +1,422 @@
+﻿
+Root   RelativePath                                         Extension  SizeKB LineCount Package      Bom      
+----   ------------                                         ---------  ------ --------- -------      ---      
+common common/big.go                                        .go          0.99        32 common       UTF-8 BOM
+common common/bitutil/bitutil.go                            .go          2.77       148 bitutil      No BOM   
+common common/bitutil/bitutil_test.go                       .go           5.9       233 bitutil      UTF-8 BOM
+common common/bitutil/compress.go                           .go          5.43       170 bitutil      UTF-8 BOM
+common common/bitutil/compress_test.go                      .go          8.41       224 bitutil      UTF-8 BOM
+common common/bytes.go                                      .go          3.47       151 common       UTF-8 BOM
+common common/bytes_test.go                                 .go          7.08       347 common       UTF-8 BOM
+common common/calc.go                                       .go          1.17        30 common       UTF-8 BOM
+common common/calc_test.go                                  .go          2.11        81 common       UTF-8 BOM
+common common/compiler/compiler.go                          .go          4.77       132 compiler     UTF-8 BOM
+common common/compiler/helpers.go                           .go          2.01        45 compiler     UTF-8 BOM
+common common/debug.go                                      .go          1.58        52 common       UTF-8 BOM
+common common/fdlimit/fdlimit_bsd.go                        .go          2.13        68 fdlimit      UTF-8 BOM
+common common/fdlimit/fdlimit_darwin.go                     .go          2.32        71 fdlimit      UTF-8 BOM
+common common/fdlimit/fdlimit_test.go                       .go           1.5        44 fdlimit      UTF-8 BOM
+common common/fdlimit/fdlimit_unix.go                       .go          2.14        66 fdlimit      UTF-8 BOM
+common common/fdlimit/fdlimit_windows.go                    .go          1.89        50 fdlimit      UTF-8 BOM
+common common/format.go                                     .go          2.41        82 common       UTF-8 BOM
+common common/hexutil/hexutil.go                            .go          5.64       240 hexutil      UTF-8 BOM
+common common/hexutil/hexutil_test.go                       .go          6.43       241 hexutil      UTF-8 BOM
+common common/hexutil/json.go                               .go         10.83       421 hexutil      UTF-8 BOM
+common common/hexutil/json_example_test.go                  .go          1.36        45 hexutil_test UTF-8 BOM
+common common/hexutil/json_test.go                          .go          11.1       374 hexutil      UTF-8 BOM
+common common/lru/basiclru.go                               .go          5.42       228 lru          UTF-8 BOM
+common common/lru/basiclru_test.go                          .go          4.66       231 lru          UTF-8 BOM
+common common/lru/blob_lru.go                               .go          2.71        84 lru          UTF-8 BOM
+common common/lru/blob_lru_test.go                          .go          4.04       155 lru          UTF-8 BOM
+common common/lru/lru.go                                    .go          2.42        95 lru          UTF-8 BOM
+common common/math/big.go                                   .go          4.74       179 math         UTF-8 BOM
+common common/math/big_test.go                              .go          4.66       159 math         UTF-8 BOM
+common common/math/integer.go                               .go          2.64        93 math         UTF-8 BOM
+common common/math/integer_test.go                          .go           2.7       117 math         UTF-8 BOM
+common common/mclock/alarm.go                               .go          2.78       106 mclock       UTF-8 BOM
+common common/mclock/alarm_test.go                          .go          2.73       116 mclock       UTF-8 BOM
+common common/mclock/mclock.go                              .go          3.31       127 mclock       UTF-8 BOM
+common common/mclock/mclock.s                               .s            0.8        17              UTF-8 BOM
+common common/mclock/simclock.go                            .go          4.87       209 mclock       UTF-8 BOM
+common common/mclock/simclock_test.go                       .go          3.49       162 mclock       UTF-8 BOM
+common common/path.go                                       .go          1.41        49 common       UTF-8 BOM
+common common/prque/lazyqueue.go                            .go          6.25       195 prque        UTF-8 BOM
+common common/prque/lazyqueue_test.go                       .go          2.58       123 prque        UTF-8 BOM
+common common/prque/prque.go                                .go          2.33        76 prque        UTF-8 BOM
+common common/prque/prque_test.go                           .go           3.2       135 prque        UTF-8 BOM
+common common/prque/sstack.go                               .go          3.23       113 prque        UTF-8 BOM
+common common/prque/sstack_test.go                          .go          2.66       102 prque        UTF-8 BOM
+common common/range.go                                      .go          3.15       115 common       UTF-8 BOM
+common common/range_test.go                                 .go          4.55       202 common       UTF-8 BOM
+common common/size.go                                       .go          1.74        56 common       UTF-8 BOM
+common common/size_test.go                                  .go          2.02        85 common       UTF-8 BOM
+common common/test_utils.go                                 .go          1.49        53 common       UTF-8 BOM
+common common/types.go                                      .go         13.26       494 common       UTF-8 BOM
+common common/types_test.go                                 .go          15.5       624 common       UTF-8 BOM
+core   core/.gitignore                                      .gitignore    0.7        48              UTF-8 BOM
+core   core/bench_test.go                                   .go           9.8       358 core         UTF-8 BOM
+core   core/bintrie_witness_test.go                         .go         14.15       243 core         UTF-8 BOM
+core   core/block_validator.go                              .go          7.47       202 core         UTF-8 BOM
+core   core/block_validator_test.go                         .go          8.85       281 core         UTF-8 BOM
+core   core/blockchain.go                                   .go        110.24      2976 core         UTF-8 BOM
+core   core/blockchain_insert.go                            .go          5.47       159 core         UTF-8 BOM
+core   core/blockchain_reader.go                            .go         18.21       549 core         UTF-8 BOM
+core   core/blockchain_repair_test.go                       .go         69.79      2035 core         UTF-8 BOM
+core   core/blockchain_sethead_test.go                      .go         67.36      2193 core         UTF-8 BOM
+core   core/blockchain_snapshot_test.go                     .go         21.75       723 core         UTF-8 BOM
+core   core/blockchain_stats.go                             .go         10.06       255 core         UTF-8 BOM
+core   core/blockchain_test.go                              .go        161.39      4546 core         UTF-8 BOM
+core   core/bloombits/bloombits.go                          .go          0.02         1 bloombits    No BOM   
+core   core/bloombits/bloombits_test.go                     .go          0.02         1 bloombits    No BOM   
+core   core/chain_makers.go                                 .go         21.53       639 core         UTF-8 BOM
+core   core/chain_makers_test.go                            .go          8.11       254 core         UTF-8 BOM
+core   core/dao_test.go                                     .go          6.84       158 core         UTF-8 BOM
+core   core/error.go                                        .go          6.32       145 core         UTF-8 BOM
+core   core/eth_transfer_logs_test.go                       .go          6.23       169 core         UTF-8 BOM
+core   core/events.go                                       .go          1.43        47 core         UTF-8 BOM
+core   core/evm.go                                          .go          4.64       148 core         UTF-8 BOM
+core   core/filtermaps/chain_view.go                        .go           6.9       202 filtermaps   UTF-8 BOM
+core   core/filtermaps/checkpoints.go                       .go          1.87        54 filtermaps   UTF-8 BOM
+core   core/filtermaps/checkpoints_holesky.json             .json        0.01         1              UTF-8 BOM
+core   core/filtermaps/checkpoints_hoodi.json               .json        0.01         1              UTF-8 BOM
+core   core/filtermaps/checkpoints_mainnet.json             .json        0.01         1              UTF-8 BOM
+core   core/filtermaps/checkpoints_sepolia.json             .json        0.01         1              UTF-8 BOM
+core   core/filtermaps/filtermaps.go                        .go         23.11       729 filtermaps   UTF-8 BOM
+core   core/filtermaps/indexer.go                           .go         11.65       424 filtermaps   UTF-8 BOM
+core   core/filtermaps/indexer_test.go                      .go         14.67       631 filtermaps   UTF-8 BOM
+core   core/filtermaps/map_renderer.go                      .go         21.66       720 filtermaps   UTF-8 BOM
+core   core/filtermaps/matcher.go                           .go         19.74       784 filtermaps   UTF-8 BOM
+core   core/filtermaps/matcher_backend.go                   .go          4.46       152 filtermaps   UTF-8 BOM
+core   core/filtermaps/matcher_test.go                      .go          2.19        87 filtermaps   UTF-8 BOM
+core   core/filtermaps/math.go                              .go          6.73       217 filtermaps   UTF-8 BOM
+core   core/filtermaps/math_test.go                         .go          3.63       124 filtermaps   UTF-8 BOM
+core   core/forkchoice/forkchoice.go                        .go          0.02         1 forkchoice   No BOM   
+core   core/forkchoice/forkchoice_test.go                   .go          0.02         1 forkchoice   No BOM   
+core   core/forkid/forkid.go                                .go          9.76       285 forkid       UTF-8 BOM
+core   core/forkid/forkid_test.go                           .go         12.16       245 forkid       UTF-8 BOM
+core   core/gaspool.go                                      .go          3.09       107 core         UTF-8 BOM
+core   core/gen_genesis.go                                  .go          5.92       159 core         UTF-8 BOM
+core   core/genesis.go                                      .go         25.33       758 core         UTF-8 BOM
+core   core/genesis_test.go                                 .go         11.24       345 core         UTF-8 BOM
+core   core/headerchain.go                                  .go         22.96       665 core         UTF-8 BOM
+core   core/headerchain_test.go                             .go          3.87       118 core         UTF-8 BOM
+core   core/history/historymode.go                          .go          4.01       139 history      UTF-8 BOM
+core   core/history/historymode_test.go                     .go          1.82        58 history      UTF-8 BOM
+core   core/mkalloc.go                                      .go          2.67       109 main         UTF-8 BOM
+core   core/overlay/state_transition.go                     .go          3.38       106 overlay      UTF-8 BOM
+core   core/rawdb/accessors/accessors.go                    .go          0.02         1 accessors    No BOM   
+core   core/rawdb/accessors/accessors_test.go               .go          0.02         1 accessors    No BOM   
+core   core/rawdb/accessors_chain.go                        .go         25.16       837 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_chain_test.go                   .go         27.52       906 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_history.go                      .go          9.23       246 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_indexes.go                      .go          17.6       578 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_indexes_test.go                 .go          8.13       296 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_metadata.go                     .go          5.46       165 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_overlay.go                      .go           1.3        32 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_snapshot.go                     .go          7.19       200 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_state.go                        .go         11.25       317 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_sync.go                         .go          3.29        99 rawdb        UTF-8 BOM
+core   core/rawdb/accessors_trie.go                         .go          7.13       235 rawdb        UTF-8 BOM
+core   core/rawdb/ancient_scheme.go                         .go          4.53       118 rawdb        UTF-8 BOM
+core   core/rawdb/ancient_utils.go                          .go          3.98       167 rawdb        UTF-8 BOM
+core   core/rawdb/ancients/ancients.go                      .go          0.02         1 ancients     No BOM   
+core   core/rawdb/ancients/ancients_test.go                 .go          0.02         1 ancients     No BOM   
+core   core/rawdb/ancienttest/testsuite.go                  .go          7.94       340 ancienttest  UTF-8 BOM
+core   core/rawdb/chain_freezer.go                          .go         10.04       379 rawdb        UTF-8 BOM
+core   core/rawdb/chain_iterator.go                         .go           9.4       343 rawdb        UTF-8 BOM
+core   core/rawdb/chain_iterator_test.go                    .go          6.96       268 rawdb        UTF-8 BOM
+core   core/rawdb/database.go                               .go         20.87       673 rawdb        UTF-8 BOM
+core   core/rawdb/eradb/eradb.go                            .go          7.43       317 eradb        UTF-8 BOM
+core   core/rawdb/eradb/eradb_test.go                       .go          2.27       103 eradb        UTF-8 BOM
+core   core/rawdb/freezer.go                                .go          8.97       368 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_batch.go                          .go          6.18       241 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_memory.go                         .go          9.86       433 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_memory_test.go                    .go          1.44        47 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_meta.go                           .go          3.52       159 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_meta_test.go                      .go          2.89       126 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_resettable.go                     .go           5.5       219 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_resettable_test.go                .go          2.61       107 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_table.go                          .go         26.48      1102 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_table_test.go                     .go         12.17       559 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_test.go                           .go          9.22       385 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_utils.go                          .go          3.57       160 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_utils_test.go                     .go          1.79        75 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_utils_unix.go                     .go          1.34        49 rawdb        UTF-8 BOM
+core   core/rawdb/freezer_utils_windows.go                  .go          0.95        26 rawdb        UTF-8 BOM
+core   core/rawdb/key_length_iterator.go                    .go          1.61        47 rawdb        UTF-8 BOM
+core   core/rawdb/key_length_iterator_test.go               .go          1.75        60 rawdb        UTF-8 BOM
+core   core/rawdb/rawdb.go                                  .go          0.01         1 rawdb        No BOM   
+core   core/rawdb/rawdb_test.go                             .go          0.01         1 rawdb        No BOM   
+core   core/rawdb/schema.go                                 .go         15.18       442 rawdb        UTF-8 BOM
+core   core/rawdb/schema/schema.go                          .go          0.01         1 schema       No BOM   
+core   core/rawdb/schema/schema_test.go                     .go          0.01         1 schema       No BOM   
+core   core/rawdb/table.go                                  .go          7.51       283 rawdb        UTF-8 BOM
+core   core/rawdb/table_test.go                             .go          3.62       143 rawdb        UTF-8 BOM
+core   core/rlp_test.go                                     .go          5.27       200 core         UTF-8 BOM
+core   core/sender_cacher.go                                .go          3.98       120 core         UTF-8 BOM
+core   core/state/access_events.go                          .go         11.78       339 state        UTF-8 BOM
+core   core/state/access_events_test.go                     .go           4.8       142 state        UTF-8 BOM
+core   core/state/access_list.go                            .go          4.98       162 state        UTF-8 BOM
+core   core/state/database.go                               .go         12.53       330 state        UTF-8 BOM
+core   core/state/database_code.go                          .go          6.99       231 state        UTF-8 BOM
+core   core/state/database_history.go                       .go          9.19       302 state        UTF-8 BOM
+core   core/state/database_iterator.go                      .go         14.15       435 state        UTF-8 BOM
+core   core/state/database_iterator_test.go                 .go          8.09       262 state        UTF-8 BOM
+core   core/state/dump.go                                   .go          7.42       262 state        UTF-8 BOM
+core   core/state/iterator.go                               .go           5.3       179 state        UTF-8 BOM
+core   core/state/iterator_test.go                          .go          2.94       108 state        UTF-8 BOM
+core   core/state/journal.go                                .go         11.86       502 state        UTF-8 BOM
+core   core/state/metrics.go                                .go          1.69        32 state        UTF-8 BOM
+core   core/state/pruner/bloom.go                           .go         10.42       384 pruner       UTF-8 BOM
+core   core/state/pruner/pruner.go                          .go         10.42       384 pruner       UTF-8 BOM
+core   core/state/reader.go                                 .go         17.51       552 state        UTF-8 BOM
+core   core/state/reader_stater.go                          .go          2.87        82 state        UTF-8 BOM
+core   core/state/snapshot/context.go                       .go          7.73       241 snapshot     UTF-8 BOM
+core   core/state/snapshot/conversion.go                    .go          8.66       336 snapshot     UTF-8 BOM
+core   core/state/snapshot/difflayer.go                     .go          9.63       355 snapshot     UTF-8 BOM
+core   core/state/snapshot/difflayer_test.go                .go          9.42       347 snapshot     UTF-8 BOM
+core   core/state/snapshot/disklayer.go                     .go          4.58       178 snapshot     UTF-8 BOM
+core   core/state/snapshot/disklayer_test.go                .go         19.17       529 snapshot     UTF-8 BOM
+core   core/state/snapshot/generate.go                      .go         15.83       606 snapshot     UTF-8 BOM
+core   core/state/snapshot/generate_test.go                 .go         33.22       829 snapshot     UTF-8 BOM
+core   core/state/snapshot/holdable_iterator.go             .go          2.96        97 snapshot     UTF-8 BOM
+core   core/state/snapshot/holdable_iterator_test.go        .go          4.71       163 snapshot     UTF-8 BOM
+core   core/state/snapshot/iterator.go                      .go          7.88       306 snapshot     UTF-8 BOM
+core   core/state/snapshot/iterator_binary.go               .go           4.6       185 snapshot     UTF-8 BOM
+core   core/state/snapshot/iterator_fast.go                 .go          6.31       266 snapshot     UTF-8 BOM
+core   core/state/snapshot/iterator_test.go                 .go         34.26      1065 snapshot     UTF-8 BOM
+core   core/state/snapshot/journal.go                       .go         12.62       368 snapshot     UTF-8 BOM
+core   core/state/snapshot/metrics.go                       .go           3.7        53 snapshot     UTF-8 BOM
+core   core/state/snapshot/snapshot.go                      .go         23.63       755 snapshot     UTF-8 BOM
+core   core/state/snapshot/snapshot_test.go                 .go         16.92       487 snapshot     UTF-8 BOM
+core   core/state/snapshot/utils.go                         .go          4.91       148 snapshot     UTF-8 BOM
+core   core/state/state_object.go                           .go         21.01       642 state        UTF-8 BOM
+core   core/state/state_object_test.go                      .go          2.67       100 state        UTF-8 BOM
+core   core/state/state_sizer.go                            .go         16.26       630 state        UTF-8 BOM
+core   core/state/state_sizer_test.go                       .go          8.67       232 state        UTF-8 BOM
+core   core/state/state_test.go                             .go           8.7       213 state        UTF-8 BOM
+core   core/state/statedb.go                                .go         48.51      1469 state        UTF-8 BOM
+core   core/state/statedb_fuzz_test.go                      .go         12.62       449 state        UTF-8 BOM
+core   core/state/statedb_hooked.go                         .go           8.8       287 state        UTF-8 BOM
+core   core/state/statedb_hooked_test.go                    .go           8.1       179 state        UTF-8 BOM
+core   core/state/statedb_test.go                           .go         39.21      1260 state        UTF-8 BOM
+core   core/state/stateupdate.go                            .go          12.1       369 state        UTF-8 BOM
+core   core/state/sync.go                                   .go          2.08        55 state        UTF-8 BOM
+core   core/state/sync_test.go                              .go         23.68       774 state        UTF-8 BOM
+core   core/state/transient_storage.go                      .go          2.42        83 state        UTF-8 BOM
+core   core/state/trie_prefetcher.go                        .go         15.25       472 state        UTF-8 BOM
+core   core/state/trie_prefetcher_test.go                   .go          3.85       106 state        UTF-8 BOM
+core   core/state_prefetcher.go                             .go          4.19       129 core         UTF-8 BOM
+core   core/state_processor.go                              .go         13.55       382 core         UTF-8 BOM
+core   core/state_processor_test.go                         .go          17.8       441 core         UTF-8 BOM
+core   core/state_transition.go                             .go         24.24       703 core         UTF-8 BOM
+core   core/stateless.go                                    .go          3.85        88 core         UTF-8 BOM
+core   core/stateless/database.go                           .go          2.23        67 stateless    UTF-8 BOM
+core   core/stateless/encoding.go                           .go          2.43        82 stateless    UTF-8 BOM
+core   core/stateless/stateless.go                          .go          0.02         1 stateless    No BOM   
+core   core/stateless/stateless_test.go                     .go          0.02         1 stateless    No BOM   
+core   core/stateless/stats.go                              .go          3.53       116 stateless    UTF-8 BOM
+core   core/stateless/witness.go                            .go          4.73       150 stateless    UTF-8 BOM
+core   core/tracing/CHANGELOG.md                            .md         12.43       189              UTF-8 BOM
+core   core/tracing/gen_code_change_reason_stringer.go      .go          1.02        30 tracing      UTF-8 BOM
+core   core/tracing/gen_gas_change_reason_stringer.go       .go          1.93        52 tracing      UTF-8 BOM
+core   core/tracing/gen_nonce_change_reason_stringer.go     .go          1.06        31 tracing      UTF-8 BOM
+core   core/tracing/hooks.go                                .go         20.36       464 tracing      UTF-8 BOM
+core   core/tracing/hooks/hooks.go                          .go          0.01         1 hooks        No BOM   
+core   core/tracing/hooks/hooks_test.go                     .go          0.01         1 hooks        No BOM   
+core   core/tracing/journal.go                              .go          8.27       266 tracing      UTF-8 BOM
+core   core/tracing/journal_test.go                         .go         11.76       395 tracing      UTF-8 BOM
+core   core/tracing/logger/logger.go                        .go          0.01         1 logger       No BOM   
+core   core/tracing/logger/logger_test.go                   .go          0.01         1 logger       No BOM   
+core   core/tracing/tracing.go                              .go          0.01         1 tracing      No BOM   
+core   core/tracing/tracing_test.go                         .go          0.01         1 tracing      No BOM   
+core   core/tracing/types/types.go                          .go          0.01         1 types        No BOM   
+core   core/tracing/types/types_test.go                     .go          0.01         1 types        No BOM   
+core   core/txindexer.go                                    .go         10.94       340 core         UTF-8 BOM
+core   core/txindexer/txindexer.go                          .go          0.02         1 txindexer    No BOM   
+core   core/txindexer/txindexer_test.go                     .go          0.02         1 txindexer    No BOM   
+core   core/txindexer_test.go                               .go         11.15       455 core         UTF-8 BOM
+core   core/txpool/blobpool/blobpool.go                     .go          20.2       389 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/blobpool_test.go                .go          13.3       414 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/config.go                       .go          2.04        50 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/evictheap.go                    .go          5.01       134 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/evictheap_test.go               .go         11.23       336 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/interface.go                    .go          1.67        44 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/limbo.go                        .go          8.86       264 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/lookup.go                       .go          3.54       112 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/metrics.go                      .go          7.08       105 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/priority.go                     .go          3.18        81 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/priority_test.go                .go          3.24        87 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/slotter.go                      .go          4.34       119 blobpool     UTF-8 BOM
+core   core/txpool/blobpool/slotter_test.go                 .go          5.14       103 blobpool     UTF-8 BOM
+core   core/txpool/errors.go                                .go          3.58        77 txpool       UTF-8 BOM
+core   core/txpool/legacypool/legacypool.go                 .go         18.98       490 legacypool   UTF-8 BOM
+core   core/txpool/legacypool/legacypool_test.go            .go        102.26      2716 legacypool   UTF-8 BOM
+core   core/txpool/legacypool/legacypool2_test.go           .go          9.34       246 legacypool   UTF-8 BOM
+core   core/txpool/legacypool/list.go                       .go         22.45       693 legacypool   UTF-8 BOM
+core   core/txpool/legacypool/list_test.go                  .go          4.56       148 legacypool   UTF-8 BOM
+core   core/txpool/legacypool/noncer.go                     .go          2.69        91 legacypool   UTF-8 BOM
+core   core/txpool/legacypool/queue.go                      .go          8.65       282 legacypool   UTF-8 BOM
+core   core/txpool/locals/errors.go                         .go          1.54        46 locals       UTF-8 BOM
+core   core/txpool/locals/journal.go                        .go          5.63       204 locals       UTF-8 BOM
+core   core/txpool/locals/tx_tracker.go                     .go          6.71       226 locals       UTF-8 BOM
+core   core/txpool/locals/tx_tracker_test.go                .go          6.07       208 locals       UTF-8 BOM
+core   core/txpool/pricing/pricing.go                       .go          0.01         1 pricing      No BOM   
+core   core/txpool/pricing/pricing_test.go                  .go          0.01         1 pricing      No BOM   
+core   core/txpool/reserver.go                              .go          4.72       138 txpool       UTF-8 BOM
+core   core/txpool/subpool.go                               .go             8       186 txpool       UTF-8 BOM
+core   core/txpool/txpool.go                                .go         15.82       505 txpool       UTF-8 BOM
+core   core/txpool/txpool_test.go                           .go          0.01         1 txpool       No BOM   
+core   core/txpool/validation.go                            .go         13.14       304 txpool       UTF-8 BOM
+core   core/txpool/validation/validation.go                 .go          0.02         1 validation   No BOM   
+core   core/txpool/validation/validation_test.go            .go          0.02         1 validation   No BOM   
+core   core/txpool/validation_test.go                       .go          2.81       115 txpool       UTF-8 BOM
+core   core/types.go                                        .go          2.62        67 core         UTF-8 BOM
+core   core/types/account.go                                .go          2.67        83 types        UTF-8 BOM
+core   core/types/bal/bal.go                                .go           6.4       173 bal          UTF-8 BOM
+core   core/types/bal/bal_encoding.go                       .go         11.74       361 bal          UTF-8 BOM
+core   core/types/bal/bal_encoding_rlp_generated.go         .go          5.02       280 bal          UTF-8 BOM
+core   core/types/bal/bal_test.go                           .go          6.39       254 bal          UTF-8 BOM
+core   core/types/block.go                                  .go         18.14       575 types        UTF-8 BOM
+core   core/types/block/block.go                            .go          0.01         1 block        No BOM   
+core   core/types/block/block_test.go                       .go          0.01         1 block        No BOM   
+core   core/types/block_test.go                             .go         20.23       375 types        UTF-8 BOM
+core   core/types/bloom9.go                                 .go          4.77       163 types        UTF-8 BOM
+core   core/types/bloom9_test.go                            .go          4.67       195 types        UTF-8 BOM
+core   core/types/deposit.go                                .go          2.24        64 types        UTF-8 BOM
+core   core/types/deposit_test.go                           .go          3.08        95 types        UTF-8 BOM
+core   core/types/gen_access_tuple.go                       .go          1.12        43 types        UTF-8 BOM
+core   core/types/gen_account.go                            .go          1.79        67 types        UTF-8 BOM
+core   core/types/gen_account_rlp.go                        .go          0.41        21 types        UTF-8 BOM
+core   core/types/gen_authorization.go                      .go          2.33        75 types        UTF-8 BOM
+core   core/types/gen_header_json.go                        .go          7.07       185 types        UTF-8 BOM
+core   core/types/gen_header_rlp.go                         .go          2.34       109 types        UTF-8 BOM
+core   core/types/gen_log_json.go                           .go          2.92        96 types        UTF-8 BOM
+core   core/types/gen_log_rlp.go                            .go          0.38        20 types        UTF-8 BOM
+core   core/types/gen_receipt_json.go                       .go          4.41       128 types        UTF-8 BOM
+core   core/types/gen_withdrawal_json.go                    .go          1.29        55 types        UTF-8 BOM
+core   core/types/gen_withdrawal_rlp.go                     .go          0.35        17 types        UTF-8 BOM
+core   core/types/hashes.go                                 .go          2.28        51 types        UTF-8 BOM
+core   core/types/hashing.go                                .go          4.59       140 types        UTF-8 BOM
+core   core/types/hashing_test.go                           .go          7.49       249 types_test   UTF-8 BOM
+core   core/types/header/header.go                          .go          0.01         1 header       No BOM   
+core   core/types/header/header_test.go                     .go          0.01         1 header       No BOM   
+core   core/types/log.go                                    .go          3.37        95 types        UTF-8 BOM
+core   core/types/log_test.go                               .go          6.28       132 types        UTF-8 BOM
+core   core/types/receipt.go                                .go         14.04       456 types        UTF-8 BOM
+core   core/types/receipt/receipt.go                        .go          0.01         1 receipt      No BOM   
+core   core/types/receipt/receipt_test.go                   .go          0.01         1 receipt      No BOM   
+core   core/types/receipt_test.go                           .go         23.73       590 types        UTF-8 BOM
+core   core/types/rlp_fuzzer_test.go                        .go          2.93       147 types        UTF-8 BOM
+core   core/types/state_account.go                          .go          3.48       121 types        UTF-8 BOM
+core   core/types/transaction.go                            .go         20.36       707 types        UTF-8 BOM
+core   core/types/transaction/transaction.go                .go          0.02         1 transaction  No BOM   
+core   core/types/transaction/transaction_test.go           .go          0.02         1 transaction  No BOM   
+core   core/types/transaction_marshalling.go                .go         15.56       518 types        UTF-8 BOM
+core   core/types/transaction_signing.go                    .go          15.6       517 types        UTF-8 BOM
+core   core/types/transaction_signing_test.go               .go          8.28       227 types        UTF-8 BOM
+core   core/types/transaction_test.go                       .go         19.82       736 types        UTF-8 BOM
+core   core/types/tx_access_list.go                         .go          4.24       144 types        UTF-8 BOM
+core   core/types/tx_blob.go                                .go         12.41       440 types        UTF-8 BOM
+core   core/types/tx_blob_test.go                           .go          3.48       107 types        UTF-8 BOM
+core   core/types/tx_dynamic_fee.go                         .go          3.76       141 types        UTF-8 BOM
+core   core/types/tx_legacy.go                              .go          4.01       138 types        UTF-8 BOM
+core   core/types/tx_setcode.go                             .go           7.1       246 types        UTF-8 BOM
+core   core/types/tx_setcode_test.go                        .go          1.89        70 types        UTF-8 BOM
+core   core/types/types.go                                  .go          0.01         1 types        No BOM   
+core   core/types/types_test.go                             .go           3.1       148 types        UTF-8 BOM
+core   core/types/withdrawal.go                             .go          2.37        63 types        UTF-8 BOM
+core   core/vm/analysis_legacy.go                           .go          3.28       129 vm           UTF-8 BOM
+core   core/vm/analysis_legacy_test.go                      .go          3.75       103 vm           UTF-8 BOM
+core   core/vm/common.go                                    .go          3.83       123 vm           UTF-8 BOM
+core   core/vm/contract.go                                  .go          5.49       172 vm           UTF-8 BOM
+core   core/vm/contracts_fuzz_test.go                       .go          1.49        50 vm           UTF-8 BOM
+core   core/vm/contracts_test.go                            .go         23.61       441 vm           UTF-8 BOM
+core   core/vm/doc.go                                       .go          1.01        24 vm           UTF-8 BOM
+core   core/vm/eip7610.go                                   .go          4.78       105 vm           UTF-8 BOM
+core   core/vm/eips.go                                      .go         16.18       602 vm           UTF-8 BOM
+core   core/vm/errors.go                                    .go          6.43       213 vm           UTF-8 BOM
+core   core/vm/evm.go                                       .go          27.5       720 vm           UTF-8 BOM
+core   core/vm/gas.go                                       .go          1.93        60 vm           UTF-8 BOM
+core   core/vm/gas_table.go                                 .go         18.29       512 vm           UTF-8 BOM
+core   core/vm/gas_table_test.go                            .go          7.29       193 vm           UTF-8 BOM
+core   core/vm/gascosts.go                                  .go          1.34        42 vm           UTF-8 BOM
+core   core/vm/instructions.go                              .go         33.77      1169 vm           UTF-8 BOM
+core   core/vm/instructions_test.go                         .go         37.76      1208 vm           UTF-8 BOM
+core   core/vm/interface.go                                 .go          3.78       104 vm           UTF-8 BOM
+core   core/vm/interpreter.go                               .go          8.77       268 vm           UTF-8 BOM
+core   core/vm/interpreter_test.go                          .go          3.04       102 vm           UTF-8 BOM
+core   core/vm/jump_table.go                                .go         26.67      1120 vm           UTF-8 BOM
+core   core/vm/jump_table_export.go                         .go          2.85        86 vm           UTF-8 BOM
+core   core/vm/jump_table_test.go                           .go          1.42        41 vm           UTF-8 BOM
+core   core/vm/jumpdests.go                                 .go           1.9        53 vm           UTF-8 BOM
+core   core/vm/memory.go                                    .go           3.8       138 vm           UTF-8 BOM
+core   core/vm/memory/memory.go                             .go          0.01         1 memory       No BOM   
+core   core/vm/memory/memory_test.go                        .go          0.01         1 memory       No BOM   
+core   core/vm/memory_table.go                              .go          3.32       129 vm           UTF-8 BOM
+core   core/vm/memory_test.go                               .go           3.1        98 vm           UTF-8 BOM
+core   core/vm/opcodes.go                                   .go         13.59       649 vm           UTF-8 BOM
+core   core/vm/operations_acl.go                            .go         14.53       354 vm           UTF-8 BOM
+core   core/vm/operations_verkle.go                         .go          8.44       215 vm           UTF-8 BOM
+core   core/vm/precompile/precompile.go                     .go          0.02         1 precompile   No BOM   
+core   core/vm/precompile/precompile_test.go                .go          0.02         1 precompile   No BOM   
+core   core/vm/program/program.go                           .go         12.81       431 program      UTF-8 BOM
+core   core/vm/program/program_test.go                      .go          8.62       311 program      UTF-8 BOM
+core   core/vm/program/readme.md                            .md          1.34        28              UTF-8 BOM
+core   core/vm/runtime/doc.go                               .go          0.84        18 runtime      UTF-8 BOM
+core   core/vm/runtime/env.go                               .go          1.47        48 runtime      UTF-8 BOM
+core   core/vm/runtime/runtime.go                           .go          7.44       227 runtime      UTF-8 BOM
+core   core/vm/runtime/runtime_example_test.go              .go          1.09        34 runtime_test UTF-8 BOM
+core   core/vm/runtime/runtime_fuzz_test.go                 .go          0.92        29 runtime      UTF-8 BOM
+core   core/vm/runtime/runtime_test.go                      .go          6.76       175 runtime      UTF-8 BOM
+core   core/vm/stack.go                                     .go          3.88       133 vm           UTF-8 BOM
+core   core/vm/stack/stack.go                               .go          0.01         1 stack        No BOM   
+core   core/vm/stack/stack_test.go                          .go          0.01         1 stack        No BOM   
+core   core/vm/stack_table.go                               .go          1.37        49 vm           UTF-8 BOM
+core   core/vm/testdata/precompiles/blake2F.json            .json        3.28        37              UTF-8 BOM
+core   core/vm/testdata/precompiles/blsG1Add.json           .json        4.38        36              UTF-8 BOM
+core   core/vm/testdata/precompiles/blsG1Mul.json           .json        7.63        79              UTF-8 BOM
+core   core/vm/testdata/precompiles/blsMapG1.json           .json         1.5        23              UTF-8 BOM
+core   core/vm/testdata/precompiles/blsPairing.json         .json       22.23        60              UTF-8 BOM
+core   core/vm/testdata/precompiles/bn256Add.json           .json        7.85       114              UTF-8 BOM
+core   core/vm/testdata/precompiles/bn256Pairing.json       .json       17.92       100              UTF-8 BOM
+core   core/vm/testdata/precompiles/bn256ScalarMul.json     .json        8.11       135              UTF-8 BOM
+core   core/vm/testdata/precompiles/ecRecover.json          .json        2.01        37              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blake2f.json       .json        3.21        32              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blsG1Mul.json      .json        2.72        37              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blsG1MultiExp.json .json        3.07        37              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blsG2Add.json      .json        5.71        32              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blsG2Mul.json      .json        4.22        37              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blsMapG1.json      .json        1.07        27              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blsMapG2.json      .json        1.58        27              UTF-8 BOM
+core   core/vm/testdata/precompiles/fail-blsPairing.json    .json       13.11        47              UTF-8 BOM
+core   core/vm/testdata/precompiles/modexp.json             .json       40.59       121              UTF-8 BOM
+core   core/vm/testdata/precompiles/modexp_eip7883.json     .json        1.38        16              UTF-8 BOM
+core   core/vm/testdata/precompiles/pointEvaluation.json    .json        0.62         9              UTF-8 BOM
+core   core/vm/testdata/testcases_add.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_and.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_byte.json                 .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_div.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_eq.json                   .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_gt.json                   .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_lt.json                   .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_mod.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_mul.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_or.json                   .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_sar.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_sdiv.json                 .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_sgt.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_shl.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_shr.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_signext.json              .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_slt.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_smod.json                 .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_sub.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/testdata/testcases_xor.json                  .json       19.47       407              UTF-8 BOM
+core   core/vm/tracer/tracer.go                             .go          0.01         1 tracer       No BOM   
+core   core/vm/tracer/tracer_test.go                        .go          0.01         1 tracer       No BOM   
+core   core/vm/vm.go                                        .go          0.01         1 vm           No BOM   
+core   core/vm/vm_test.go                                   .go          0.01         1 vm           No BOM   
+
+
+

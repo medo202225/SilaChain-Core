@@ -1,0 +1,452 @@
+﻿Folder PATH listing
+Volume serial number is 8859-EA03
+C:\USERS\AHMED IBRAHIM\DESKTOP\SILACHAIN\CORE
+?   .gitignore
+?   bench_test.go
+?   bintrie_witness_test.go
+?   blockchain.go
+?   blockchain_insert.go
+?   blockchain_reader.go
+?   blockchain_repair_test.go
+?   blockchain_sethead_test.go
+?   blockchain_snapshot_test.go
+?   blockchain_stats.go
+?   blockchain_test.go
+?   block_validator.go
+?   block_validator_test.go
+?   chain_makers.go
+?   chain_makers_test.go
+?   dao_test.go
+?   error.go
+?   eth_transfer_logs_test.go
+?   events.go
+?   evm.go
+?   gaspool.go
+?   genesis.go
+?   genesis_test.go
+?   gen_genesis.go
+?   headerchain.go
+?   headerchain_test.go
+?   mkalloc.go
+?   rlp_test.go
+?   sender_cacher.go
+?   stateless.go
+?   state_prefetcher.go
+?   state_processor.go
+?   state_processor_test.go
+?   state_transition.go
+?   txindexer.go
+?   txindexer_test.go
+?   types.go
+?   
+????bloombits
+?       bloombits.go
+?       bloombits_test.go
+?       
+????filtermaps
+?       chain_view.go
+?       checkpoints.go
+?       checkpoints_holesky.json
+?       checkpoints_hoodi.json
+?       checkpoints_mainnet.json
+?       checkpoints_sepolia.json
+?       filtermaps.go
+?       indexer.go
+?       indexer_test.go
+?       map_renderer.go
+?       matcher.go
+?       matcher_backend.go
+?       matcher_test.go
+?       math.go
+?       math_test.go
+?       
+????forkchoice
+?       forkchoice.go
+?       forkchoice_test.go
+?       
+????forkid
+?       forkid.go
+?       forkid_test.go
+?       
+????history
+?       historymode.go
+?       historymode_test.go
+?       
+????overlay
+?       state_transition.go
+?       
+????rawdb
+?   ?   accessors_chain.go
+?   ?   accessors_chain_test.go
+?   ?   accessors_history.go
+?   ?   accessors_indexes.go
+?   ?   accessors_indexes_test.go
+?   ?   accessors_metadata.go
+?   ?   accessors_overlay.go
+?   ?   accessors_snapshot.go
+?   ?   accessors_state.go
+?   ?   accessors_sync.go
+?   ?   accessors_trie.go
+?   ?   ancient_scheme.go
+?   ?   ancient_utils.go
+?   ?   chain_freezer.go
+?   ?   chain_iterator.go
+?   ?   chain_iterator_test.go
+?   ?   database.go
+?   ?   freezer.go
+?   ?   freezer_batch.go
+?   ?   freezer_memory.go
+?   ?   freezer_memory_test.go
+?   ?   freezer_meta.go
+?   ?   freezer_meta_test.go
+?   ?   freezer_resettable.go
+?   ?   freezer_resettable_test.go
+?   ?   freezer_table.go
+?   ?   freezer_table_test.go
+?   ?   freezer_test.go
+?   ?   freezer_utils.go
+?   ?   freezer_utils_test.go
+?   ?   freezer_utils_unix.go
+?   ?   freezer_utils_windows.go
+?   ?   key_length_iterator.go
+?   ?   key_length_iterator_test.go
+?   ?   rawdb.go
+?   ?   rawdb_test.go
+?   ?   schema.go
+?   ?   table.go
+?   ?   table_test.go
+?   ?   
+?   ????accessors
+?   ?       accessors.go
+?   ?       accessors_test.go
+?   ?       
+?   ????ancients
+?   ?       ancients.go
+?   ?       ancients_test.go
+?   ?       
+?   ????ancienttest
+?   ?       testsuite.go
+?   ?       
+?   ????eradb
+?   ?       eradb.go
+?   ?       eradb_test.go
+?   ?       
+?   ????schema
+?           schema.go
+?           schema_test.go
+?           
+????state
+?   ?   access_events.go
+?   ?   access_events_test.go
+?   ?   access_list.go
+?   ?   database.go
+?   ?   database_code.go
+?   ?   database_history.go
+?   ?   database_iterator.go
+?   ?   database_iterator_test.go
+?   ?   dump.go
+?   ?   iterator.go
+?   ?   iterator_test.go
+?   ?   journal.go
+?   ?   metrics.go
+?   ?   reader.go
+?   ?   reader_stater.go
+?   ?   statedb.go
+?   ?   statedb_fuzz_test.go
+?   ?   statedb_hooked.go
+?   ?   statedb_hooked_test.go
+?   ?   statedb_test.go
+?   ?   stateupdate.go
+?   ?   state_object.go
+?   ?   state_object_test.go
+?   ?   state_sizer.go
+?   ?   state_sizer_test.go
+?   ?   state_test.go
+?   ?   sync.go
+?   ?   sync_test.go
+?   ?   transient_storage.go
+?   ?   trie_prefetcher.go
+?   ?   trie_prefetcher_test.go
+?   ?   
+?   ????pruner
+?   ?       bloom.go
+?   ?       pruner.go
+?   ?       
+?   ????snapshot
+?           context.go
+?           conversion.go
+?           difflayer.go
+?           difflayer_test.go
+?           disklayer.go
+?           disklayer_test.go
+?           generate.go
+?           generate_test.go
+?           holdable_iterator.go
+?           holdable_iterator_test.go
+?           iterator.go
+?           iterator_binary.go
+?           iterator_fast.go
+?           iterator_test.go
+?           journal.go
+?           metrics.go
+?           snapshot.go
+?           snapshot_test.go
+?           utils.go
+?           
+????stateless
+?       database.go
+?       encoding.go
+?       stateless.go
+?       stateless_test.go
+?       stats.go
+?       witness.go
+?       
+????tracing
+?   ?   CHANGELOG.md
+?   ?   gen_code_change_reason_stringer.go
+?   ?   gen_gas_change_reason_stringer.go
+?   ?   gen_nonce_change_reason_stringer.go
+?   ?   hooks.go
+?   ?   journal.go
+?   ?   journal_test.go
+?   ?   tracing.go
+?   ?   tracing_test.go
+?   ?   
+?   ????hooks
+?   ?       hooks.go
+?   ?       hooks_test.go
+?   ?       
+?   ????logger
+?   ?       logger.go
+?   ?       logger_test.go
+?   ?       
+?   ????types
+?           types.go
+?           types_test.go
+?           
+????txindexer
+?       txindexer.go
+?       txindexer_test.go
+?       
+????txpool
+?   ?   errors.go
+?   ?   reserver.go
+?   ?   subpool.go
+?   ?   txpool.go
+?   ?   txpool_test.go
+?   ?   validation.go
+?   ?   validation_test.go
+?   ?   
+?   ????blobpool
+?   ?       blobpool.go
+?   ?       blobpool_test.go
+?   ?       config.go
+?   ?       evictheap.go
+?   ?       evictheap_test.go
+?   ?       interface.go
+?   ?       limbo.go
+?   ?       lookup.go
+?   ?       metrics.go
+?   ?       priority.go
+?   ?       priority_test.go
+?   ?       slotter.go
+?   ?       slotter_test.go
+?   ?       
+?   ????legacypool
+?   ?       legacypool.go
+?   ?       legacypool2_test.go
+?   ?       legacypool_test.go
+?   ?       list.go
+?   ?       list_test.go
+?   ?       noncer.go
+?   ?       queue.go
+?   ?       
+?   ????locals
+?   ?       errors.go
+?   ?       journal.go
+?   ?       tx_tracker.go
+?   ?       tx_tracker_test.go
+?   ?       
+?   ????pricing
+?   ?       pricing.go
+?   ?       pricing_test.go
+?   ?       
+?   ????validation
+?           validation.go
+?           validation_test.go
+?           
+????types
+?   ?   account.go
+?   ?   block.go
+?   ?   block_test.go
+?   ?   bloom9.go
+?   ?   bloom9_test.go
+?   ?   deposit.go
+?   ?   deposit_test.go
+?   ?   gen_access_tuple.go
+?   ?   gen_account.go
+?   ?   gen_account_rlp.go
+?   ?   gen_authorization.go
+?   ?   gen_header_json.go
+?   ?   gen_header_rlp.go
+?   ?   gen_log_json.go
+?   ?   gen_log_rlp.go
+?   ?   gen_receipt_json.go
+?   ?   gen_withdrawal_json.go
+?   ?   gen_withdrawal_rlp.go
+?   ?   hashes.go
+?   ?   hashing.go
+?   ?   hashing_test.go
+?   ?   log.go
+?   ?   log_test.go
+?   ?   receipt.go
+?   ?   receipt_test.go
+?   ?   rlp_fuzzer_test.go
+?   ?   state_account.go
+?   ?   transaction.go
+?   ?   transaction_marshalling.go
+?   ?   transaction_signing.go
+?   ?   transaction_signing_test.go
+?   ?   transaction_test.go
+?   ?   tx_access_list.go
+?   ?   tx_blob.go
+?   ?   tx_blob_test.go
+?   ?   tx_dynamic_fee.go
+?   ?   tx_legacy.go
+?   ?   tx_setcode.go
+?   ?   tx_setcode_test.go
+?   ?   types.go
+?   ?   types_test.go
+?   ?   withdrawal.go
+?   ?   
+?   ????bal
+?   ?       bal.go
+?   ?       bal_encoding.go
+?   ?       bal_encoding_rlp_generated.go
+?   ?       bal_test.go
+?   ?       
+?   ????block
+?   ?       block.go
+?   ?       block_test.go
+?   ?       
+?   ????header
+?   ?       header.go
+?   ?       header_test.go
+?   ?       
+?   ????receipt
+?   ?       receipt.go
+?   ?       receipt_test.go
+?   ?       
+?   ????transaction
+?           transaction.go
+?           transaction_test.go
+?           
+????vm
+    ?   analysis_legacy.go
+    ?   analysis_legacy_test.go
+    ?   common.go
+    ?   contract.go
+    ?   contracts_fuzz_test.go
+    ?   contracts_test.go
+    ?   doc.go
+    ?   eip7610.go
+    ?   eips.go
+    ?   errors.go
+    ?   evm.go
+    ?   gas.go
+    ?   gascosts.go
+    ?   gas_table.go
+    ?   gas_table_test.go
+    ?   instructions.go
+    ?   instructions_test.go
+    ?   interface.go
+    ?   interpreter.go
+    ?   interpreter_test.go
+    ?   jumpdests.go
+    ?   jump_table.go
+    ?   jump_table_export.go
+    ?   jump_table_test.go
+    ?   memory.go
+    ?   memory_table.go
+    ?   memory_test.go
+    ?   opcodes.go
+    ?   operations_acl.go
+    ?   operations_verkle.go
+    ?   stack.go
+    ?   stack_table.go
+    ?   vm.go
+    ?   vm_test.go
+    ?   
+    ????memory
+    ?       memory.go
+    ?       memory_test.go
+    ?       
+    ????precompile
+    ?       precompile.go
+    ?       precompile_test.go
+    ?       
+    ????program
+    ?       program.go
+    ?       program_test.go
+    ?       readme.md
+    ?       
+    ????runtime
+    ?       doc.go
+    ?       env.go
+    ?       runtime.go
+    ?       runtime_example_test.go
+    ?       runtime_fuzz_test.go
+    ?       runtime_test.go
+    ?       
+    ????stack
+    ?       stack.go
+    ?       stack_test.go
+    ?       
+    ????testdata
+    ?   ?   testcases_add.json
+    ?   ?   testcases_and.json
+    ?   ?   testcases_byte.json
+    ?   ?   testcases_div.json
+    ?   ?   testcases_eq.json
+    ?   ?   testcases_gt.json
+    ?   ?   testcases_lt.json
+    ?   ?   testcases_mod.json
+    ?   ?   testcases_mul.json
+    ?   ?   testcases_or.json
+    ?   ?   testcases_sar.json
+    ?   ?   testcases_sdiv.json
+    ?   ?   testcases_sgt.json
+    ?   ?   testcases_shl.json
+    ?   ?   testcases_shr.json
+    ?   ?   testcases_signext.json
+    ?   ?   testcases_slt.json
+    ?   ?   testcases_smod.json
+    ?   ?   testcases_sub.json
+    ?   ?   testcases_xor.json
+    ?   ?   
+    ?   ????precompiles
+    ?           blake2F.json
+    ?           blsG1Add.json
+    ?           blsG1Mul.json
+    ?           blsMapG1.json
+    ?           blsPairing.json
+    ?           bn256Add.json
+    ?           bn256Pairing.json
+    ?           bn256ScalarMul.json
+    ?           ecRecover.json
+    ?           fail-blake2f.json
+    ?           fail-blsG1Mul.json
+    ?           fail-blsG1MultiExp.json
+    ?           fail-blsG2Add.json
+    ?           fail-blsG2Mul.json
+    ?           fail-blsMapG1.json
+    ?           fail-blsMapG2.json
+    ?           fail-blsPairing.json
+    ?           modexp.json
+    ?           modexp_eip7883.json
+    ?           pointEvaluation.json
+    ?           
+    ????tracer
+            tracer.go
+            tracer_test.go
+            
