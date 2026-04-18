@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,90 +17,90 @@
 package overlay
 
 import (
-"bytes"
-"encoding/gob"
+	"bytes"
+	"encoding/gob"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/rawdb"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/log"
+	"silachain/common"
+	"silachain/core/rawdb"
+	"silachain/ethdb"
+	"silachain/log"
 )
 
 // TransitionState is a structure that holds the progress markers of the
 // translation process.
 type TransitionState struct {
-CurrentAccountAddress *common.Address // address of the last translated account
-CurrentSlotHash       common.Hash     // hash of the last translated storage slot
-CurrentPreimageOffset int64           // next byte to read from the preimage file
-Started, Ended        bool
+	CurrentAccountAddress *common.Address // address of the last translated account
+	CurrentSlotHash       common.Hash     // hash of the last translated storage slot
+	CurrentPreimageOffset int64           // next byte to read from the preimage file
+	Started, Ended        bool
 
-// Mark whether the storage for an account has been processed. This is useful if the
-// maximum number of leaves of the conversion is reached before the whole storage is
-// processed.
-StorageProcessed bool
+	// Mark whether the storage for an account has been processed. This is useful if the
+	// maximum number of leaves of the conversion is reached before the whole storage is
+	// processed.
+	StorageProcessed bool
 
-BaseRoot common.Hash // hash of the last read-only MPT base tree
+	BaseRoot common.Hash // hash of the last read-only MPT base tree
 }
 
 // InTransition returns true if the translation process is in progress.
 func (ts *TransitionState) InTransition() bool {
-return ts != nil && ts.Started && !ts.Ended
+	return ts != nil && ts.Started && !ts.Ended
 }
 
 // Transitioned returns true if the translation process has been completed.
 func (ts *TransitionState) Transitioned() bool {
-return ts != nil && ts.Ended
+	return ts != nil && ts.Ended
 }
 
 // Copy returns a deep copy of the TransitionState object.
 func (ts *TransitionState) Copy() *TransitionState {
-ret := &TransitionState{
-Started:               ts.Started,
-Ended:                 ts.Ended,
-CurrentSlotHash:       ts.CurrentSlotHash,
-CurrentPreimageOffset: ts.CurrentPreimageOffset,
-StorageProcessed:      ts.StorageProcessed,
-BaseRoot:              ts.BaseRoot,
-}
-if ts.CurrentAccountAddress != nil {
-addr := *ts.CurrentAccountAddress
-ret.CurrentAccountAddress = &addr
-}
-return ret
+	ret := &TransitionState{
+		Started:               ts.Started,
+		Ended:                 ts.Ended,
+		CurrentSlotHash:       ts.CurrentSlotHash,
+		CurrentPreimageOffset: ts.CurrentPreimageOffset,
+		StorageProcessed:      ts.StorageProcessed,
+		BaseRoot:              ts.BaseRoot,
+	}
+	if ts.CurrentAccountAddress != nil {
+		addr := *ts.CurrentAccountAddress
+		ret.CurrentAccountAddress = &addr
+	}
+	return ret
 }
 
 // LoadTransitionState retrieves the overlay transition state associated with
 // the given state root hash from the database.
 func LoadTransitionState(db ethdb.KeyValueReader, root common.Hash, isOverlay bool) *TransitionState {
-var ts *TransitionState
+	var ts *TransitionState
 
-data, _ := rawdb.ReadOverlayTransitionState(db, root)
+	data, _ := rawdb.ReadOverlayTransitionState(db, root)
 
-// if a state could be read from the db, attempt to decode it
-if len(data) > 0 {
-var (
-newts TransitionState
-buf   = bytes.NewBuffer(data[:])
-dec   = gob.NewDecoder(buf)
-)
-// Decode transition state
-err := dec.Decode(&newts)
-if err != nil {
-log.Error("failed to decode transition state", "err", err)
-return nil
-}
-ts = &newts
-}
+	// if a state could be read from the db, attempt to decode it
+	if len(data) > 0 {
+		var (
+			newts TransitionState
+			buf   = bytes.NewBuffer(data[:])
+			dec   = gob.NewDecoder(buf)
+		)
+		// Decode transition state
+		err := dec.Decode(&newts)
+		if err != nil {
+			log.Error("failed to decode transition state", "err", err)
+			return nil
+		}
+		ts = &newts
+	}
 
-// Fallback that should only happen before the transition
-if ts == nil {
-// Initialize the first transition state, with the "ended"
-// field set to true if the database was created
-// as an overlay database.
-log.Debug("no transition state found, starting fresh", "overlay", isOverlay)
+	// Fallback that should only happen before the transition
+	if ts == nil {
+		// Initialize the first transition state, with the "ended"
+		// field set to true if the database was created
+		// as an overlay database.
+		log.Debug("no transition state found, starting fresh", "overlay", isOverlay)
 
-// Start with a fresh state
-ts = &TransitionState{Ended: isOverlay}
-}
-return ts
+		// Start with a fresh state
+		ts = &TransitionState{Ended: isOverlay}
+	}
+	return ts
 }

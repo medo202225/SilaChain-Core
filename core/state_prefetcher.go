@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -24,16 +24,16 @@ the state caches before actual execution.
 package core
 
 import (
-"bytes"
-"runtime"
-"sync/atomic"
+	"bytes"
+	"runtime"
+	"sync/atomic"
 
-"github.com/silachain/sila-library/common"
-"github.com/silachain/sila-library/core/state"
-"github.com/silachain/sila-library/core/types"
-"github.com/silachain/sila-library/core/vm"
-"github.com/silachain/sila-library/params"
-"golang.org/x/sync/errgroup"
+	"golang.org/x/sync/errgroup"
+	"silachain/common"
+	"silachain/core/state"
+	"silachain/core/types"
+	"silachain/core/vm"
+	"silachain/params"
 )
 
 // statePrefetcher is a basic Prefetcher that executes transactions from a block
@@ -41,89 +41,89 @@ import (
 // from disk. Transactions are executed in parallel to fully leverage the
 // SSD's read performance.
 type statePrefetcher struct {
-config *params.ChainConfig // Chain configuration options
-chain  *HeaderChain        // Canonical block chain
+	config *params.ChainConfig // Chain configuration options
+	chain  *HeaderChain        // Canonical block chain
 }
 
 // newStatePrefetcher initialises a new statePrefetcher.
 func newStatePrefetcher(config *params.ChainConfig, chain *HeaderChain) *statePrefetcher {
-return &statePrefetcher{
-config: config,
-chain:  chain,
-}
+	return &statePrefetcher{
+		config: config,
+		chain:  chain,
+	}
 }
 
 // Prefetch processes the state changes according to the SILA rules by running
 // the transaction messages using the statedb, but any changes are discarded. The
 // only goal is to warm the state caches.
 func (p *statePrefetcher) Prefetch(block *types.Block, statedb *state.StateDB, cfg vm.Config, interrupt *atomic.Bool) {
-var (
-fails   atomic.Int64
-header  = block.Header()
-signer  = types.MakeSigner(p.config, header.Number, header.Time)
-workers errgroup.Group
-reader  = statedb.Reader()
-)
-workers.SetLimit(max(1, 4*runtime.NumCPU()/5)) // Aggressively run the prefetching
+	var (
+		fails   atomic.Int64
+		header  = block.Header()
+		signer  = types.MakeSigner(p.config, header.Number, header.Time)
+		workers errgroup.Group
+		reader  = statedb.Reader()
+	)
+	workers.SetLimit(max(1, 4*runtime.NumCPU()/5)) // Aggressively run the prefetching
 
-// Iterate over and process the individual transactions
-for i, tx := range block.Transactions() {
-stateCpy := statedb.Copy() // closure
-workers.Go(func() error {
-// If block precaching was interrupted, abort
-if interrupt != nil && interrupt.Load() {
-return nil
-}
-// Preload the touched accounts and storage slots in advance
-sender, err := types.Sender(signer, tx)
-if err != nil {
-fails.Add(1)
-return nil
-}
-reader.Account(sender)
+	// Iterate over and process the individual transactions
+	for i, tx := range block.Transactions() {
+		stateCpy := statedb.Copy() // closure
+		workers.Go(func() error {
+			// If block precaching was interrupted, abort
+			if interrupt != nil && interrupt.Load() {
+				return nil
+			}
+			// Preload the touched accounts and storage slots in advance
+			sender, err := types.Sender(signer, tx)
+			if err != nil {
+				fails.Add(1)
+				return nil
+			}
+			reader.Account(sender)
 
-if tx.To() != nil {
-account, _ := reader.Account(*tx.To())
+			if tx.To() != nil {
+				account, _ := reader.Account(*tx.To())
 
-// Preload the contract code if the destination has non-empty code
-if account != nil && !bytes.Equal(account.CodeHash, types.EmptyCodeHash.Bytes()) {
-reader.Code(*tx.To(), common.BytesToHash(account.CodeHash))
-}
-}
-for _, list := range tx.AccessList() {
-reader.Account(list.Address)
-if len(list.StorageKeys) > 0 {
-for _, slot := range list.StorageKeys {
-reader.Storage(list.Address, slot)
-}
-}
-}
-// Execute the message to preload the implicit touched states
-evm := vm.NewEVM(NewEVMBlockContext(header, p.chain, nil), stateCpy, p.config, cfg)
+				// Preload the contract code if the destination has non-empty code
+				if account != nil && !bytes.Equal(account.CodeHash, types.EmptyCodeHash.Bytes()) {
+					reader.Code(*tx.To(), common.BytesToHash(account.CodeHash))
+				}
+			}
+			for _, list := range tx.AccessList() {
+				reader.Account(list.Address)
+				if len(list.StorageKeys) > 0 {
+					for _, slot := range list.StorageKeys {
+						reader.Storage(list.Address, slot)
+					}
+				}
+			}
+			// Execute the message to preload the implicit touched states
+			evm := vm.NewEVM(NewEVMBlockContext(header, p.chain, nil), stateCpy, p.config, cfg)
 
-// Convert the transaction into an executable message and pre-cache its sender
-msg, err := TransactionToMessage(tx, signer, header.BaseFee)
-if err != nil {
-fails.Add(1)
-return nil // Also invalid block, bail out
-}
-// Disable the nonce check
-msg.SkipNonceChecks = true
+			// Convert the transaction into an executable message and pre-cache its sender
+			msg, err := TransactionToMessage(tx, signer, header.BaseFee)
+			if err != nil {
+				fails.Add(1)
+				return nil // Also invalid block, bail out
+			}
+			// Disable the nonce check
+			msg.SkipNonceChecks = true
 
-stateCpy.SetTxContext(tx.Hash(), i)
+			stateCpy.SetTxContext(tx.Hash(), i)
 
-// We attempt to apply a transaction. The goal is not to execute
-// the transaction successfully, rather to warm up touched data slots.
-if _, err := ApplyMessage(evm, msg, nil); err != nil {
-fails.Add(1)
-return nil // Ugh, something went horribly wrong, bail out
-}
-return nil
-})
-}
-workers.Wait()
+			// We attempt to apply a transaction. The goal is not to execute
+			// the transaction successfully, rather to warm up touched data slots.
+			if _, err := ApplyMessage(evm, msg, nil); err != nil {
+				fails.Add(1)
+				return nil // Ugh, something went horribly wrong, bail out
+			}
+			return nil
+		})
+	}
+	workers.Wait()
 
-blockPrefetchTxsValidMeter.Mark(int64(len(block.Transactions())) - fails.Load())
-blockPrefetchTxsInvalidMeter.Mark(fails.Load())
-return
+	blockPrefetchTxsValidMeter.Mark(int64(len(block.Transactions())) - fails.Load())
+	blockPrefetchTxsInvalidMeter.Mark(fails.Load())
+	return
 }

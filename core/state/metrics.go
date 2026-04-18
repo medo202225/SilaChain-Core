@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -16,17 +16,17 @@
 
 package state
 
-import "github.com/SILA/sila-chain/metrics"
+import "silachain/metrics"
 
 var (
-accountReadMeters        = metrics.NewRegisteredMeter("sila/state/read/account", nil)
-storageReadMeters        = metrics.NewRegisteredMeter("sila/state/read/storage", nil)
-accountUpdatedMeter      = metrics.NewRegisteredMeter("sila/state/update/account", nil)
-storageUpdatedMeter      = metrics.NewRegisteredMeter("sila/state/update/storage", nil)
-accountDeletedMeter      = metrics.NewRegisteredMeter("sila/state/delete/account", nil)
-storageDeletedMeter      = metrics.NewRegisteredMeter("sila/state/delete/storage", nil)
-accountTrieUpdatedMeter  = metrics.NewRegisteredMeter("sila/state/update/accountnodes", nil)
-storageTriesUpdatedMeter = metrics.NewRegisteredMeter("sila/state/update/storagenodes", nil)
-accountTrieDeletedMeter  = metrics.NewRegisteredMeter("sila/state/delete/accountnodes", nil)
-storageTriesDeletedMeter = metrics.NewRegisteredMeter("sila/state/delete/storagenodes", nil)
+	accountReadMeters        = metrics.NewRegisteredMeter("sila/state/read/account", nil)
+	storageReadMeters        = metrics.NewRegisteredMeter("sila/state/read/storage", nil)
+	accountUpdatedMeter      = metrics.NewRegisteredMeter("sila/state/update/account", nil)
+	storageUpdatedMeter      = metrics.NewRegisteredMeter("sila/state/update/storage", nil)
+	accountDeletedMeter      = metrics.NewRegisteredMeter("sila/state/delete/account", nil)
+	storageDeletedMeter      = metrics.NewRegisteredMeter("sila/state/delete/storage", nil)
+	accountTrieUpdatedMeter  = metrics.NewRegisteredMeter("sila/state/update/accountnodes", nil)
+	storageTriesUpdatedMeter = metrics.NewRegisteredMeter("sila/state/update/storagenodes", nil)
+	accountTrieDeletedMeter  = metrics.NewRegisteredMeter("sila/state/delete/accountnodes", nil)
+	storageTriesDeletedMeter = metrics.NewRegisteredMeter("sila/state/delete/storagenodes", nil)
 )

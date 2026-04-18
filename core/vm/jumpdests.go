@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -22,16 +22,16 @@ allowing efficient reuse of analysis across multiple contract executions.
 */
 package vm
 
-import "github.com/silachain/sila-library/common"
+import "silachain/common"
 
 // JumpDestCache represents the cache of jumpdest analysis results.
 type JumpDestCache interface {
-// Load retrieves the cached jumpdest analysis for the given code hash.
-// Returns the BitVec and true if found, or nil and false if not cached.
-Load(codeHash common.Hash) (BitVec, bool)
+	// Load retrieves the cached jumpdest analysis for the given code hash.
+	// Returns the BitVec and true if found, or nil and false if not cached.
+	Load(codeHash common.Hash) (BitVec, bool)
 
-// Store saves the jumpdest analysis for the given code hash.
-Store(codeHash common.Hash, vec BitVec)
+	// Store saves the jumpdest analysis for the given code hash.
+	Store(codeHash common.Hash, vec BitVec)
 }
 
 // mapJumpDests is the default implementation of JumpDests using a map.
@@ -40,14 +40,14 @@ type mapJumpDests map[common.Hash]BitVec
 
 // newMapJumpDests creates a new map-based JumpDests implementation.
 func newMapJumpDests() JumpDestCache {
-return make(mapJumpDests)
+	return make(mapJumpDests)
 }
 
 func (j mapJumpDests) Load(codeHash common.Hash) (BitVec, bool) {
-vec, ok := j[codeHash]
-return vec, ok
+	vec, ok := j[codeHash]
+	return vec, ok
 }
 
 func (j mapJumpDests) Store(codeHash common.Hash, vec BitVec) {
-j[codeHash] = vec
+	j[codeHash] = vec
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,126 +17,126 @@
 package state
 
 import (
-"math"
-"testing"
+	"math"
+	"testing"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/params"
+	"silachain/common"
+	"silachain/params"
 )
 
 var (
-testAddr  [20]byte
-testAddr2 [20]byte
+	testAddr  [20]byte
+	testAddr2 [20]byte
 )
 
 func init() {
-for i := byte(0); i < 20; i++ {
-testAddr[i] = i
-testAddr[2] = 2 * i
-}
+	for i := byte(0); i < 20; i++ {
+		testAddr[i] = i
+		testAddr[2] = 2 * i
+	}
 }
 
 // TestAccountHeaderGas - SILA test for account header gas costs
 func TestAccountHeaderGas(t *testing.T) {
-ae := NewAccessEvents()
+	ae := NewAccessEvents()
 
-// Check cold read cost
-gas := ae.BasicDataGas(testAddr, false, math.MaxUint64, false)
-if want := params.WitnessBranchReadCost + params.WitnessChunkReadCost; gas != want {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
-}
+	// Check cold read cost
+	gas := ae.BasicDataGas(testAddr, false, math.MaxUint64, false)
+	if want := params.WitnessBranchReadCost + params.WitnessChunkReadCost; gas != want {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
+	}
 
-// Check warm read cost
-gas = ae.BasicDataGas(testAddr, false, math.MaxUint64, false)
-if gas != 0 {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
-}
+	// Check warm read cost
+	gas = ae.BasicDataGas(testAddr, false, math.MaxUint64, false)
+	if gas != 0 {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
+	}
 
-// Check cold read costs in the same group no longer incur the branch read cost
-gas = ae.CodeHashGas(testAddr, false, math.MaxUint64, false)
-if gas != params.WitnessChunkReadCost {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WitnessChunkReadCost)
-}
+	// Check cold read costs in the same group no longer incur the branch read cost
+	gas = ae.CodeHashGas(testAddr, false, math.MaxUint64, false)
+	if gas != params.WitnessChunkReadCost {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WitnessChunkReadCost)
+	}
 
-// Check cold write cost
-gas = ae.BasicDataGas(testAddr, true, math.MaxUint64, false)
-if want := params.WitnessBranchWriteCost + params.WitnessChunkWriteCost; gas != want {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
-}
+	// Check cold write cost
+	gas = ae.BasicDataGas(testAddr, true, math.MaxUint64, false)
+	if want := params.WitnessBranchWriteCost + params.WitnessChunkWriteCost; gas != want {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
+	}
 
-// Check warm write cost
-gas = ae.BasicDataGas(testAddr, true, math.MaxUint64, false)
-if gas != 0 {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
-}
+	// Check warm write cost
+	gas = ae.BasicDataGas(testAddr, true, math.MaxUint64, false)
+	if gas != 0 {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
+	}
 
-// Check a write without a read charges both read and write costs
-gas = ae.BasicDataGas(testAddr2, true, math.MaxUint64, false)
-if want := params.WitnessBranchReadCost + params.WitnessBranchWriteCost + params.WitnessChunkWriteCost + params.WitnessChunkReadCost; gas != want {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
-}
+	// Check a write without a read charges both read and write costs
+	gas = ae.BasicDataGas(testAddr2, true, math.MaxUint64, false)
+	if want := params.WitnessBranchReadCost + params.WitnessBranchWriteCost + params.WitnessChunkWriteCost + params.WitnessChunkReadCost; gas != want {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
+	}
 
-// Check that a write followed by a read charges nothing
-gas = ae.BasicDataGas(testAddr2, false, math.MaxUint64, false)
-if gas != 0 {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
-}
+	// Check that a write followed by a read charges nothing
+	gas = ae.BasicDataGas(testAddr2, false, math.MaxUint64, false)
+	if gas != 0 {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
+	}
 
-// Check that reading a slot from the account header only charges the
-// chunk read cost.
-gas = ae.SlotGas(testAddr, common.Hash{}, false, math.MaxUint64, false)
-if gas != params.WitnessChunkReadCost {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WitnessChunkReadCost)
-}
+	// Check that reading a slot from the account header only charges the
+	// chunk read cost.
+	gas = ae.SlotGas(testAddr, common.Hash{}, false, math.MaxUint64, false)
+	if gas != params.WitnessChunkReadCost {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WitnessChunkReadCost)
+	}
 }
 
 // TestContractCreateInitGas checks that the gas cost of SILA contract creation is correctly
 // calculated.
 func TestContractCreateInitGas(t *testing.T) {
-ae := NewAccessEvents()
+	ae := NewAccessEvents()
 
-var testAddr [20]byte
-for i := byte(0); i < 20; i++ {
-testAddr[i] = i
-}
+	var testAddr [20]byte
+	for i := byte(0); i < 20; i++ {
+		testAddr[i] = i
+	}
 
-// Check cold read cost, without a value
-gas, _ := ae.ContractCreateInitGas(testAddr, math.MaxUint64)
-if want := params.WitnessBranchWriteCost + params.WitnessBranchReadCost + 2*params.WitnessChunkWriteCost + 2*params.WitnessChunkReadCost; gas != want {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
-}
+	// Check cold read cost, without a value
+	gas, _ := ae.ContractCreateInitGas(testAddr, math.MaxUint64)
+	if want := params.WitnessBranchWriteCost + params.WitnessBranchReadCost + 2*params.WitnessChunkWriteCost + 2*params.WitnessChunkReadCost; gas != want {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
+	}
 
-// Check warm read cost
-gas, _ = ae.ContractCreateInitGas(testAddr, math.MaxUint64)
-if gas != 0 {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
-}
+	// Check warm read cost
+	gas, _ = ae.ContractCreateInitGas(testAddr, math.MaxUint64)
+	if gas != 0 {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
+	}
 }
 
 // TestMessageCallGas checks that the gas cost of SILA message calls is correctly
 // calculated.
 func TestMessageCallGas(t *testing.T) {
-ae := NewAccessEvents()
+	ae := NewAccessEvents()
 
-// Check cold read cost, without a value
-gas := ae.MessageCallGas(testAddr, math.MaxUint64)
-if want := params.WitnessBranchReadCost + params.WitnessChunkReadCost; gas != want {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
-}
+	// Check cold read cost, without a value
+	gas := ae.MessageCallGas(testAddr, math.MaxUint64)
+	if want := params.WitnessBranchReadCost + params.WitnessChunkReadCost; gas != want {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, want)
+	}
 
-// Check that reading the basic data and code hash of the same account does not incur the branch read cost
-gas = ae.BasicDataGas(testAddr, false, math.MaxUint64, false)
-if gas != 0 {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
-}
-gas = ae.CodeHashGas(testAddr, false, math.MaxUint64, false)
-if gas != params.WitnessChunkReadCost {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WitnessChunkReadCost)
-}
+	// Check that reading the basic data and code hash of the same account does not incur the branch read cost
+	gas = ae.BasicDataGas(testAddr, false, math.MaxUint64, false)
+	if gas != 0 {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, 0)
+	}
+	gas = ae.CodeHashGas(testAddr, false, math.MaxUint64, false)
+	if gas != params.WitnessChunkReadCost {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WitnessChunkReadCost)
+	}
 
-// Check warm read cost
-gas = ae.MessageCallGas(testAddr, math.MaxUint64)
-if gas != params.WarmStorageReadCostEIP2929 {
-t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WarmStorageReadCostEIP2929)
-}
+	// Check warm read cost
+	gas = ae.MessageCallGas(testAddr, math.MaxUint64)
+	if gas != params.WarmStorageReadCostEIP2929 {
+		t.Fatalf("SILA incorrect gas computed, got %d, want %d", gas, params.WarmStorageReadCostEIP2929)
+	}
 }

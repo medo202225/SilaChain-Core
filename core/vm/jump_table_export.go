@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -23,52 +23,52 @@ based on fork rules and inspecting operation properties.
 package vm
 
 import (
-"errors"
+	"errors"
 
-"github.com/silachain/sila-library/params"
+	"silachain/params"
 )
 
 // LookupInstructionSet returns the instruction set for the fork configured by
 // the rules.
 func LookupInstructionSet(rules params.Rules) (JumpTable, error) {
-switch {
-case rules.IsVerkle:
-return newCancunInstructionSet(), errors.New("verkle-fork not defined yet")
-case rules.IsAmsterdam:
-return newAmsterdamInstructionSet(), nil
-case rules.IsOsaka:
-return newOsakaInstructionSet(), nil
-case rules.IsPrague:
-return newPragueInstructionSet(), nil
-case rules.IsCancun:
-return newCancunInstructionSet(), nil
-case rules.IsShanghai:
-return newShanghaiInstructionSet(), nil
-case rules.IsMerge:
-return newMergeInstructionSet(), nil
-case rules.IsLondon:
-return newLondonInstructionSet(), nil
-case rules.IsBerlin:
-return newBerlinInstructionSet(), nil
-case rules.IsIstanbul:
-return newIstanbulInstructionSet(), nil
-case rules.IsConstantinople:
-return newConstantinopleInstructionSet(), nil
-case rules.IsByzantium:
-return newByzantiumInstructionSet(), nil
-case rules.IsEIP158:
-return newSpuriousDragonInstructionSet(), nil
-case rules.IsEIP150:
-return newTangerineWhistleInstructionSet(), nil
-case rules.IsHomestead:
-return newHomesteadInstructionSet(), nil
-}
-return newFrontierInstructionSet(), nil
+	switch {
+	case rules.IsVerkle:
+		return newCancunInstructionSet(), errors.New("verkle-fork not defined yet")
+	case rules.IsAmsterdam:
+		return newAmsterdamInstructionSet(), nil
+	case rules.IsOsaka:
+		return newOsakaInstructionSet(), nil
+	case rules.IsPrague:
+		return newPragueInstructionSet(), nil
+	case rules.IsCancun:
+		return newCancunInstructionSet(), nil
+	case rules.IsShanghai:
+		return newShanghaiInstructionSet(), nil
+	case rules.IsMerge:
+		return newMergeInstructionSet(), nil
+	case rules.IsLondon:
+		return newLondonInstructionSet(), nil
+	case rules.IsBerlin:
+		return newBerlinInstructionSet(), nil
+	case rules.IsIstanbul:
+		return newIstanbulInstructionSet(), nil
+	case rules.IsConstantinople:
+		return newConstantinopleInstructionSet(), nil
+	case rules.IsByzantium:
+		return newByzantiumInstructionSet(), nil
+	case rules.IsEIP158:
+		return newSpuriousDragonInstructionSet(), nil
+	case rules.IsEIP150:
+		return newTangerineWhistleInstructionSet(), nil
+	case rules.IsHomestead:
+		return newHomesteadInstructionSet(), nil
+	}
+	return newFrontierInstructionSet(), nil
 }
 
 // Stack returns the minimum and maximum stack requirements.
 func (op *operation) Stack() (int, int) {
-return op.minStack, op.maxStack
+	return op.minStack, op.maxStack
 }
 
 // HasCost returns true if the opcode has a cost. Opcodes which do _not_ have
@@ -77,10 +77,10 @@ return op.minStack, op.maxStack
 // - the STOP opcode.
 // This method can thus be used to check if an opcode is "Invalid (or STOP)".
 func (op *operation) HasCost() bool {
-// Ideally, we'd check this:
-//return op.execute == opUndefined
-// However, go-lang does now allow that. So we'll just check some other
-// 'indicators' that this is an invalid op. Alas, STOP is impossible to
-// filter out
-return op.dynamicGas != nil || op.constantGas != 0
+	// Ideally, we'd check this:
+	// return op.execute == opUndefined
+	// However, go-lang does now allow that. So we'll just check some other
+	// 'indicators' that this is an invalid op. Alas, STOP is impossible to
+	// filter out
+	return op.dynamicGas != nil || op.constantGas != 0
 }

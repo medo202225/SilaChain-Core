@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,15 +17,15 @@
 package locals
 
 import (
-"errors"
-"io"
-"io/fs"
-"os"
+	"errors"
+	"io"
+	"io/fs"
+	"os"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/rlp"
+	"silachain/common"
+	"silachain/core/types"
+	"silachain/log"
+	"silachain/rlp"
 )
 
 // errNoActiveJournal is returned if a transaction is attempted to be inserted
@@ -44,161 +44,161 @@ func (*devNull) Close() error                      { return nil }
 // journal is a rotating log of transactions with the aim of storing locally
 // created transactions to allow non-executed ones to survive node restarts on SILA.
 type journal struct {
-path   string         // Filesystem path to store the transactions at
-writer io.WriteCloser // Output stream to write new transactions into
+	path   string         // Filesystem path to store the transactions at
+	writer io.WriteCloser // Output stream to write new transactions into
 }
 
 // newTxJournal creates a new transaction journal on SILA
 func newTxJournal(path string) *journal {
-return &journal{
-path: path,
-}
+	return &journal{
+		path: path,
+	}
 }
 
 // load parses a transaction journal dump from disk, loading its contents into
 // the specified pool on SILA.
 func (journal *journal) load(add func([]*types.Transaction) []error) error {
-// Open the journal for loading any past transactions
-input, err := os.Open(journal.path)
-if errors.Is(err, fs.ErrNotExist) {
-// Skip the parsing if the journal file doesn't exist at all
-return nil
-}
-if err != nil {
-return err
-}
-defer input.Close()
+	// Open the journal for loading any past transactions
+	input, err := os.Open(journal.path)
+	if errors.Is(err, fs.ErrNotExist) {
+		// Skip the parsing if the journal file doesn't exist at all
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer input.Close()
 
-// Temporarily discard any journal additions (don't double add on load)
-journal.writer = new(devNull)
-defer func() { journal.writer = nil }()
+	// Temporarily discard any journal additions (don't double add on load)
+	journal.writer = new(devNull)
+	defer func() { journal.writer = nil }()
 
-// Inject all transactions from the journal into the pool
-stream := rlp.NewStream(input, 0)
-total, dropped := 0, 0
+	// Inject all transactions from the journal into the pool
+	stream := rlp.NewStream(input, 0)
+	total, dropped := 0, 0
 
-// Create a method to load a limited batch of transactions and bump the
-// appropriate progress counters. Then use this method to load all the
-// journaled transactions in small-ish batches.
-loadBatch := func(txs types.Transactions) {
-for _, err := range add(txs) {
-if err != nil {
-log.Debug("Failed to add journaled transaction on SILA", "err", err)
-dropped++
-}
-}
-}
-var (
-failure error
-batch   types.Transactions
-)
-for {
-// Parse the next transaction and terminate on error
-tx := new(types.Transaction)
-if err = stream.Decode(tx); err != nil {
-if err != io.EOF {
-failure = err
-}
-if batch.Len() > 0 {
-loadBatch(batch)
-}
-break
-}
-// New transaction parsed, queue up for later, import if threshold is reached
-total++
+	// Create a method to load a limited batch of transactions and bump the
+	// appropriate progress counters. Then use this method to load all the
+	// journaled transactions in small-ish batches.
+	loadBatch := func(txs types.Transactions) {
+		for _, err := range add(txs) {
+			if err != nil {
+				log.Debug("Failed to add journaled transaction on SILA", "err", err)
+				dropped++
+			}
+		}
+	}
+	var (
+		failure error
+		batch   types.Transactions
+	)
+	for {
+		// Parse the next transaction and terminate on error
+		tx := new(types.Transaction)
+		if err = stream.Decode(tx); err != nil {
+			if err != io.EOF {
+				failure = err
+			}
+			if batch.Len() > 0 {
+				loadBatch(batch)
+			}
+			break
+		}
+		// New transaction parsed, queue up for later, import if threshold is reached
+		total++
 
-if batch = append(batch, tx); batch.Len() > 1024 {
-loadBatch(batch)
-batch = batch[:0]
-}
-}
-log.Info("Loaded local transaction journal on SILA", "transactions", total, "dropped", dropped)
+		if batch = append(batch, tx); batch.Len() > 1024 {
+			loadBatch(batch)
+			batch = batch[:0]
+		}
+	}
+	log.Info("Loaded local transaction journal on SILA", "transactions", total, "dropped", dropped)
 
-return failure
+	return failure
 }
 
 func (journal *journal) setupWriter() error {
-if journal.writer != nil {
-if err := journal.writer.Close(); err != nil {
-return err
-}
-journal.writer = nil
-}
+	if journal.writer != nil {
+		if err := journal.writer.Close(); err != nil {
+			return err
+		}
+		journal.writer = nil
+	}
 
-// Re-open the journal file for appending
-// Use O_APPEND to ensure we always write to the end of the file
-sink, err := os.OpenFile(journal.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-if err != nil {
-return err
-}
-journal.writer = sink
+	// Re-open the journal file for appending
+	// Use O_APPEND to ensure we always write to the end of the file
+	sink, err := os.OpenFile(journal.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	journal.writer = sink
 
-return nil
+	return nil
 }
 
 // insert adds the specified transaction to the local disk journal on SILA.
 func (journal *journal) insert(tx *types.Transaction) error {
-if journal.writer == nil {
-return errNoActiveJournal
-}
-if err := rlp.Encode(journal.writer, tx); err != nil {
-return err
-}
-return nil
+	if journal.writer == nil {
+		return errNoActiveJournal
+	}
+	if err := rlp.Encode(journal.writer, tx); err != nil {
+		return err
+	}
+	return nil
 }
 
 // rotate regenerates the transaction journal based on the current contents of
 // the transaction pool on SILA.
 func (journal *journal) rotate(all map[common.Address]types.Transactions) error {
-// Close the current journal (if any is open)
-if journal.writer != nil {
-if err := journal.writer.Close(); err != nil {
-return err
-}
-journal.writer = nil
-}
-// Generate a new journal with the contents of the current pool
-replacement, err := os.OpenFile(journal.path+".new", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-if err != nil {
-return err
-}
-journaled := 0
-for _, txs := range all {
-for _, tx := range txs {
-if err = rlp.Encode(replacement, tx); err != nil {
-replacement.Close()
-return err
-}
-}
-journaled += len(txs)
-}
-replacement.Close()
+	// Close the current journal (if any is open)
+	if journal.writer != nil {
+		if err := journal.writer.Close(); err != nil {
+			return err
+		}
+		journal.writer = nil
+	}
+	// Generate a new journal with the contents of the current pool
+	replacement, err := os.OpenFile(journal.path+".new", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	journaled := 0
+	for _, txs := range all {
+		for _, tx := range txs {
+			if err = rlp.Encode(replacement, tx); err != nil {
+				replacement.Close()
+				return err
+			}
+		}
+		journaled += len(txs)
+	}
+	replacement.Close()
 
-// Replace the live journal with the newly generated one
-if err = os.Rename(journal.path+".new", journal.path); err != nil {
-return err
-}
-sink, err := os.OpenFile(journal.path, os.O_WRONLY|os.O_APPEND, 0644)
-if err != nil {
-return err
-}
-journal.writer = sink
+	// Replace the live journal with the newly generated one
+	if err = os.Rename(journal.path+".new", journal.path); err != nil {
+		return err
+	}
+	sink, err := os.OpenFile(journal.path, os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	journal.writer = sink
 
-logger := log.Info
-if len(all) == 0 {
-logger = log.Debug
-}
-logger("Regenerated local transaction journal on SILA", "transactions", journaled, "accounts", len(all))
+	logger := log.Info
+	if len(all) == 0 {
+		logger = log.Debug
+	}
+	logger("Regenerated local transaction journal on SILA", "transactions", journaled, "accounts", len(all))
 
-return nil
+	return nil
 }
 
 // close flushes the transaction journal contents to disk and closes the file on SILA.
 func (journal *journal) close() error {
-var err error
-if journal.writer != nil {
-err = journal.writer.Close()
-journal.writer = nil
-}
-return err
+	var err error
+	if journal.writer != nil {
+		err = journal.writer.Close()
+		journal.writer = nil
+	}
+	return err
 }

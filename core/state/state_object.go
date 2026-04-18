@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,28 +17,28 @@
 package state
 
 import (
-"bytes"
-"fmt"
-"maps"
-"slices"
-"time"
+	"bytes"
+	"fmt"
+	"maps"
+	"slices"
+	"time"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/rlp"
-"github.com/SILA/sila-chain/trie"
-"github.com/SILA/sila-chain/trie/bintrie"
-"github.com/SILA/sila-chain/trie/transitiontrie"
-"github.com/SILA/sila-chain/trie/trienode"
-"github.com/holiman/uint256"
+	"github.com/holiman/uint256"
+	"silachain/common"
+	"silachain/core/types"
+	"silachain/crypto"
+	"silachain/log"
+	"silachain/rlp"
+	"silachain/trie"
+	"silachain/trie/bintrie"
+	"silachain/trie/transitiontrie"
+	"silachain/trie/trienode"
 )
 
 type Storage map[common.Hash]common.Hash
 
 func (s Storage) Copy() Storage {
-return maps.Clone(s)
+	return maps.Clone(s)
 }
 
 // stateObject represents a SILA account which is being modified.
@@ -48,83 +48,83 @@ return maps.Clone(s)
 // - Account values as well as storages can be accessed and modified through the object.
 // - Finally, call commit to return the changes of storage trie and update account data.
 type stateObject struct {
-db          *StateDB
-address     common.Address      // address of SILA account
-addressHash *common.Hash        // hash of SILA address of the account
-origin      *types.StateAccount // Account original data without any change applied, nil means it was not existent
-data        types.StateAccount  // Account data with all mutations applied in the scope of block
+	db          *StateDB
+	address     common.Address      // address of SILA account
+	addressHash *common.Hash        // hash of SILA address of the account
+	origin      *types.StateAccount // Account original data without any change applied, nil means it was not existent
+	data        types.StateAccount  // Account data with all mutations applied in the scope of block
 
-// Write caches.
-trie Trie   // storage trie, which becomes non-nil on first access
-code []byte // contract bytecode, which gets set when code is loaded
+	// Write caches.
+	trie Trie   // storage trie, which becomes non-nil on first access
+	code []byte // contract bytecode, which gets set when code is loaded
 
-originStorage  Storage // Storage entries that have been accessed within the current block
-dirtyStorage   Storage // Storage entries that have been modified within the current transaction
-pendingStorage Storage // Storage entries that have been modified within the current block
+	originStorage  Storage // Storage entries that have been accessed within the current block
+	dirtyStorage   Storage // Storage entries that have been modified within the current transaction
+	pendingStorage Storage // Storage entries that have been modified within the current block
 
-// uncommittedStorage tracks a set of storage entries that have been modified
-// but not yet committed since the "last commit operation", along with their
-// original values before mutation.
-//
-// Specifically, the commit will be performed after each transaction before
-// the byzantium fork, therefore the map is already reset at the transaction
-// boundary; however post the byzantium fork, the commit will only be performed
-// at the end of block, this set essentially tracks all the modifications
-// made within the block.
-uncommittedStorage Storage
+	// uncommittedStorage tracks a set of storage entries that have been modified
+	// but not yet committed since the "last commit operation", along with their
+	// original values before mutation.
+	//
+	// Specifically, the commit will be performed after each transaction before
+	// the byzantium fork, therefore the map is already reset at the transaction
+	// boundary; however post the byzantium fork, the commit will only be performed
+	// at the end of block, this set essentially tracks all the modifications
+	// made within the block.
+	uncommittedStorage Storage
 
-// Cache flags.
-dirtyCode bool // true if the code was updated
+	// Cache flags.
+	dirtyCode bool // true if the code was updated
 
-// Flag whether the account was marked as self-destructed. The self-destructed
-// account is still accessible in the scope of same transaction.
-selfDestructed bool
+	// Flag whether the account was marked as self-destructed. The self-destructed
+	// account is still accessible in the scope of same transaction.
+	selfDestructed bool
 
-// This is an EIP-6780 flag indicating whether the object is eligible for
-// self-destruct according to EIP-6780. The flag could be set either when
-// the contract is just created within the current transaction, or when the
-// object was previously existent and is being deployed as a contract within
-// the current transaction.
-newContract bool
+	// This is an EIP-6780 flag indicating whether the object is eligible for
+	// self-destruct according to EIP-6780. The flag could be set either when
+	// the contract is just created within the current transaction, or when the
+	// object was previously existent and is being deployed as a contract within
+	// the current transaction.
+	newContract bool
 }
 
 // empty returns whether the SILA account is considered empty.
 func (s *stateObject) empty() bool {
-return s.data.Nonce == 0 && s.data.Balance.IsZero() && bytes.Equal(s.data.CodeHash, types.EmptyCodeHash.Bytes())
+	return s.data.Nonce == 0 && s.data.Balance.IsZero() && bytes.Equal(s.data.CodeHash, types.EmptyCodeHash.Bytes())
 }
 
 // newObject creates a SILA state object.
 func newObject(db *StateDB, address common.Address, acct *types.StateAccount) *stateObject {
-origin := acct
-if acct == nil {
-acct = types.NewEmptyStateAccount()
-}
-return &stateObject{
-db:                 db,
-address:            address,
-origin:             origin,
-data:               *acct,
-originStorage:      make(Storage),
-dirtyStorage:       make(Storage),
-pendingStorage:     make(Storage),
-uncommittedStorage: make(Storage),
-}
+	origin := acct
+	if acct == nil {
+		acct = types.NewEmptyStateAccount()
+	}
+	return &stateObject{
+		db:                 db,
+		address:            address,
+		origin:             origin,
+		data:               *acct,
+		originStorage:      make(Storage),
+		dirtyStorage:       make(Storage),
+		pendingStorage:     make(Storage),
+		uncommittedStorage: make(Storage),
+	}
 }
 
 func (s *stateObject) addrHash() common.Hash {
-if s.addressHash == nil {
-h := crypto.Keccak256Hash(s.address[:])
-s.addressHash = &h
-}
-return *s.addressHash
+	if s.addressHash == nil {
+		h := crypto.Keccak256Hash(s.address[:])
+		s.addressHash = &h
+	}
+	return *s.addressHash
 }
 
 func (s *stateObject) markSelfdestructed() {
-s.selfDestructed = true
+	s.selfDestructed = true
 }
 
 func (s *stateObject) touch() {
-s.db.journal.touchChange(s.address)
+	s.db.journal.touchChange(s.address)
 }
 
 // getTrie returns the associated storage trie. The trie will be opened if it's
@@ -133,15 +133,15 @@ s.db.journal.touchChange(s.address)
 // If a new trie is opened, it will be cached within the state object to allow
 // subsequent reads to expand the same trie instead of reloading from disk.
 func (s *stateObject) getTrie() (Trie, error) {
-if s.trie == nil {
-// Assumes the primary account trie is already loaded
-tr, err := s.db.db.OpenStorageTrie(s.db.originalRoot, s.address, s.data.Root, s.db.trie)
-if err != nil {
-return nil, err
-}
-s.trie = tr
-}
-return s.trie, nil
+	if s.trie == nil {
+		// Assumes the primary account trie is already loaded
+		tr, err := s.db.db.OpenStorageTrie(s.db.originalRoot, s.address, s.data.Root, s.db.trie)
+		if err != nil {
+			return nil, err
+		}
+		s.trie = tr
+	}
+	return s.trie, nil
 }
 
 // getPrefetchedTrie returns the associated trie, as populated by the prefetcher
@@ -152,149 +152,149 @@ return s.trie, nil
 // to break the hidden interdependency between retrieving tries from the db or
 // from the prefetcher.
 func (s *stateObject) getPrefetchedTrie() Trie {
-// If there's nothing to meaningfully return, let the user figure it out by
-// pulling the trie from disk.
-if (s.data.Root == types.EmptyRootHash && !s.db.db.TrieDB().IsVerkle()) || s.db.prefetcher == nil {
-return nil
-}
-// Attempt to retrieve the trie from the prefetcher
-return s.db.prefetcher.trie(s.addrHash(), s.data.Root)
+	// If there's nothing to meaningfully return, let the user figure it out by
+	// pulling the trie from disk.
+	if (s.data.Root == types.EmptyRootHash && !s.db.db.TrieDB().IsVerkle()) || s.db.prefetcher == nil {
+		return nil
+	}
+	// Attempt to retrieve the trie from the prefetcher
+	return s.db.prefetcher.trie(s.addrHash(), s.data.Root)
 }
 
 // GetState retrieves a value associated with the given storage key.
 func (s *stateObject) GetState(key common.Hash) common.Hash {
-value, _ := s.getState(key)
-return value
+	value, _ := s.getState(key)
+	return value
 }
 
 // getState retrieves a value associated with the given storage key, along with
 // its original value.
 func (s *stateObject) getState(key common.Hash) (common.Hash, common.Hash) {
-origin := s.GetCommittedState(key)
-value, dirty := s.dirtyStorage[key]
-if dirty {
-return value, origin
-}
-return origin, origin
+	origin := s.GetCommittedState(key)
+	value, dirty := s.dirtyStorage[key]
+	if dirty {
+		return value, origin
+	}
+	return origin, origin
 }
 
 // GetCommittedState retrieves the value associated with the specific key
 // without any mutations caused in the current execution.
 func (s *stateObject) GetCommittedState(key common.Hash) common.Hash {
-// If we have a pending write or clean cached, return that
-if value, pending := s.pendingStorage[key]; pending {
-return value
-}
-if value, cached := s.originStorage[key]; cached {
-return value
-}
-// If the object was destructed in *this* block (and potentially resurrected),
-// the storage has been cleared out, and we should *not* consult the previous
-// database about any storage values. The only possible alternatives are:
-//   1) resurrect happened, and new slot values were set -- those should
-//      have been handles via pendingStorage above.
-//   2) we don't have new values, and can deliver empty response back
-if _, destructed := s.db.stateObjectsDestruct[s.address]; destructed {
-// Invoke the reader regardless and discard the returned value.
-// The returned value may not be empty, as it could belong to a
-// self-destructed contract.
-//
-// The read operation is still essential for correctly building
-// the block-level access list.
-//
-// TODO(rjl493456442) the reader interface can be extended with
-// Touch, recording the read access without the actual disk load.
-_, err := s.db.reader.Storage(s.address, key)
-if err != nil {
-s.db.setError(err)
-}
-s.originStorage[key] = common.Hash{} // track the empty slot as origin value
-return common.Hash{}
-}
-s.db.StorageLoaded++
+	// If we have a pending write or clean cached, return that
+	if value, pending := s.pendingStorage[key]; pending {
+		return value
+	}
+	if value, cached := s.originStorage[key]; cached {
+		return value
+	}
+	// If the object was destructed in *this* block (and potentially resurrected),
+	// the storage has been cleared out, and we should *not* consult the previous
+	// database about any storage values. The only possible alternatives are:
+	//  1. resurrect happened, and new slot values were set -- those should
+	//     have been handles via pendingStorage above.
+	//  2. we don't have new values, and can deliver empty response back
+	if _, destructed := s.db.stateObjectsDestruct[s.address]; destructed {
+		// Invoke the reader regardless and discard the returned value.
+		// The returned value may not be empty, as it could belong to a
+		// self-destructed contract.
+		//
+		// The read operation is still essential for correctly building
+		// the block-level access list.
+		//
+		// TODO(rjl493456442) the reader interface can be extended with
+		// Touch, recording the read access without the actual disk load.
+		_, err := s.db.reader.Storage(s.address, key)
+		if err != nil {
+			s.db.setError(err)
+		}
+		s.originStorage[key] = common.Hash{} // track the empty slot as origin value
+		return common.Hash{}
+	}
+	s.db.StorageLoaded++
 
-start := time.Now()
-value, err := s.db.reader.Storage(s.address, key)
-if err != nil {
-s.db.setError(err)
-return common.Hash{}
-}
-s.db.StorageReads += time.Since(start)
+	start := time.Now()
+	value, err := s.db.reader.Storage(s.address, key)
+	if err != nil {
+		s.db.setError(err)
+		return common.Hash{}
+	}
+	s.db.StorageReads += time.Since(start)
 
-// Schedule the resolved storage slots for prefetching if it's enabled.
-if s.db.prefetcher != nil && s.data.Root != types.EmptyRootHash {
-if err = s.db.prefetcher.prefetch(s.addrHash(), s.origin.Root, s.address, nil, []common.Hash{key}, true); err != nil {
-log.Error("Failed to prefetch SILA storage slot", "addr", s.address, "key", key, "err", err)
-}
-}
-s.originStorage[key] = value
-return value
+	// Schedule the resolved storage slots for prefetching if it's enabled.
+	if s.db.prefetcher != nil && s.data.Root != types.EmptyRootHash {
+		if err = s.db.prefetcher.prefetch(s.addrHash(), s.origin.Root, s.address, nil, []common.Hash{key}, true); err != nil {
+			log.Error("Failed to prefetch SILA storage slot", "addr", s.address, "key", key, "err", err)
+		}
+	}
+	s.originStorage[key] = value
+	return value
 }
 
 // SetState updates a value in account storage.
 // It returns the previous value
 func (s *stateObject) SetState(key, value common.Hash) common.Hash {
-// If the new value is the same as old, don't set. Otherwise, track only the
-// dirty changes, supporting reverting all of it back to no change.
-prev, origin := s.getState(key)
-if prev == value {
-return prev
-}
-// New value is different, update and journal the change
-s.db.journal.storageChange(s.address, key, prev, origin)
-s.setState(key, value, origin)
-return prev
+	// If the new value is the same as old, don't set. Otherwise, track only the
+	// dirty changes, supporting reverting all of it back to no change.
+	prev, origin := s.getState(key)
+	if prev == value {
+		return prev
+	}
+	// New value is different, update and journal the change
+	s.db.journal.storageChange(s.address, key, prev, origin)
+	s.setState(key, value, origin)
+	return prev
 }
 
 // setState updates a value in account dirty storage. The dirtiness will be
 // removed if the value being set equals to the original value.
 func (s *stateObject) setState(key common.Hash, value common.Hash, origin common.Hash) {
-// Storage slot is set back to its original value, undo the dirty marker
-if value == origin {
-delete(s.dirtyStorage, key)
-return
-}
-s.dirtyStorage[key] = value
+	// Storage slot is set back to its original value, undo the dirty marker
+	if value == origin {
+		delete(s.dirtyStorage, key)
+		return
+	}
+	s.dirtyStorage[key] = value
 }
 
 // finalise moves all dirty storage slots into the pending area to be hashed or
 // committed later. It is invoked at the end of every transaction.
 func (s *stateObject) finalise() {
-slotsToPrefetch := make([]common.Hash, 0, len(s.dirtyStorage))
-for key, value := range s.dirtyStorage {
-if origin, exist := s.uncommittedStorage[key]; exist && origin == value {
-// The slot is reverted to its original value, delete the entry
-// to avoid thrashing the data structures.
-delete(s.uncommittedStorage, key)
-} else if exist {
-// The slot is modified to another value and the slot has been
-// tracked for commit, do nothing here.
-} else {
-// The slot is different from its original value and hasn't been
-// tracked for commit yet.
-s.uncommittedStorage[key] = s.GetCommittedState(key)
-slotsToPrefetch = append(slotsToPrefetch, key) // Copy needed for closure
-}
-// Aggregate the dirty storage slots into the pending area. It might
-// be possible that the value of tracked slot here is same with the
-// one in originStorage (e.g. the slot was modified in tx_a and then
-// modified back in tx_b). We can't blindly remove it from pending
-// map as the dirty slot might have been committed already (before the
-// byzantium fork) and entry is necessary to modify the value back.
-s.pendingStorage[key] = value
-}
-if s.db.prefetcher != nil && len(slotsToPrefetch) > 0 && s.data.Root != types.EmptyRootHash {
-if err := s.db.prefetcher.prefetch(s.addrHash(), s.data.Root, s.address, nil, slotsToPrefetch, false); err != nil {
-log.Error("Failed to prefetch SILA slots", "addr", s.address, "slots", len(slotsToPrefetch), "err", err)
-}
-}
-if len(s.dirtyStorage) > 0 {
-s.dirtyStorage = make(Storage)
-}
-// Revoke the flag at the end of the transaction. It finalizes the status
-// of the newly-created object as it's no longer eligible for self-destruct
-// by EIP-6780. For non-newly-created objects, it's a no-op.
-s.newContract = false
+	slotsToPrefetch := make([]common.Hash, 0, len(s.dirtyStorage))
+	for key, value := range s.dirtyStorage {
+		if origin, exist := s.uncommittedStorage[key]; exist && origin == value {
+			// The slot is reverted to its original value, delete the entry
+			// to avoid thrashing the data structures.
+			delete(s.uncommittedStorage, key)
+		} else if exist {
+			// The slot is modified to another value and the slot has been
+			// tracked for commit, do nothing here.
+		} else {
+			// The slot is different from its original value and hasn't been
+			// tracked for commit yet.
+			s.uncommittedStorage[key] = s.GetCommittedState(key)
+			slotsToPrefetch = append(slotsToPrefetch, key) // Copy needed for closure
+		}
+		// Aggregate the dirty storage slots into the pending area. It might
+		// be possible that the value of tracked slot here is same with the
+		// one in originStorage (e.g. the slot was modified in tx_a and then
+		// modified back in tx_b). We can't blindly remove it from pending
+		// map as the dirty slot might have been committed already (before the
+		// byzantium fork) and entry is necessary to modify the value back.
+		s.pendingStorage[key] = value
+	}
+	if s.db.prefetcher != nil && len(slotsToPrefetch) > 0 && s.data.Root != types.EmptyRootHash {
+		if err := s.db.prefetcher.prefetch(s.addrHash(), s.data.Root, s.address, nil, slotsToPrefetch, false); err != nil {
+			log.Error("Failed to prefetch SILA slots", "addr", s.address, "slots", len(slotsToPrefetch), "err", err)
+		}
+	}
+	if len(s.dirtyStorage) > 0 {
+		s.dirtyStorage = make(Storage)
+	}
+	// Revoke the flag at the end of the transaction. It finalizes the status
+	// of the newly-created object as it's no longer eligible for self-destruct
+	// by EIP-6780. For non-newly-created objects, it's a no-op.
+	s.newContract = false
 }
 
 // updateTrie is responsible for persisting cached storage changes into the
@@ -306,137 +306,137 @@ s.newContract = false
 //
 // It assumes all the dirty storage slots have been finalized before.
 func (s *stateObject) updateTrie() (Trie, error) {
-// Short circuit if nothing was accessed, don't trigger a prefetcher warning
-if len(s.uncommittedStorage) == 0 {
-// Nothing was written, so we could stop early. Unless we have both reads
-// and witness collection enabled, in which case we need to fetch the trie.
-if s.db.witness == nil || len(s.originStorage) == 0 {
-return s.trie, nil
-}
-}
-// Retrieve a pretecher populated trie, or fall back to the database. This will
-// block until all prefetch tasks are done, which are needed for witnesses even
-// for unmodified state objects.
-tr := s.getPrefetchedTrie()
-if tr != nil {
-// Prefetcher returned a live trie, swap it out for the current one
-s.trie = tr
-} else {
-// Fetcher not running or empty trie, fallback to the database trie
-var err error
-tr, err = s.getTrie()
-if err != nil {
-s.db.setError(err)
-return nil, err
-}
-}
-// Short circuit if nothing changed, don't bother with hashing anything
-if len(s.uncommittedStorage) == 0 {
-return s.trie, nil
-}
-// Perform trie updates before deletions. This prevents resolution of unnecessary trie nodes
-// in circumstances similar to the following:
-//
-// Consider nodes `A` and `B` who share the same full node parent `P` and have no other siblings.
-// During the execution of a block:
-// - `A` is deleted,
-// - `C` is created, and also shares the parent `P`.
-// If the deletion is handled first, then `P` would be left with only one child, thus collapsed
-// into a shortnode. This requires `B` to be resolved from disk.
-// Whereas if the created node is handled first, then the collapse is avoided, and `B` is not resolved.
-var (
-deletions []common.Hash
-used      = make([]common.Hash, 0, len(s.uncommittedStorage))
-)
-for key, origin := range s.uncommittedStorage {
-// Skip noop changes, persist actual changes
-value, exist := s.pendingStorage[key]
-if value == origin {
-log.Error("SILA storage update was noop", "address", s.address, "slot", key)
-continue
-}
-if !exist {
-log.Error("SILA storage slot is not found in pending area", "address", s.address, "slot", key)
-continue
-}
-if (value != common.Hash{}) {
-if err := tr.UpdateStorage(s.address, key[:], common.TrimLeftZeroes(value[:])); err != nil {
-s.db.setError(err)
-return nil, err
-}
-s.db.StorageUpdated.Add(1)
-} else {
-deletions = append(deletions, key)
-}
-// Cache the items for preloading
-used = append(used, key) // Copy needed for closure
-}
-for _, key := range deletions {
-if err := tr.DeleteStorage(s.address, key[:]); err != nil {
-s.db.setError(err)
-return nil, err
-}
-s.db.StorageDeleted.Add(1)
-}
-if s.db.prefetcher != nil {
-s.db.prefetcher.used(s.addrHash(), s.data.Root, nil, used)
-}
-s.uncommittedStorage = make(Storage) // empties the commit markers
-return tr, nil
+	// Short circuit if nothing was accessed, don't trigger a prefetcher warning
+	if len(s.uncommittedStorage) == 0 {
+		// Nothing was written, so we could stop early. Unless we have both reads
+		// and witness collection enabled, in which case we need to fetch the trie.
+		if s.db.witness == nil || len(s.originStorage) == 0 {
+			return s.trie, nil
+		}
+	}
+	// Retrieve a pretecher populated trie, or fall back to the database. This will
+	// block until all prefetch tasks are done, which are needed for witnesses even
+	// for unmodified state objects.
+	tr := s.getPrefetchedTrie()
+	if tr != nil {
+		// Prefetcher returned a live trie, swap it out for the current one
+		s.trie = tr
+	} else {
+		// Fetcher not running or empty trie, fallback to the database trie
+		var err error
+		tr, err = s.getTrie()
+		if err != nil {
+			s.db.setError(err)
+			return nil, err
+		}
+	}
+	// Short circuit if nothing changed, don't bother with hashing anything
+	if len(s.uncommittedStorage) == 0 {
+		return s.trie, nil
+	}
+	// Perform trie updates before deletions. This prevents resolution of unnecessary trie nodes
+	// in circumstances similar to the following:
+	//
+	// Consider nodes `A` and `B` who share the same full node parent `P` and have no other siblings.
+	// During the execution of a block:
+	// - `A` is deleted,
+	// - `C` is created, and also shares the parent `P`.
+	// If the deletion is handled first, then `P` would be left with only one child, thus collapsed
+	// into a shortnode. This requires `B` to be resolved from disk.
+	// Whereas if the created node is handled first, then the collapse is avoided, and `B` is not resolved.
+	var (
+		deletions []common.Hash
+		used      = make([]common.Hash, 0, len(s.uncommittedStorage))
+	)
+	for key, origin := range s.uncommittedStorage {
+		// Skip noop changes, persist actual changes
+		value, exist := s.pendingStorage[key]
+		if value == origin {
+			log.Error("SILA storage update was noop", "address", s.address, "slot", key)
+			continue
+		}
+		if !exist {
+			log.Error("SILA storage slot is not found in pending area", "address", s.address, "slot", key)
+			continue
+		}
+		if (value != common.Hash{}) {
+			if err := tr.UpdateStorage(s.address, key[:], common.TrimLeftZeroes(value[:])); err != nil {
+				s.db.setError(err)
+				return nil, err
+			}
+			s.db.StorageUpdated.Add(1)
+		} else {
+			deletions = append(deletions, key)
+		}
+		// Cache the items for preloading
+		used = append(used, key) // Copy needed for closure
+	}
+	for _, key := range deletions {
+		if err := tr.DeleteStorage(s.address, key[:]); err != nil {
+			s.db.setError(err)
+			return nil, err
+		}
+		s.db.StorageDeleted.Add(1)
+	}
+	if s.db.prefetcher != nil {
+		s.db.prefetcher.used(s.addrHash(), s.data.Root, nil, used)
+	}
+	s.uncommittedStorage = make(Storage) // empties the commit markers
+	return tr, nil
 }
 
 // updateRoot flushes all cached storage mutations to trie, recalculating the
 // new storage trie root.
 func (s *stateObject) updateRoot() {
-// Flush cached storage mutations into trie, short circuit if any error
-// is occurred or there is no change in the trie.
-tr, err := s.updateTrie()
-if err != nil || tr == nil {
-return
-}
-s.data.Root = tr.Hash()
+	// Flush cached storage mutations into trie, short circuit if any error
+	// is occurred or there is no change in the trie.
+	tr, err := s.updateTrie()
+	if err != nil || tr == nil {
+		return
+	}
+	s.data.Root = tr.Hash()
 }
 
 // commitStorage overwrites the clean storage with the storage changes and
 // fulfills the storage diffs into the given accountUpdate struct.
 func (s *stateObject) commitStorage(op *accountUpdate) {
-var (
-encode = func(val common.Hash) []byte {
-if val == (common.Hash{}) {
-return nil
-}
-blob, _ := rlp.EncodeToBytes(common.TrimLeftZeroes(val[:]))
-return blob
-}
-)
-for key, val := range s.pendingStorage {
-// Skip the noop storage changes, it might be possible the value
-// of tracked slot is same in originStorage and pendingStorage
-// map, e.g. the storage slot is modified in tx_a and then reset
-// back in tx_b.
-if val == s.originStorage[key] {
-continue
-}
-hash := crypto.Keccak256Hash(key[:])
-if op.storages == nil {
-op.storages = make(map[common.Hash][]byte)
-}
-op.storages[hash] = encode(val)
+	var (
+		encode = func(val common.Hash) []byte {
+			if val == (common.Hash{}) {
+				return nil
+			}
+			blob, _ := rlp.EncodeToBytes(common.TrimLeftZeroes(val[:]))
+			return blob
+		}
+	)
+	for key, val := range s.pendingStorage {
+		// Skip the noop storage changes, it might be possible the value
+		// of tracked slot is same in originStorage and pendingStorage
+		// map, e.g. the storage slot is modified in tx_a and then reset
+		// back in tx_b.
+		if val == s.originStorage[key] {
+			continue
+		}
+		hash := crypto.Keccak256Hash(key[:])
+		if op.storages == nil {
+			op.storages = make(map[common.Hash][]byte)
+		}
+		op.storages[hash] = encode(val)
 
-if op.storagesOriginByKey == nil {
-op.storagesOriginByKey = make(map[common.Hash][]byte)
-}
-if op.storagesOriginByHash == nil {
-op.storagesOriginByHash = make(map[common.Hash][]byte)
-}
-origin := encode(s.originStorage[key])
-op.storagesOriginByKey[key] = origin
-op.storagesOriginByHash[hash] = origin
+		if op.storagesOriginByKey == nil {
+			op.storagesOriginByKey = make(map[common.Hash][]byte)
+		}
+		if op.storagesOriginByHash == nil {
+			op.storagesOriginByHash = make(map[common.Hash][]byte)
+		}
+		origin := encode(s.originStorage[key])
+		op.storagesOriginByKey[key] = origin
+		op.storagesOriginByHash[hash] = origin
 
-// Overwrite the clean value of storage slots
-s.originStorage[key] = val
-}
-s.pendingStorage = make(Storage)
+		// Overwrite the clean value of storage slots
+		s.originStorage[key] = val
+	}
+	s.pendingStorage = make(Storage)
 }
 
 // commit obtains the account changes (metadata, storage slots, code) caused by
@@ -445,109 +445,109 @@ s.pendingStorage = make(Storage)
 // Note, commit may run concurrently across all the state objects. Do not assume
 // thread-safe access to the statedb.
 func (s *stateObject) commit() (*accountUpdate, *trienode.NodeSet, error) {
-// commit the account metadata changes
-op := &accountUpdate{
-address: s.address,
-data:    types.SlimAccountRLP(s.data),
-}
-if s.origin != nil {
-op.origin = types.SlimAccountRLP(*s.origin)
-}
-// commit the contract code if it's modified
-if s.dirtyCode {
-op.code = &contractCode{
-hash: common.BytesToHash(s.CodeHash()),
-blob: s.code,
-}
-s.dirtyCode = false // reset the dirty flag
+	// commit the account metadata changes
+	op := &accountUpdate{
+		address: s.address,
+		data:    types.SlimAccountRLP(s.data),
+	}
+	if s.origin != nil {
+		op.origin = types.SlimAccountRLP(*s.origin)
+	}
+	// commit the contract code if it's modified
+	if s.dirtyCode {
+		op.code = &contractCode{
+			hash: common.BytesToHash(s.CodeHash()),
+			blob: s.code,
+		}
+		s.dirtyCode = false // reset the dirty flag
 
-if s.origin == nil {
-op.code.originHash = types.EmptyCodeHash
-} else {
-op.code.originHash = common.BytesToHash(s.origin.CodeHash)
-}
-}
-// Commit storage changes and the associated storage trie
-s.commitStorage(op)
-if len(op.storages) == 0 {
-// nothing changed, don't bother to commit the trie
-s.origin = s.data.Copy()
-return op, nil, nil
-}
-// In Verkle/binary trie mode, all state objects share one unified trie.
-// The main account trie commit in stateDB.commit() already calls
-// CollectNodes on this trie, so calling Commit here again would
-// redundantly traverse and serialize the entire tree per dirty account.
-if s.db.GetTrie().IsVerkle() {
-s.origin = s.data.Copy()
-return op, nil, nil
-}
-// The storage trie root is omitted, as it has already been updated in the
-// previous updateRoot step.
-_, nodes := s.trie.Commit(false)
-s.origin = s.data.Copy()
-return op, nodes, nil
+		if s.origin == nil {
+			op.code.originHash = types.EmptyCodeHash
+		} else {
+			op.code.originHash = common.BytesToHash(s.origin.CodeHash)
+		}
+	}
+	// Commit storage changes and the associated storage trie
+	s.commitStorage(op)
+	if len(op.storages) == 0 {
+		// nothing changed, don't bother to commit the trie
+		s.origin = s.data.Copy()
+		return op, nil, nil
+	}
+	// In Verkle/binary trie mode, all state objects share one unified trie.
+	// The main account trie commit in stateDB.commit() already calls
+	// CollectNodes on this trie, so calling Commit here again would
+	// redundantly traverse and serialize the entire tree per dirty account.
+	if s.db.GetTrie().IsVerkle() {
+		s.origin = s.data.Copy()
+		return op, nil, nil
+	}
+	// The storage trie root is omitted, as it has already been updated in the
+	// previous updateRoot step.
+	_, nodes := s.trie.Commit(false)
+	s.origin = s.data.Copy()
+	return op, nodes, nil
 }
 
 // AddBalance adds amount to s's balance.
 // It is used to add funds to the destination account of a transfer.
 // returns the previous balance
 func (s *stateObject) AddBalance(amount *uint256.Int) uint256.Int {
-// EIP161: We must check emptiness for the objects such that the account
-// clearing (0,0,0 objects) can take effect.
-if amount.IsZero() {
-if s.empty() {
-s.touch()
-}
-return *(s.Balance())
-}
-return s.SetBalance(new(uint256.Int).Add(s.Balance(), amount))
+	// EIP161: We must check emptiness for the objects such that the account
+	// clearing (0,0,0 objects) can take effect.
+	if amount.IsZero() {
+		if s.empty() {
+			s.touch()
+		}
+		return *(s.Balance())
+	}
+	return s.SetBalance(new(uint256.Int).Add(s.Balance(), amount))
 }
 
 // SetBalance sets the balance for the object, and returns the previous balance.
 func (s *stateObject) SetBalance(amount *uint256.Int) uint256.Int {
-prev := *s.data.Balance
-s.db.journal.balanceChange(s.address, s.data.Balance)
-s.setBalance(amount)
-return prev
+	prev := *s.data.Balance
+	s.db.journal.balanceChange(s.address, s.data.Balance)
+	s.setBalance(amount)
+	return prev
 }
 
 func (s *stateObject) setBalance(amount *uint256.Int) {
-s.data.Balance = amount
+	s.data.Balance = amount
 }
 
 func (s *stateObject) deepCopy(db *StateDB) *stateObject {
-obj := &stateObject{
-db:                 db,
-address:            s.address,
-addressHash:        nil,
-origin:             s.origin,
-data:               s.data,
-code:               s.code,
-originStorage:      s.originStorage.Copy(),
-pendingStorage:     s.pendingStorage.Copy(),
-dirtyStorage:       s.dirtyStorage.Copy(),
-uncommittedStorage: s.uncommittedStorage.Copy(),
-dirtyCode:          s.dirtyCode,
-selfDestructed:     s.selfDestructed,
-newContract:        s.newContract,
-}
+	obj := &stateObject{
+		db:                 db,
+		address:            s.address,
+		addressHash:        nil,
+		origin:             s.origin,
+		data:               s.data,
+		code:               s.code,
+		originStorage:      s.originStorage.Copy(),
+		pendingStorage:     s.pendingStorage.Copy(),
+		dirtyStorage:       s.dirtyStorage.Copy(),
+		uncommittedStorage: s.uncommittedStorage.Copy(),
+		dirtyCode:          s.dirtyCode,
+		selfDestructed:     s.selfDestructed,
+		newContract:        s.newContract,
+	}
 
-switch s.trie.(type) {
-case *bintrie.BinaryTrie:
-// UBT uses only one tree, and the copy has already been
-// made in mustCopyTrie.
-obj.trie = db.trie
-case *transitiontrie.TransitionTrie:
-// Same thing for the transition tree, since the MPT is
-// read-only.
-obj.trie = db.trie
-case *trie.StateTrie:
-obj.trie = mustCopyTrie(s.trie)
-case nil:
-// do nothing
-}
-return obj
+	switch s.trie.(type) {
+	case *bintrie.BinaryTrie:
+		// UBT uses only one tree, and the copy has already been
+		// made in mustCopyTrie.
+		obj.trie = db.trie
+	case *transitiontrie.TransitionTrie:
+		// Same thing for the transition tree, since the MPT is
+		// read-only.
+		obj.trie = db.trie
+	case *trie.StateTrie:
+		obj.trie = mustCopyTrie(s.trie)
+	case nil:
+		// do nothing
+	}
+	return obj
 }
 
 //
@@ -556,87 +556,87 @@ return obj
 
 // Address returns the address of the SILA contract/account
 func (s *stateObject) Address() common.Address {
-return s.address
+	return s.address
 }
 
 // Code returns the SILA contract code associated with this object, if any.
 func (s *stateObject) Code() []byte {
-if len(s.code) != 0 {
-return s.code
-}
-if bytes.Equal(s.CodeHash(), types.EmptyCodeHash.Bytes()) {
-return nil
-}
-defer func(start time.Time) {
-s.db.CodeLoaded += 1
-s.db.CodeReads += time.Since(start)
-s.db.CodeLoadBytes += len(s.code)
-}(time.Now())
+	if len(s.code) != 0 {
+		return s.code
+	}
+	if bytes.Equal(s.CodeHash(), types.EmptyCodeHash.Bytes()) {
+		return nil
+	}
+	defer func(start time.Time) {
+		s.db.CodeLoaded += 1
+		s.db.CodeReads += time.Since(start)
+		s.db.CodeLoadBytes += len(s.code)
+	}(time.Now())
 
-code := s.db.reader.Code(s.address, common.BytesToHash(s.CodeHash()))
-if len(code) == 0 {
-s.db.setError(fmt.Errorf("SILA code is not found %x", s.CodeHash()))
-}
-s.code = code
-return code
+	code := s.db.reader.Code(s.address, common.BytesToHash(s.CodeHash()))
+	if len(code) == 0 {
+		s.db.setError(fmt.Errorf("SILA code is not found %x", s.CodeHash()))
+	}
+	s.code = code
+	return code
 }
 
 // CodeSize returns the size of the SILA contract code associated with this object,
 // or zero if none. This method is an almost mirror of Code, but uses a cache
 // inside the database to avoid loading codes seen recently.
 func (s *stateObject) CodeSize() int {
-if len(s.code) != 0 {
-return len(s.code)
-}
-if bytes.Equal(s.CodeHash(), types.EmptyCodeHash.Bytes()) {
-return 0
-}
-defer func(start time.Time) {
-s.db.CodeLoaded += 1
-s.db.CodeReads += time.Since(start)
-}(time.Now())
+	if len(s.code) != 0 {
+		return len(s.code)
+	}
+	if bytes.Equal(s.CodeHash(), types.EmptyCodeHash.Bytes()) {
+		return 0
+	}
+	defer func(start time.Time) {
+		s.db.CodeLoaded += 1
+		s.db.CodeReads += time.Since(start)
+	}(time.Now())
 
-size := s.db.reader.CodeSize(s.address, common.BytesToHash(s.CodeHash()))
-if size == 0 {
-s.db.setError(fmt.Errorf("SILA code is not found %x", s.CodeHash()))
-}
-return size
+	size := s.db.reader.CodeSize(s.address, common.BytesToHash(s.CodeHash()))
+	if size == 0 {
+		s.db.setError(fmt.Errorf("SILA code is not found %x", s.CodeHash()))
+	}
+	return size
 }
 
 func (s *stateObject) SetCode(codeHash common.Hash, code []byte) (prev []byte) {
-prev = slices.Clone(s.code)
-s.db.journal.setCode(s.address, prev)
-s.setCode(codeHash, code)
-return prev
+	prev = slices.Clone(s.code)
+	s.db.journal.setCode(s.address, prev)
+	s.setCode(codeHash, code)
+	return prev
 }
 
 func (s *stateObject) setCode(codeHash common.Hash, code []byte) {
-s.code = code
-s.data.CodeHash = codeHash[:]
-s.dirtyCode = true
+	s.code = code
+	s.data.CodeHash = codeHash[:]
+	s.dirtyCode = true
 }
 
 func (s *stateObject) SetNonce(nonce uint64) {
-s.db.journal.nonceChange(s.address, s.data.Nonce)
-s.setNonce(nonce)
+	s.db.journal.nonceChange(s.address, s.data.Nonce)
+	s.setNonce(nonce)
 }
 
 func (s *stateObject) setNonce(nonce uint64) {
-s.data.Nonce = nonce
+	s.data.Nonce = nonce
 }
 
 func (s *stateObject) CodeHash() []byte {
-return s.data.CodeHash
+	return s.data.CodeHash
 }
 
 func (s *stateObject) Balance() *uint256.Int {
-return s.data.Balance
+	return s.data.Balance
 }
 
 func (s *stateObject) Nonce() uint64 {
-return s.data.Nonce
+	return s.data.Nonce
 }
 
 func (s *stateObject) Root() common.Hash {
-return s.data.Root
+	return s.data.Root
 }

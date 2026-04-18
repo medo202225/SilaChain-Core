@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,10 +17,10 @@
 package core
 
 import (
-"time"
+	"time"
 
-"github.com/sila-library/sila/common"
-"github.com/sila-library/sila/core/types"
+	"github.com/sila-library/sila/common"
+	"github.com/sila-library/sila/core/types"
 )
 
 // NewTxsEvent is posted when a batch of transactions enter the transaction pool.
@@ -30,18 +30,18 @@ type NewTxsEvent struct{ Txs []*types.Transaction }
 type RemovedLogsEvent struct{ Logs []*types.Log }
 
 type ChainEvent struct {
-Header       *types.Header
-Receipts     []*types.Receipt
-Transactions []*types.Transaction
+	Header       *types.Header
+	Receipts     []*types.Receipt
+	Transactions []*types.Transaction
 }
 
 type ChainHeadEvent struct {
-Header *types.Header
+	Header *types.Header
 }
 
 // NewPayloadEvent is posted when engine_newPayloadVX processes a block.
 type NewPayloadEvent struct {
-Hash           common.Hash
-Number         uint64
-ProcessingTime time.Duration
+	Hash           common.Hash
+	Number         uint64
+	ProcessingTime time.Duration
 }

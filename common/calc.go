@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -21,10 +21,10 @@ import "time"
 // CalculateETA calculates the estimated remaining time based on the
 // number of finished task, remaining task, and the time cost for finished task.
 func CalculateETA(done, left uint64, elapsed time.Duration) time.Duration {
-if done == 0 || elapsed.Milliseconds() == 0 {
-return 0
-}
+	if done == 0 || elapsed.Milliseconds() == 0 {
+		return 0
+	}
 
-speed := float64(done) / float64(elapsed.Milliseconds())
-return time.Duration(float64(left)/speed) * time.Millisecond
+	speed := float64(done) / float64(elapsed.Milliseconds())
+	return time.Duration(float64(left)/speed) * time.Millisecond
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -22,5 +22,5 @@ package rawdb
 // syncDir is a no-op on Windows. Fsyncing a directory handle is not
 // supported and returns "Access is denied".
 func syncDir(name string) error {
-return nil
+	return nil
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,83 +17,83 @@
 package rawdb
 
 import (
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/rlp"
+	"silachain/core/types"
+	"silachain/ethdb"
+	"silachain/log"
+	"silachain/rlp"
 )
 
 // ReadSkeletonSyncStatus retrieves the serialized sync status saved at shutdown.
 func ReadSkeletonSyncStatus(db ethdb.KeyValueReader) []byte {
-data, _ := db.Get(skeletonSyncStatusKey)
-return data
+	data, _ := db.Get(skeletonSyncStatusKey)
+	return data
 }
 
 // WriteSkeletonSyncStatus stores the serialized sync status to save at shutdown.
 func WriteSkeletonSyncStatus(db ethdb.KeyValueWriter, status []byte) {
-if err := db.Put(skeletonSyncStatusKey, status); err != nil {
-log.Crit("Failed to store skeleton sync status", "err", err)
-}
+	if err := db.Put(skeletonSyncStatusKey, status); err != nil {
+		log.Crit("Failed to store skeleton sync status", "err", err)
+	}
 }
 
 // DeleteSkeletonSyncStatus deletes the serialized sync status.
 func DeleteSkeletonSyncStatus(db ethdb.KeyValueWriter) {
-if err := db.Delete(skeletonSyncStatusKey); err != nil {
-log.Crit("Failed to remove skeleton sync status", "err", err)
-}
+	if err := db.Delete(skeletonSyncStatusKey); err != nil {
+		log.Crit("Failed to remove skeleton sync status", "err", err)
+	}
 }
 
 // ReadSkeletonHeader retrieves a block header from the skeleton sync store.
 func ReadSkeletonHeader(db ethdb.KeyValueReader, number uint64) *types.Header {
-data, _ := db.Get(skeletonHeaderKey(number))
-if len(data) == 0 {
-return nil
-}
-header := new(types.Header)
-if err := rlp.DecodeBytes(data, header); err != nil {
-log.Error("Invalid skeleton header RLP", "number", number, "err", err)
-return nil
-}
-return header
+	data, _ := db.Get(skeletonHeaderKey(number))
+	if len(data) == 0 {
+		return nil
+	}
+	header := new(types.Header)
+	if err := rlp.DecodeBytes(data, header); err != nil {
+		log.Error("Invalid skeleton header RLP", "number", number, "err", err)
+		return nil
+	}
+	return header
 }
 
 // WriteSkeletonHeader stores a block header into the skeleton sync store.
 func WriteSkeletonHeader(db ethdb.KeyValueWriter, header *types.Header) {
-data, err := rlp.EncodeToBytes(header)
-if err != nil {
-log.Crit("Failed to RLP encode header", "err", err)
-}
-key := skeletonHeaderKey(header.Number.Uint64())
-if err := db.Put(key, data); err != nil {
-log.Crit("Failed to store skeleton header", "err", err)
-}
+	data, err := rlp.EncodeToBytes(header)
+	if err != nil {
+		log.Crit("Failed to RLP encode header", "err", err)
+	}
+	key := skeletonHeaderKey(header.Number.Uint64())
+	if err := db.Put(key, data); err != nil {
+		log.Crit("Failed to store skeleton header", "err", err)
+	}
 }
 
 // DeleteSkeletonHeader removes block header data associated with a number.
 func DeleteSkeletonHeader(db ethdb.KeyValueWriter, number uint64) {
-if err := db.Delete(skeletonHeaderKey(number)); err != nil {
-log.Crit("Failed to delete skeleton header", "err", err)
-}
+	if err := db.Delete(skeletonHeaderKey(number)); err != nil {
+		log.Crit("Failed to delete skeleton header", "err", err)
+	}
 }
 
 const (
-StateSyncUnknown  = uint8(0)
-StateSyncRunning  = uint8(1)
-StateSyncFinished = uint8(2)
+	StateSyncUnknown  = uint8(0)
+	StateSyncRunning  = uint8(1)
+	StateSyncFinished = uint8(2)
 )
 
 // ReadSnapSyncStatusFlag retrieves the state snap sync status flag.
 func ReadSnapSyncStatusFlag(db ethdb.KeyValueReader) uint8 {
-blob, err := db.Get(snapSyncStatusFlagKey)
-if err != nil || len(blob) != 1 {
-return StateSyncUnknown
-}
-return blob[0]
+	blob, err := db.Get(snapSyncStatusFlagKey)
+	if err != nil || len(blob) != 1 {
+		return StateSyncUnknown
+	}
+	return blob[0]
 }
 
 // WriteSnapSyncStatusFlag stores the state snap sync status flag.
 func WriteSnapSyncStatusFlag(db ethdb.KeyValueWriter, flag uint8) {
-if err := db.Put(snapSyncStatusFlagKey, []byte{flag}); err != nil {
-log.Crit("Failed to store sync status flag", "err", err)
-}
+	if err := db.Put(snapSyncStatusFlagKey, []byte{flag}); err != nil {
+		log.Crit("Failed to store sync status flag", "err", err)
+	}
 }

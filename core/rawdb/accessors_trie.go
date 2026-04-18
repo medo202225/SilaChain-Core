@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,12 +17,12 @@
 package rawdb
 
 import (
-"fmt"
+	"fmt"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/log"
+	"silachain/common"
+	"silachain/crypto"
+	"silachain/ethdb"
+	"silachain/log"
 )
 
 // HashScheme is the legacy hash-based state scheme.
@@ -33,203 +33,203 @@ const PathScheme = "path"
 
 // ReadAccountTrieNode retrieves the account trie node with the specified node path.
 func ReadAccountTrieNode(db ethdb.KeyValueReader, path []byte) []byte {
-data, _ := db.Get(accountTrieNodeKey(path))
-return data
+	data, _ := db.Get(accountTrieNodeKey(path))
+	return data
 }
 
 // HasAccountTrieNode checks the presence of the account trie node.
 func HasAccountTrieNode(db ethdb.KeyValueReader, path []byte) bool {
-has, err := db.Has(accountTrieNodeKey(path))
-if err != nil {
-return false
-}
-return has
+	has, err := db.Has(accountTrieNodeKey(path))
+	if err != nil {
+		return false
+	}
+	return has
 }
 
 // WriteAccountTrieNode writes the provided account trie node into database.
 func WriteAccountTrieNode(db ethdb.KeyValueWriter, path []byte, node []byte) {
-if err := db.Put(accountTrieNodeKey(path), node); err != nil {
-log.Crit("Failed to store account trie node", "err", err)
-}
+	if err := db.Put(accountTrieNodeKey(path), node); err != nil {
+		log.Crit("Failed to store account trie node", "err", err)
+	}
 }
 
 // DeleteAccountTrieNode deletes the specified account trie node from the database.
 func DeleteAccountTrieNode(db ethdb.KeyValueWriter, path []byte) {
-if err := db.Delete(accountTrieNodeKey(path)); err != nil {
-log.Crit("Failed to delete account trie node", "err", err)
-}
+	if err := db.Delete(accountTrieNodeKey(path)); err != nil {
+		log.Crit("Failed to delete account trie node", "err", err)
+	}
 }
 
 // ReadStorageTrieNode retrieves the storage trie node with the specified node path.
 func ReadStorageTrieNode(db ethdb.KeyValueReader, accountHash common.Hash, path []byte) []byte {
-data, _ := db.Get(storageTrieNodeKey(accountHash, path))
-return data
+	data, _ := db.Get(storageTrieNodeKey(accountHash, path))
+	return data
 }
 
 // HasStorageTrieNode checks the presence of the storage trie node.
 func HasStorageTrieNode(db ethdb.KeyValueReader, accountHash common.Hash, path []byte) bool {
-has, err := db.Has(storageTrieNodeKey(accountHash, path))
-if err != nil {
-return false
-}
-return has
+	has, err := db.Has(storageTrieNodeKey(accountHash, path))
+	if err != nil {
+		return false
+	}
+	return has
 }
 
 // WriteStorageTrieNode writes the provided storage trie node into database.
 func WriteStorageTrieNode(db ethdb.KeyValueWriter, accountHash common.Hash, path []byte, node []byte) {
-if err := db.Put(storageTrieNodeKey(accountHash, path), node); err != nil {
-log.Crit("Failed to store storage trie node", "err", err)
-}
+	if err := db.Put(storageTrieNodeKey(accountHash, path), node); err != nil {
+		log.Crit("Failed to store storage trie node", "err", err)
+	}
 }
 
 // DeleteStorageTrieNode deletes the specified storage trie node from the database.
 func DeleteStorageTrieNode(db ethdb.KeyValueWriter, accountHash common.Hash, path []byte) {
-if err := db.Delete(storageTrieNodeKey(accountHash, path)); err != nil {
-log.Crit("Failed to delete storage trie node", "err", err)
-}
+	if err := db.Delete(storageTrieNodeKey(accountHash, path)); err != nil {
+		log.Crit("Failed to delete storage trie node", "err", err)
+	}
 }
 
 // ReadLegacyTrieNode retrieves the legacy trie node with the given associated node hash.
 func ReadLegacyTrieNode(db ethdb.KeyValueReader, hash common.Hash) []byte {
-data, err := db.Get(hash.Bytes())
-if err != nil {
-return nil
-}
-return data
+	data, err := db.Get(hash.Bytes())
+	if err != nil {
+		return nil
+	}
+	return data
 }
 
 // HasLegacyTrieNode checks if the trie node with the provided hash is present.
 func HasLegacyTrieNode(db ethdb.KeyValueReader, hash common.Hash) bool {
-ok, _ := db.Has(hash.Bytes())
-return ok
+	ok, _ := db.Has(hash.Bytes())
+	return ok
 }
 
 // WriteLegacyTrieNode writes the provided legacy trie node to database.
 func WriteLegacyTrieNode(db ethdb.KeyValueWriter, hash common.Hash, node []byte) {
-if err := db.Put(hash.Bytes(), node); err != nil {
-log.Crit("Failed to store legacy trie node", "err", err)
-}
+	if err := db.Put(hash.Bytes(), node); err != nil {
+		log.Crit("Failed to store legacy trie node", "err", err)
+	}
 }
 
 // DeleteLegacyTrieNode deletes the specified legacy trie node from database.
 func DeleteLegacyTrieNode(db ethdb.KeyValueWriter, hash common.Hash) {
-if err := db.Delete(hash.Bytes()); err != nil {
-log.Crit("Failed to delete legacy trie node", "err", err)
-}
+	if err := db.Delete(hash.Bytes()); err != nil {
+		log.Crit("Failed to delete legacy trie node", "err", err)
+	}
 }
 
 // HasTrieNode checks the trie node presence with the provided node info.
 func HasTrieNode(db ethdb.KeyValueReader, owner common.Hash, path []byte, hash common.Hash, scheme string) bool {
-switch scheme {
-case HashScheme:
-return HasLegacyTrieNode(db, hash)
-case PathScheme:
-var blob []byte
-if owner == (common.Hash{}) {
-blob = ReadAccountTrieNode(db, path)
-} else {
-blob = ReadStorageTrieNode(db, owner, path)
-}
-if len(blob) == 0 {
-return false
-}
-return crypto.Keccak256Hash(blob) == hash
-default:
-panic(fmt.Sprintf("Unknown scheme %v", scheme))
-}
+	switch scheme {
+	case HashScheme:
+		return HasLegacyTrieNode(db, hash)
+	case PathScheme:
+		var blob []byte
+		if owner == (common.Hash{}) {
+			blob = ReadAccountTrieNode(db, path)
+		} else {
+			blob = ReadStorageTrieNode(db, owner, path)
+		}
+		if len(blob) == 0 {
+			return false
+		}
+		return crypto.Keccak256Hash(blob) == hash
+	default:
+		panic(fmt.Sprintf("Unknown scheme %v", scheme))
+	}
 }
 
 // ReadTrieNode retrieves the trie node from database.
 func ReadTrieNode(db ethdb.KeyValueReader, owner common.Hash, path []byte, hash common.Hash, scheme string) []byte {
-switch scheme {
-case HashScheme:
-return ReadLegacyTrieNode(db, hash)
-case PathScheme:
-var blob []byte
-if owner == (common.Hash{}) {
-blob = ReadAccountTrieNode(db, path)
-} else {
-blob = ReadStorageTrieNode(db, owner, path)
-}
-if len(blob) == 0 {
-return nil
-}
-if crypto.Keccak256Hash(blob) != hash {
-return nil
-}
-return blob
-default:
-panic(fmt.Sprintf("Unknown scheme %v", scheme))
-}
+	switch scheme {
+	case HashScheme:
+		return ReadLegacyTrieNode(db, hash)
+	case PathScheme:
+		var blob []byte
+		if owner == (common.Hash{}) {
+			blob = ReadAccountTrieNode(db, path)
+		} else {
+			blob = ReadStorageTrieNode(db, owner, path)
+		}
+		if len(blob) == 0 {
+			return nil
+		}
+		if crypto.Keccak256Hash(blob) != hash {
+			return nil
+		}
+		return blob
+	default:
+		panic(fmt.Sprintf("Unknown scheme %v", scheme))
+	}
 }
 
 // WriteTrieNode writes the trie node into database.
 func WriteTrieNode(db ethdb.KeyValueWriter, owner common.Hash, path []byte, hash common.Hash, node []byte, scheme string) {
-switch scheme {
-case HashScheme:
-WriteLegacyTrieNode(db, hash, node)
-case PathScheme:
-if owner == (common.Hash{}) {
-WriteAccountTrieNode(db, path, node)
-} else {
-WriteStorageTrieNode(db, owner, path, node)
-}
-default:
-panic(fmt.Sprintf("Unknown scheme %v", scheme))
-}
+	switch scheme {
+	case HashScheme:
+		WriteLegacyTrieNode(db, hash, node)
+	case PathScheme:
+		if owner == (common.Hash{}) {
+			WriteAccountTrieNode(db, path, node)
+		} else {
+			WriteStorageTrieNode(db, owner, path, node)
+		}
+	default:
+		panic(fmt.Sprintf("Unknown scheme %v", scheme))
+	}
 }
 
 // DeleteTrieNode deletes the trie node from database.
 func DeleteTrieNode(db ethdb.KeyValueWriter, owner common.Hash, path []byte, hash common.Hash, scheme string) {
-switch scheme {
-case HashScheme:
-DeleteLegacyTrieNode(db, hash)
-case PathScheme:
-if owner == (common.Hash{}) {
-DeleteAccountTrieNode(db, path)
-} else {
-DeleteStorageTrieNode(db, owner, path)
-}
-default:
-panic(fmt.Sprintf("Unknown scheme %v", scheme))
-}
+	switch scheme {
+	case HashScheme:
+		DeleteLegacyTrieNode(db, hash)
+	case PathScheme:
+		if owner == (common.Hash{}) {
+			DeleteAccountTrieNode(db, path)
+		} else {
+			DeleteStorageTrieNode(db, owner, path)
+		}
+	default:
+		panic(fmt.Sprintf("Unknown scheme %v", scheme))
+	}
 }
 
 // ReadStateScheme reads the state scheme of persistent state.
 func ReadStateScheme(db ethdb.Database) string {
-if HasAccountTrieNode(db, nil) {
-return PathScheme
-}
-if id := ReadPersistentStateID(db); id != 0 {
-return PathScheme
-}
-header := ReadHeader(db, ReadCanonicalHash(db, 0), 0)
-if header == nil {
-return ""
-}
-if !HasLegacyTrieNode(db, header.Root) {
-return ""
-}
-return HashScheme
+	if HasAccountTrieNode(db, nil) {
+		return PathScheme
+	}
+	if id := ReadPersistentStateID(db); id != 0 {
+		return PathScheme
+	}
+	header := ReadHeader(db, ReadCanonicalHash(db, 0), 0)
+	if header == nil {
+		return ""
+	}
+	if !HasLegacyTrieNode(db, header.Root) {
+		return ""
+	}
+	return HashScheme
 }
 
 // ParseStateScheme checks if the specified state scheme is compatible.
 func ParseStateScheme(provided string, disk ethdb.Database) (string, error) {
-stored := ReadStateScheme(disk)
-if provided == "" {
-if stored == "" {
-log.Info("State schema set to default", "scheme", "path")
-return PathScheme, nil
-}
-log.Info("State scheme set to already existing", "scheme", stored)
-return stored, nil
-}
-if provided != HashScheme && provided != PathScheme {
-return "", fmt.Errorf("invalid state scheme %s", provided)
-}
-if stored == "" || provided == stored {
-log.Info("State scheme set by user", "scheme", provided)
-return provided, nil
-}
-return "", fmt.Errorf("incompatible state scheme, stored: %s, provided: %s", stored, provided)
+	stored := ReadStateScheme(disk)
+	if provided == "" {
+		if stored == "" {
+			log.Info("State schema set to default", "scheme", "path")
+			return PathScheme, nil
+		}
+		log.Info("State scheme set to already existing", "scheme", stored)
+		return stored, nil
+	}
+	if provided != HashScheme && provided != PathScheme {
+		return "", fmt.Errorf("invalid state scheme %s", provided)
+	}
+	if stored == "" || provided == stored {
+		log.Info("State scheme set by user", "scheme", provided)
+		return provided, nil
+	}
+	return "", fmt.Errorf("incompatible state scheme, stored: %s, provided: %s", stored, provided)
 }

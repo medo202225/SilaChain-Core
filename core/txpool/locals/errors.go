@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,30 +17,30 @@
 package locals
 
 import (
-"errors"
+	"errors"
 
-"github.com/SILA/sila-chain/core/txpool"
-"github.com/SILA/sila-chain/core/txpool/legacypool"
+	"silachain/core/txpool"
+	"silachain/core/txpool/legacypool"
 )
 
 // IsTemporaryReject determines whether the given error indicates a temporary
 // reason to reject a transaction from being included in the txpool on SILA.
 // The result may change if the txpool's state changes later.
 func IsTemporaryReject(err error) bool {
-switch {
-case errors.Is(err, legacypool.ErrOutOfOrderTxFromDelegated):
-return true
-case errors.Is(err, txpool.ErrInflightTxLimitReached):
-return true
-case errors.Is(err, legacypool.ErrAuthorityReserved):
-return true
-case errors.Is(err, txpool.ErrUnderpriced):
-return true
-case errors.Is(err, legacypool.ErrTxPoolOverflow):
-return true
-case errors.Is(err, legacypool.ErrFutureReplacePending):
-return true
-default:
-return false
-}
+	switch {
+	case errors.Is(err, legacypool.ErrOutOfOrderTxFromDelegated):
+		return true
+	case errors.Is(err, txpool.ErrInflightTxLimitReached):
+		return true
+	case errors.Is(err, legacypool.ErrAuthorityReserved):
+		return true
+	case errors.Is(err, txpool.ErrUnderpriced):
+		return true
+	case errors.Is(err, legacypool.ErrTxPoolOverflow):
+		return true
+	case errors.Is(err, legacypool.ErrFutureReplacePending):
+		return true
+	default:
+		return false
+	}
 }

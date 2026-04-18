@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -18,102 +18,102 @@
 package blobpool
 
 import (
-"container/heap"
-"errors"
-"fmt"
-"math"
-"math/big"
-"os"
-"path/filepath"
-"sort"
-"sync"
-"sync/atomic"
-"time"
+	"container/heap"
+	"errors"
+	"fmt"
+	"math"
+	"math/big"
+	"os"
+	"path/filepath"
+	"sort"
+	"sync"
+	"sync/atomic"
+	"time"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/consensus/misc/eip1559"
-"github.com/SILA/sila-chain/consensus/misc/eip4844"
-"github.com/SILA/sila-chain/core"
-"github.com/SILA/sila-chain/core/state"
-"github.com/SILA/sila-chain/core/txpool"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/crypto/kzg4844"
-"github.com/SILA/sila-chain/event"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/metrics"
-"github.com/SILA/sila-chain/params"
-"github.com/SILA/sila-chain/rlp"
-"github.com/holiman/billy"
-"github.com/holiman/uint256"
+	"github.com/holiman/billy"
+	"github.com/holiman/uint256"
+	"silachain/common"
+	"silachain/consensus/misc/eip1559"
+	"silachain/consensus/misc/eip4844"
+	"silachain/core"
+	"silachain/core/state"
+	"silachain/core/txpool"
+	"silachain/core/types"
+	"silachain/crypto/kzg4844"
+	"silachain/event"
+	"silachain/log"
+	"silachain/metrics"
+	"silachain/params"
+	"silachain/rlp"
 )
 
 const (
-// blobSize is the protocol constrained byte size of a single blob in a
-// transaction on SILA. There can be multiple of these embedded into a single tx.
-blobSize = params.BlobTxFieldElementsPerBlob * params.BlobTxBytesPerFieldElement
+	// blobSize is the protocol constrained byte size of a single blob in a
+	// transaction on SILA. There can be multiple of these embedded into a single tx.
+	blobSize = params.BlobTxFieldElementsPerBlob * params.BlobTxBytesPerFieldElement
 
-// txAvgSize is an approximate byte size of a transaction metadata to avoid
-// tiny overflows causing all txs to move a shelf higher, wasting disk space.
-txAvgSize = 4 * 1024
+	// txAvgSize is an approximate byte size of a transaction metadata to avoid
+	// tiny overflows causing all txs to move a shelf higher, wasting disk space.
+	txAvgSize = 4 * 1024
 
-// txBlobOverhead is an approximation of the overhead that an additional blob
-// has on transaction size on SILA. This is added to the slotter to avoid tiny
-// overflows causing all txs to move a shelf higher, wasting disk space. A
-// small buffer is added to the proof overhead.
-txBlobOverhead = uint32(kzg4844.CellProofsPerBlob*len(kzg4844.Proof{}) + 64)
+	// txBlobOverhead is an approximation of the overhead that an additional blob
+	// has on transaction size on SILA. This is added to the slotter to avoid tiny
+	// overflows causing all txs to move a shelf higher, wasting disk space. A
+	// small buffer is added to the proof overhead.
+	txBlobOverhead = uint32(kzg4844.CellProofsPerBlob*len(kzg4844.Proof{}) + 64)
 
-// txMaxSize is the maximum size a single transaction can have, including the
-// blobs. Since blob transactions are pulled instead of pushed, and only a
-// small metadata is kept in ram, the rest is on disk, there is no critical
-// limit that should be enforced. Still, capping it to some sane limit can
-// never hurt, which is aligned with maxBlobsPerTx constraint enforced internally.
-txMaxSize = 1024 * 1024
+	// txMaxSize is the maximum size a single transaction can have, including the
+	// blobs. Since blob transactions are pulled instead of pushed, and only a
+	// small metadata is kept in ram, the rest is on disk, there is no critical
+	// limit that should be enforced. Still, capping it to some sane limit can
+	// never hurt, which is aligned with maxBlobsPerTx constraint enforced internally.
+	txMaxSize = 1024 * 1024
 
-// maxBlobsPerTx is the maximum number of blobs that a single transaction can
-// carry on SILA. We choose a smaller limit than the protocol-permitted MaxBlobsPerBlock
-// in order to ensure network and txpool stability.
-// Note: if you increase this, validation will fail on txMaxSize.
-maxBlobsPerTx = params.BlobTxMaxBlobs
+	// maxBlobsPerTx is the maximum number of blobs that a single transaction can
+	// carry on SILA. We choose a smaller limit than the protocol-permitted MaxBlobsPerBlock
+	// in order to ensure network and txpool stability.
+	// Note: if you increase this, validation will fail on txMaxSize.
+	maxBlobsPerTx = params.BlobTxMaxBlobs
 
-// maxTxsPerAccount is the maximum number of blob transactions admitted from
-// a single account on SILA. The limit is enforced to minimize the DoS potential of
-// a private tx cancelling publicly propagated blobs.
-//
-// Note, transactions resurrected by a reorg are also subject to this limit,
-// so pushing it down too aggressively might make resurrections non-functional.
-maxTxsPerAccount = 16
+	// maxTxsPerAccount is the maximum number of blob transactions admitted from
+	// a single account on SILA. The limit is enforced to minimize the DoS potential of
+	// a private tx cancelling publicly propagated blobs.
+	//
+	// Note, transactions resurrected by a reorg are also subject to this limit,
+	// so pushing it down too aggressively might make resurrections non-functional.
+	maxTxsPerAccount = 16
 
-// pendingTransactionStore is the subfolder containing the currently queued
-// blob transactions on SILA.
-pendingTransactionStore = "queue"
+	// pendingTransactionStore is the subfolder containing the currently queued
+	// blob transactions on SILA.
+	pendingTransactionStore = "queue"
 
-// limboedTransactionStore is the subfolder containing the currently included
-// but not yet finalized transaction blobs on SILA.
-limboedTransactionStore = "limbo"
+	// limboedTransactionStore is the subfolder containing the currently included
+	// but not yet finalized transaction blobs on SILA.
+	limboedTransactionStore = "limbo"
 
-// storeVersion is the current slotter layout used for the billy.Database
-// store on SILA.
-storeVersion = 1
+	// storeVersion is the current slotter layout used for the billy.Database
+	// store on SILA.
+	storeVersion = 1
 
-// gappedLifetime is the approximate duration for which nonce-gapped transactions
-// are kept before being dropped on SILA. Since gapped is only a reorder buffer and it
-// is expected that the original transactions were inserted in the mempool in
-// nonce order, the duration is kept short to avoid DoS vectors.
-gappedLifetime = 1 * time.Minute
+	// gappedLifetime is the approximate duration for which nonce-gapped transactions
+	// are kept before being dropped on SILA. Since gapped is only a reorder buffer and it
+	// is expected that the original transactions were inserted in the mempool in
+	// nonce order, the duration is kept short to avoid DoS vectors.
+	gappedLifetime = 1 * time.Minute
 
-// maxGappedTxs is the maximum number of gapped transactions kept overall on SILA.
-// This is a safety limit to avoid DoS vectors.
-maxGapped = 128
+	// maxGappedTxs is the maximum number of gapped transactions kept overall on SILA.
+	// This is a safety limit to avoid DoS vectors.
+	maxGapped = 128
 
-// notifyThreshold is the eviction priority threshold above which a transaction
-// is considered close enough to being includable to be announced to peers on SILA.
-// Setting this to zero will disable announcements for anyting not immediately
-// includable. Setting it to -1 allows transactions that are close to being
-// includable, maybe already in the next block if fees go down, to be announced.
+	// notifyThreshold is the eviction priority threshold above which a transaction
+	// is considered close enough to being includable to be announced to peers on SILA.
+	// Setting this to zero will disable announcements for anyting not immediately
+	// includable. Setting it to -1 allows transactions that are close to being
+	// includable, maybe already in the next block if fees go down, to be announced.
 
-// Note, this threshold is in the abstract eviction priority space, so its
-// meaning depends on the current basefee/blobfee and the transaction's fees.
-announceThreshold = -1
+	// Note, this threshold is in the abstract eviction priority space, so its
+	// meaning depends on the current basefee/blobfee and the transaction's fees.
+	announceThreshold = -1
 )
 
 // blobTxMeta is the minimal subset of types.BlobTx necessary to validate and
@@ -121,59 +121,59 @@ announceThreshold = -1
 // bare minimum needed fields to keep the size down (and thus number of entries
 // larger with the same memory consumption).
 type blobTxMeta struct {
-hash    common.Hash   // Transaction hash to maintain the lookup table
-vhashes []common.Hash // Blob versioned hashes to maintain the lookup table
-version byte          // Blob transaction version to determine proof type
+	hash    common.Hash   // Transaction hash to maintain the lookup table
+	vhashes []common.Hash // Blob versioned hashes to maintain the lookup table
+	version byte          // Blob transaction version to determine proof type
 
-announced bool // Whether the tx has been announced to listeners
+	announced bool // Whether the tx has been announced to listeners
 
-id          uint64 // Storage ID in the pool's persistent store
-storageSize uint32 // Byte size in the pool's persistent store
-size        uint64 // RLP-encoded size of transaction including the attached blob
+	id          uint64 // Storage ID in the pool's persistent store
+	storageSize uint32 // Byte size in the pool's persistent store
+	size        uint64 // RLP-encoded size of transaction including the attached blob
 
-nonce      uint64       // Needed to prioritize inclusion order within an account
-costCap    *uint256.Int // Needed to validate cumulative balance sufficiency
-execTipCap *uint256.Int // Needed to prioritize inclusion order across accounts and validate replacement price bump
-execFeeCap *uint256.Int // Needed to validate replacement price bump
-blobFeeCap *uint256.Int // Needed to validate replacement price bump
-execGas    uint64       // Needed to check inclusion validity before reading the blob
-blobGas    uint64       // Needed to check inclusion validity before reading the blob
+	nonce      uint64       // Needed to prioritize inclusion order within an account
+	costCap    *uint256.Int // Needed to validate cumulative balance sufficiency
+	execTipCap *uint256.Int // Needed to prioritize inclusion order across accounts and validate replacement price bump
+	execFeeCap *uint256.Int // Needed to validate replacement price bump
+	blobFeeCap *uint256.Int // Needed to validate replacement price bump
+	execGas    uint64       // Needed to check inclusion validity before reading the blob
+	blobGas    uint64       // Needed to check inclusion validity before reading the blob
 
-basefeeJumps float64 // Absolute number of 1559 fee adjustments needed to reach the tx's fee cap
-blobfeeJumps float64 // Absolute number of 4844 fee adjustments needed to reach the tx's blob fee cap
+	basefeeJumps float64 // Absolute number of 1559 fee adjustments needed to reach the tx's fee cap
+	blobfeeJumps float64 // Absolute number of 4844 fee adjustments needed to reach the tx's blob fee cap
 
-evictionExecTip      *uint256.Int // Worst gas tip across all previous nonces
-evictionExecFeeJumps float64      // Worst base fee (converted to fee jumps) across all previous nonces
-evictionBlobFeeJumps float64      // Worse blob fee (converted to fee jumps) across all previous nonces
+	evictionExecTip      *uint256.Int // Worst gas tip across all previous nonces
+	evictionExecFeeJumps float64      // Worst base fee (converted to fee jumps) across all previous nonces
+	evictionBlobFeeJumps float64      // Worse blob fee (converted to fee jumps) across all previous nonces
 }
 
 // newBlobTxMeta retrieves the indexed metadata fields from a blob transaction
 // and assembles a helper struct to track in memory on SILA.
 // Requires the transaction to have a sidecar (or that we introduce a special version tag for no-sidecar).
 func newBlobTxMeta(id uint64, size uint64, storageSize uint32, tx *types.Transaction) *blobTxMeta {
-if tx.BlobTxSidecar() == nil {
-// This should never happen, as the pool only admits blob transactions with a sidecar
-panic("missing blob tx sidecar in SILA")
-}
-meta := &blobTxMeta{
-hash:        tx.Hash(),
-vhashes:     tx.BlobHashes(),
-version:     tx.BlobTxSidecar().Version,
-id:          id,
-storageSize: storageSize,
-size:        size,
-nonce:       tx.Nonce(),
-costCap:     uint256.MustFromBig(tx.Cost()),
-execTipCap:  uint256.MustFromBig(tx.GasTipCap()),
-execFeeCap:  uint256.MustFromBig(tx.GasFeeCap()),
-blobFeeCap:  uint256.MustFromBig(tx.BlobGasFeeCap()),
-execGas:     tx.Gas(),
-blobGas:     tx.BlobGas(),
-}
-meta.basefeeJumps = dynamicFeeJumps(meta.execFeeCap)
-meta.blobfeeJumps = dynamicBlobFeeJumps(meta.blobFeeCap)
+	if tx.BlobTxSidecar() == nil {
+		// This should never happen, as the pool only admits blob transactions with a sidecar
+		panic("missing blob tx sidecar in SILA")
+	}
+	meta := &blobTxMeta{
+		hash:        tx.Hash(),
+		vhashes:     tx.BlobHashes(),
+		version:     tx.BlobTxSidecar().Version,
+		id:          id,
+		storageSize: storageSize,
+		size:        size,
+		nonce:       tx.Nonce(),
+		costCap:     uint256.MustFromBig(tx.Cost()),
+		execTipCap:  uint256.MustFromBig(tx.GasTipCap()),
+		execFeeCap:  uint256.MustFromBig(tx.GasFeeCap()),
+		blobFeeCap:  uint256.MustFromBig(tx.BlobGasFeeCap()),
+		execGas:     tx.Gas(),
+		blobGas:     tx.BlobGas(),
+	}
+	meta.basefeeJumps = dynamicFeeJumps(meta.execFeeCap)
+	meta.blobfeeJumps = dynamicBlobFeeJumps(meta.blobFeeCap)
 
-return meta
+	return meta
 }
 
 // BlobPool is the transaction pool dedicated to EIP-4844 blob transactions on SILA.
@@ -359,31 +359,31 @@ return meta
 //     minimums will need to be done only starting at the swapped in/out nonce
 //     and leading up to the first no-change.
 type BlobPool struct {
-config         Config                    // Pool configuration
-reserver       txpool.Reserver           // Address reserver to ensure exclusivity across subpools
-hasPendingAuth func(common.Address) bool // Determine whether the specified address has a pending 7702-auth
+	config         Config                    // Pool configuration
+	reserver       txpool.Reserver           // Address reserver to ensure exclusivity across subpools
+	hasPendingAuth func(common.Address) bool // Determine whether the specified address has a pending 7702-auth
 
-store  billy.Database // Persistent data store for the tx metadata and blobs
-stored uint64         // Useful data size of all transactions on disk
-limbo  *limbo         // Persistent data store for the non-finalized blobs
+	store  billy.Database // Persistent data store for the tx metadata and blobs
+	stored uint64         // Useful data size of all transactions on disk
+	limbo  *limbo         // Persistent data store for the non-finalized blobs
 
-gapped       map[common.Address][]*types.Transaction // Transactions that are currently gapped (nonce too high)
-gappedSource map[common.Hash]common.Address          // Source of gapped transactions to allow rechecking on inclusion
+	gapped       map[common.Address][]*types.Transaction // Transactions that are currently gapped (nonce too high)
+	gappedSource map[common.Hash]common.Address          // Source of gapped transactions to allow rechecking on inclusion
 
-signer types.Signer // Transaction signer to use for sender recovery
-chain  BlockChain   // Chain object to access the state through
+	signer types.Signer // Transaction signer to use for sender recovery
+	chain  BlockChain   // Chain object to access the state through
 
-head   atomic.Pointer[types.Header] // Current head of the chain
-state  *state.StateDB               // Current state at the head of the chain
-gasTip atomic.Pointer[uint256.Int]  // Currently accepted minimum gas tip
+	head   atomic.Pointer[types.Header] // Current head of the chain
+	state  *state.StateDB               // Current state at the head of the chain
+	gasTip atomic.Pointer[uint256.Int]  // Currently accepted minimum gas tip
 
-lookup *lookup                          // Lookup table mapping blobs to txs and txs to billy entries
-index  map[common.Address][]*blobTxMeta // Blob transactions grouped by accounts, sorted by nonce
-spent  map[common.Address]*uint256.Int  // Expenditure tracking for individual accounts
-evict  *evictHeap                       // Heap of cheapest accounts for eviction when full
+	lookup *lookup                          // Lookup table mapping blobs to txs and txs to billy entries
+	index  map[common.Address][]*blobTxMeta // Blob transactions grouped by accounts, sorted by nonce
+	spent  map[common.Address]*uint256.Int  // Expenditure tracking for individual accounts
+	evict  *evictHeap                       // Heap of cheapest accounts for eviction when full
 
-discoverFeed event.Feed // Event feed to send out new tx events on pool discovery (reorg excluded)
-insertFeed   event.Feed // Event feed to send out new tx events on pool inclusion (reorg included)
+	discoverFeed event.Feed // Event feed to send out new tx events on pool discovery (reorg excluded)
+	insertFeed   event.Feed // Event feed to send out new tx events on pool inclusion (reorg included)
 
-lock sync.RWMutex // Mutex protecting the pool during reorg handling
+	lock sync.RWMutex // Mutex protecting the pool during reorg handling
 }

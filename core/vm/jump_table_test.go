@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -23,19 +23,19 @@ including copy operations to prevent shared table modification.
 package vm
 
 import (
-"testing"
+	"testing"
 
-"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 // TestJumpTableCopy tests that deep copy is necessary to prevent modify shared jump table
 func TestJumpTableCopy(t *testing.T) {
-tbl := newMergeInstructionSet()
-require.Equal(t, uint64(0), tbl[SLOAD].constantGas)
+	tbl := newMergeInstructionSet()
+	require.Equal(t, uint64(0), tbl[SLOAD].constantGas)
 
-// a deep copy won't modify the shared jump table
-deepCopy := copyJumpTable(&tbl)
-deepCopy[SLOAD].constantGas = 100
-require.Equal(t, uint64(100), deepCopy[SLOAD].constantGas)
-require.Equal(t, uint64(0), tbl[SLOAD].constantGas)
+	// a deep copy won't modify the shared jump table
+	deepCopy := copyJumpTable(&tbl)
+	deepCopy[SLOAD].constantGas = 100
+	require.Equal(t, uint64(100), deepCopy[SLOAD].constantGas)
+	require.Equal(t, uint64(0), tbl[SLOAD].constantGas)
 }

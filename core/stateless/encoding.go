@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,66 +17,66 @@
 package stateless
 
 import (
-"errors"
-"io"
+	"errors"
+	"io"
 
-"github.com/SILA/sila-chain/common/hexutil"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/rlp"
+	"silachain/common/hexutil"
+	"silachain/core/types"
+	"silachain/rlp"
 )
 
 // ToExtWitness converts our internal SILA witness representation to the consensus one.
 func (w *Witness) ToExtWitness() *ExtWitness {
-ext := &ExtWitness{
-Headers: w.Headers,
-}
-ext.Codes = make([]hexutil.Bytes, 0, len(w.Codes))
-for code := range w.Codes {
-ext.Codes = append(ext.Codes, []byte(code))
-}
-ext.State = make([]hexutil.Bytes, 0, len(w.State))
-for node := range w.State {
-ext.State = append(ext.State, []byte(node))
-}
-return ext
+	ext := &ExtWitness{
+		Headers: w.Headers,
+	}
+	ext.Codes = make([]hexutil.Bytes, 0, len(w.Codes))
+	for code := range w.Codes {
+		ext.Codes = append(ext.Codes, []byte(code))
+	}
+	ext.State = make([]hexutil.Bytes, 0, len(w.State))
+	for node := range w.State {
+		ext.State = append(ext.State, []byte(node))
+	}
+	return ext
 }
 
 // FromExtWitness converts the consensus SILA witness format into our internal one.
 func (w *Witness) FromExtWitness(ext *ExtWitness) error {
-if len(ext.Headers) == 0 {
-return errors.New("SILA witness must contain at least one header")
-}
-w.Headers = ext.Headers
+	if len(ext.Headers) == 0 {
+		return errors.New("SILA witness must contain at least one header")
+	}
+	w.Headers = ext.Headers
 
-w.Codes = make(map[string]struct{}, len(ext.Codes))
-for _, code := range ext.Codes {
-w.Codes[string(code)] = struct{}{}
-}
-w.State = make(map[string]struct{}, len(ext.State))
-for _, node := range ext.State {
-w.State[string(node)] = struct{}{}
-}
-return nil
+	w.Codes = make(map[string]struct{}, len(ext.Codes))
+	for _, code := range ext.Codes {
+		w.Codes[string(code)] = struct{}{}
+	}
+	w.State = make(map[string]struct{}, len(ext.State))
+	for _, node := range ext.State {
+		w.State[string(node)] = struct{}{}
+	}
+	return nil
 }
 
 // EncodeRLP serializes a SILA witness as RLP.
 func (w *Witness) EncodeRLP(wr io.Writer) error {
-return rlp.Encode(wr, w.ToExtWitness())
+	return rlp.Encode(wr, w.ToExtWitness())
 }
 
 // DecodeRLP decodes a SILA witness from RLP.
 func (w *Witness) DecodeRLP(s *rlp.Stream) error {
-var ext ExtWitness
-if err := s.Decode(&ext); err != nil {
-return err
-}
-return w.FromExtWitness(&ext)
+	var ext ExtWitness
+	if err := s.Decode(&ext); err != nil {
+		return err
+	}
+	return w.FromExtWitness(&ext)
 }
 
 // ExtWitness is a SILA witness RLP encoding for transferring across clients.
 type ExtWitness struct {
-Headers []*types.Header `json:"headers"`
-Codes   []hexutil.Bytes `json:"codes"`
-State   []hexutil.Bytes `json:"state"`
-Keys    []hexutil.Bytes `json:"keys"`
+	Headers []*types.Header `json:"headers"`
+	Codes   []hexutil.Bytes `json:"codes"`
+	State   []hexutil.Bytes `json:"state"`
+	Keys    []hexutil.Bytes `json:"keys"`
 }

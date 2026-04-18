@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,16 +17,16 @@
 package rawdb
 
 import (
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/ethdb"
+	"silachain/common"
+	"silachain/ethdb"
 )
 
 // ReadOverlayTransitionState retrieves the overlay transition state for the given root hash.
 func ReadOverlayTransitionState(db ethdb.KeyValueReader, hash common.Hash) ([]byte, error) {
-return db.Get(transitionStateKey(hash))
+	return db.Get(transitionStateKey(hash))
 }
 
 // WriteOverlayTransitionState stores the overlay transition state for the given root hash.
 func WriteOverlayTransitionState(db ethdb.KeyValueWriter, hash common.Hash, state []byte) error {
-return db.Put(transitionStateKey(hash), state)
+	return db.Put(transitionStateKey(hash), state)
 }

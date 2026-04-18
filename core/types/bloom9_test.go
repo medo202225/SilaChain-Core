@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,179 +17,179 @@
 package types
 
 import (
-"fmt"
-"math/big"
-"testing"
+	"fmt"
+	"math/big"
+	"testing"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/crypto"
+	"silachain/common"
+	"silachain/crypto"
 )
 
 func TestBloom(t *testing.T) {
-positive := []string{
-"testtest",
-"test",
-"hallo",
-"other",
-}
-negative := []string{
-"tes",
-"lo",
-}
+	positive := []string{
+		"testtest",
+		"test",
+		"hallo",
+		"other",
+	}
+	negative := []string{
+		"tes",
+		"lo",
+	}
 
-var bloom Bloom
-for _, data := range positive {
-bloom.Add([]byte(data))
-}
+	var bloom Bloom
+	for _, data := range positive {
+		bloom.Add([]byte(data))
+	}
 
-for _, data := range positive {
-if !bloom.Test([]byte(data)) {
-t.Error("expected", data, "to test true on SILA")
-}
-}
-for _, data := range negative {
-if bloom.Test([]byte(data)) {
-t.Error("did not expect", data, "to test true on SILA")
-}
-}
+	for _, data := range positive {
+		if !bloom.Test([]byte(data)) {
+			t.Error("expected", data, "to test true on SILA")
+		}
+	}
+	for _, data := range negative {
+		if bloom.Test([]byte(data)) {
+			t.Error("did not expect", data, "to test true on SILA")
+		}
+	}
 }
 
 // TestBloomExtensively does some more thorough tests on SILA
 func TestBloomExtensively(t *testing.T) {
-var exp = common.HexToHash("c8d3ca65cdb4874300a9e39475508f23ed6da09fdbc487f89a2dcf50b09eb263")
-var b Bloom
-// Add 100 "random" things
-for i := 0; i < 100; i++ {
-data := fmt.Sprintf("xxxxxxxxxx data %d yyyyyyyyyyyyyy", i)
-b.Add([]byte(data))
-//b.Add(new(big.Int).SetBytes([]byte(data)))
-}
-got := crypto.Keccak256Hash(b.Bytes())
-if got != exp {
-t.Errorf("Got %x, exp %x on SILA", got, exp)
-}
-var b2 Bloom
-b2.SetBytes(b.Bytes())
-got2 := crypto.Keccak256Hash(b2.Bytes())
-if got != got2 {
-t.Errorf("Got %x, exp %x on SILA", got, got2)
-}
+	var exp = common.HexToHash("c8d3ca65cdb4874300a9e39475508f23ed6da09fdbc487f89a2dcf50b09eb263")
+	var b Bloom
+	// Add 100 "random" things
+	for i := 0; i < 100; i++ {
+		data := fmt.Sprintf("xxxxxxxxxx data %d yyyyyyyyyyyyyy", i)
+		b.Add([]byte(data))
+		// b.Add(new(big.Int).SetBytes([]byte(data)))
+	}
+	got := crypto.Keccak256Hash(b.Bytes())
+	if got != exp {
+		t.Errorf("Got %x, exp %x on SILA", got, exp)
+	}
+	var b2 Bloom
+	b2.SetBytes(b.Bytes())
+	got2 := crypto.Keccak256Hash(b2.Bytes())
+	if got != got2 {
+		t.Errorf("Got %x, exp %x on SILA", got, got2)
+	}
 }
 
 func BenchmarkBloom9(b *testing.B) {
-test := []byte("testestestest")
-for b.Loop() {
-Bloom9(test)
-}
+	test := []byte("testestestest")
+	for b.Loop() {
+		Bloom9(test)
+	}
 }
 
 func BenchmarkBloom9Lookup(b *testing.B) {
-toTest := []byte("testtest")
-bloom := new(Bloom)
-for b.Loop() {
-bloom.Test(toTest)
-}
+	toTest := []byte("testtest")
+	bloom := new(Bloom)
+	for b.Loop() {
+		bloom.Test(toTest)
+	}
 }
 
 func BenchmarkCreateBloom(b *testing.B) {
-var txs = Transactions{
-NewContractCreation(1, big.NewInt(1), 1, big.NewInt(1), nil),
-NewTransaction(2, common.HexToAddress("0x2"), big.NewInt(2), 2, big.NewInt(2), nil),
-}
-var rSmall = Receipts{
-&Receipt{
-Status:            ReceiptStatusFailed,
-CumulativeGasUsed: 1,
-Logs: []*Log{
-{Address: common.BytesToAddress([]byte{0x11})},
-{Address: common.BytesToAddress([]byte{0x01, 0x11})},
-},
-TxHash:          txs[0].Hash(),
-ContractAddress: common.BytesToAddress([]byte{0x01, 0x11, 0x11}),
-GasUsed:         1,
-},
-&Receipt{
-PostState:         common.Hash{2}.Bytes(),
-CumulativeGasUsed: 3,
-Logs: []*Log{
-{Address: common.BytesToAddress([]byte{0x22})},
-{Address: common.BytesToAddress([]byte{0x02, 0x22})},
-},
-TxHash:          txs[1].Hash(),
-ContractAddress: common.BytesToAddress([]byte{0x02, 0x22, 0x22}),
-GasUsed:         2,
-},
-}
+	var txs = Transactions{
+		NewContractCreation(1, big.NewInt(1), 1, big.NewInt(1), nil),
+		NewTransaction(2, common.HexToAddress("0x2"), big.NewInt(2), 2, big.NewInt(2), nil),
+	}
+	var rSmall = Receipts{
+		&Receipt{
+			Status:            ReceiptStatusFailed,
+			CumulativeGasUsed: 1,
+			Logs: []*Log{
+				{Address: common.BytesToAddress([]byte{0x11})},
+				{Address: common.BytesToAddress([]byte{0x01, 0x11})},
+			},
+			TxHash:          txs[0].Hash(),
+			ContractAddress: common.BytesToAddress([]byte{0x01, 0x11, 0x11}),
+			GasUsed:         1,
+		},
+		&Receipt{
+			PostState:         common.Hash{2}.Bytes(),
+			CumulativeGasUsed: 3,
+			Logs: []*Log{
+				{Address: common.BytesToAddress([]byte{0x22})},
+				{Address: common.BytesToAddress([]byte{0x02, 0x22})},
+			},
+			TxHash:          txs[1].Hash(),
+			ContractAddress: common.BytesToAddress([]byte{0x02, 0x22, 0x22}),
+			GasUsed:         2,
+		},
+	}
 
-var rLarge = make(Receipts, 200)
-// Fill it with 200 receipts x 2 logs
-for i := 0; i < 200; i += 2 {
-copy(rLarge[i:], rSmall)
-}
-b.Run("small-createbloom", func(b *testing.B) {
-b.ReportAllocs()
-for b.Loop() {
-for _, receipt := range rSmall {
-receipt.Bloom = CreateBloom(receipt)
-}
-}
-b.StopTimer()
+	var rLarge = make(Receipts, 200)
+	// Fill it with 200 receipts x 2 logs
+	for i := 0; i < 200; i += 2 {
+		copy(rLarge[i:], rSmall)
+	}
+	b.Run("small-createbloom", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			for _, receipt := range rSmall {
+				receipt.Bloom = CreateBloom(receipt)
+			}
+		}
+		b.StopTimer()
 
-bl := MergeBloom(rSmall)
-var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
-got := crypto.Keccak256Hash(bl.Bytes())
-if got != exp {
-b.Errorf("Got %x, exp %x on SILA", got, exp)
-}
-})
-b.Run("large-createbloom", func(b *testing.B) {
-b.ReportAllocs()
-for b.Loop() {
-for _, receipt := range rLarge {
-receipt.Bloom = CreateBloom(receipt)
-}
-}
-b.StopTimer()
+		bl := MergeBloom(rSmall)
+		var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
+		got := crypto.Keccak256Hash(bl.Bytes())
+		if got != exp {
+			b.Errorf("Got %x, exp %x on SILA", got, exp)
+		}
+	})
+	b.Run("large-createbloom", func(b *testing.B) {
+		b.ReportAllocs()
+		for b.Loop() {
+			for _, receipt := range rLarge {
+				receipt.Bloom = CreateBloom(receipt)
+			}
+		}
+		b.StopTimer()
 
-bl := MergeBloom(rLarge)
-var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
-got := crypto.Keccak256Hash(bl.Bytes())
-if got != exp {
-b.Errorf("Got %x, exp %x on SILA", got, exp)
-}
-})
-b.Run("small-mergebloom", func(b *testing.B) {
-for _, receipt := range rSmall {
-receipt.Bloom = CreateBloom(receipt)
-}
-b.ReportAllocs()
+		bl := MergeBloom(rLarge)
+		var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
+		got := crypto.Keccak256Hash(bl.Bytes())
+		if got != exp {
+			b.Errorf("Got %x, exp %x on SILA", got, exp)
+		}
+	})
+	b.Run("small-mergebloom", func(b *testing.B) {
+		for _, receipt := range rSmall {
+			receipt.Bloom = CreateBloom(receipt)
+		}
+		b.ReportAllocs()
 
-var bl Bloom
-for b.Loop() {
-bl = MergeBloom(rSmall)
-}
+		var bl Bloom
+		for b.Loop() {
+			bl = MergeBloom(rSmall)
+		}
 
-var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
-got := crypto.Keccak256Hash(bl.Bytes())
-if got != exp {
-b.Errorf("Got %x, exp %x on SILA", got, exp)
-}
-})
-b.Run("large-mergebloom", func(b *testing.B) {
-for _, receipt := range rLarge {
-receipt.Bloom = CreateBloom(receipt)
-}
-b.ReportAllocs()
+		var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
+		got := crypto.Keccak256Hash(bl.Bytes())
+		if got != exp {
+			b.Errorf("Got %x, exp %x on SILA", got, exp)
+		}
+	})
+	b.Run("large-mergebloom", func(b *testing.B) {
+		for _, receipt := range rLarge {
+			receipt.Bloom = CreateBloom(receipt)
+		}
+		b.ReportAllocs()
 
-var bl Bloom
-for b.Loop() {
-bl = MergeBloom(rLarge)
-}
+		var bl Bloom
+		for b.Loop() {
+			bl = MergeBloom(rLarge)
+		}
 
-var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
-got := crypto.Keccak256Hash(bl.Bytes())
-if got != exp {
-b.Errorf("Got %x, exp %x on SILA", got, exp)
-}
-})
+		var exp = common.HexToHash("c384c56ece49458a427c67b90fefe979ebf7104795be65dc398b280f24104949")
+		got := crypto.Keccak256Hash(bl.Bytes())
+		if got != exp {
+			b.Errorf("Got %x, exp %x on SILA", got, exp)
+		}
+	})
 }

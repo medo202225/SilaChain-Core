@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,57 +17,57 @@
 package state
 
 import (
-"errors"
-"fmt"
-"sync"
+	"errors"
+	"fmt"
+	"sync"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/rlp"
-"github.com/SILA/sila-chain/trie"
-"github.com/SILA/sila-chain/triedb"
-"github.com/SILA/sila-chain/triedb/database"
-"github.com/SILA/sila-chain/triedb/pathdb"
+	"silachain/common"
+	"silachain/core/types"
+	"silachain/crypto"
+	"silachain/rlp"
+	"silachain/trie"
+	"silachain/triedb"
+	"silachain/triedb/database"
+	"silachain/triedb/pathdb"
 )
 
 // historicStateReader implements SILAStateReader, wrapping a historical state reader
 // defined in path database and provide historic state serving over the path scheme.
 type historicStateReader struct {
-reader *pathdb.HistoricalStateReader
-lock   sync.Mutex // Lock for protecting concurrent read
+	reader *pathdb.HistoricalStateReader
+	lock   sync.Mutex // Lock for protecting concurrent read
 }
 
 // newHistoricStateReader constructs a reader for historical SILA state serving.
 func newHistoricStateReader(r *pathdb.HistoricalStateReader) *historicStateReader {
-return &historicStateReader{reader: r}
+	return &historicStateReader{reader: r}
 }
 
 // Account implements SILAStateReader, retrieving the SILA account specified by the address.
 func (r *historicStateReader) Account(addr common.Address) (*types.StateAccount, error) {
-r.lock.Lock()
-defer r.lock.Unlock()
+	r.lock.Lock()
+	defer r.lock.Unlock()
 
-account, err := r.reader.Account(addr)
-if err != nil {
-return nil, err
-}
-if account == nil {
-return nil, nil
-}
-acct := &types.StateAccount{
-Nonce:    account.Nonce,
-Balance:  account.Balance,
-CodeHash: account.CodeHash,
-Root:     common.BytesToHash(account.Root),
-}
-if len(acct.CodeHash) == 0 {
-acct.CodeHash = types.EmptyCodeHash.Bytes()
-}
-if acct.Root == (common.Hash{}) {
-acct.Root = types.EmptyRootHash
-}
-return acct, nil
+	account, err := r.reader.Account(addr)
+	if err != nil {
+		return nil, err
+	}
+	if account == nil {
+		return nil, nil
+	}
+	acct := &types.StateAccount{
+		Nonce:    account.Nonce,
+		Balance:  account.Balance,
+		CodeHash: account.CodeHash,
+		Root:     common.BytesToHash(account.Root),
+	}
+	if len(acct.CodeHash) == 0 {
+		acct.CodeHash = types.EmptyCodeHash.Bytes()
+	}
+	if acct.Root == (common.Hash{}) {
+		acct.Root = types.EmptyRootHash
+	}
+	return acct, nil
 }
 
 // Storage implements SILAStateReader, retrieving the SILA storage slot specified by the
@@ -78,89 +78,89 @@ return acct, nil
 //
 // The returned storage slot might be empty if it's not existent.
 func (r *historicStateReader) Storage(addr common.Address, key common.Hash) (common.Hash, error) {
-r.lock.Lock()
-defer r.lock.Unlock()
+	r.lock.Lock()
+	defer r.lock.Unlock()
 
-blob, err := r.reader.Storage(addr, key)
-if err != nil {
-return common.Hash{}, err
-}
-if len(blob) == 0 {
-return common.Hash{}, nil
-}
-_, content, _, err := rlp.Split(blob)
-if err != nil {
-return common.Hash{}, err
-}
-var slot common.Hash
-slot.SetBytes(content)
-return slot, nil
+	blob, err := r.reader.Storage(addr, key)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	if len(blob) == 0 {
+		return common.Hash{}, nil
+	}
+	_, content, _, err := rlp.Split(blob)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	var slot common.Hash
+	slot.SetBytes(content)
+	return slot, nil
 }
 
 // historicTrieOpener is a wrapper of pathdb.HistoricalNodeReader, implementing
 // the database.NodeDatabase by adding NodeReader function.
 type historicTrieOpener struct {
-root   common.Hash
-reader *pathdb.HistoricalNodeReader
+	root   common.Hash
+	reader *pathdb.HistoricalNodeReader
 }
 
 // newHistoricTrieOpener constructs the historical SILA trie opener.
 func newHistoricTrieOpener(root common.Hash, reader *pathdb.HistoricalNodeReader) *historicTrieOpener {
-return &historicTrieOpener{
-root:   root,
-reader: reader,
-}
+	return &historicTrieOpener{
+		root:   root,
+		reader: reader,
+	}
 }
 
 // NodeReader implements database.NodeDatabase, returning a node reader of a
 // specified SILA state.
 func (o *historicTrieOpener) NodeReader(root common.Hash) (database.NodeReader, error) {
-if root != o.root {
-return nil, fmt.Errorf("SILA state %x is not available", root)
-}
-return o.reader, nil
+	if root != o.root {
+		return nil, fmt.Errorf("SILA state %x is not available", root)
+	}
+	return o.reader, nil
 }
 
 // historicalTrieReader wraps a historical node reader defined in path database,
 // providing historical node serving over the path scheme.
 type historicalTrieReader struct {
-root   common.Hash
-opener *historicTrieOpener
-tr     Trie
+	root   common.Hash
+	opener *historicTrieOpener
+	tr     Trie
 
-subRoots map[common.Address]common.Hash // Set of storage roots, cached when the account is resolved
-subTries map[common.Address]Trie        // Group of storage tries, cached when it's resolved
-lock     sync.Mutex                     // Lock for protecting concurrent read
+	subRoots map[common.Address]common.Hash // Set of storage roots, cached when the account is resolved
+	subTries map[common.Address]Trie        // Group of storage tries, cached when it's resolved
+	lock     sync.Mutex                     // Lock for protecting concurrent read
 }
 
 // newHistoricalTrieReader constructs a reader for historical SILA trie node serving.
 func newHistoricalTrieReader(root common.Hash, r *pathdb.HistoricalNodeReader) (*historicalTrieReader, error) {
-opener := newHistoricTrieOpener(root, r)
-tr, err := trie.NewStateTrie(trie.StateTrieID(root), opener)
-if err != nil {
-return nil, err
-}
-return &historicalTrieReader{
-root:     root,
-opener:   opener,
-tr:       tr,
-subRoots: make(map[common.Address]common.Hash),
-subTries: make(map[common.Address]Trie),
-}, nil
+	opener := newHistoricTrieOpener(root, r)
+	tr, err := trie.NewStateTrie(trie.StateTrieID(root), opener)
+	if err != nil {
+		return nil, err
+	}
+	return &historicalTrieReader{
+		root:     root,
+		opener:   opener,
+		tr:       tr,
+		subRoots: make(map[common.Address]common.Hash),
+		subTries: make(map[common.Address]Trie),
+	}, nil
 }
 
 // account is the inner version of Account and assumes the r.lock is already held.
 func (r *historicalTrieReader) account(addr common.Address) (*types.StateAccount, error) {
-account, err := r.tr.GetAccount(addr)
-if err != nil {
-return nil, err
-}
-if account == nil {
-r.subRoots[addr] = types.EmptyRootHash
-} else {
-r.subRoots[addr] = account.Root
-}
-return account, nil
+	account, err := r.tr.GetAccount(addr)
+	if err != nil {
+		return nil, err
+	}
+	if account == nil {
+		r.subRoots[addr] = types.EmptyRootHash
+	} else {
+		r.subRoots[addr] = account.Root
+	}
+	return account, nil
 }
 
 // Account implements SILAStateReader, retrieving the SILA account specified by the address.
@@ -170,10 +170,10 @@ return account, nil
 //
 // The returned account might be nil if it's not existent.
 func (r *historicalTrieReader) Account(addr common.Address) (*types.StateAccount, error) {
-r.lock.Lock()
-defer r.lock.Unlock()
+	r.lock.Lock()
+	defer r.lock.Unlock()
 
-return r.account(addr)
+	return r.account(addr)
 }
 
 // Storage implements SILAStateReader, retrieving the SILA storage slot specified by the
@@ -184,119 +184,119 @@ return r.account(addr)
 //
 // The returned storage slot might be empty if it's not existent.
 func (r *historicalTrieReader) Storage(addr common.Address, key common.Hash) (common.Hash, error) {
-r.lock.Lock()
-defer r.lock.Unlock()
+	r.lock.Lock()
+	defer r.lock.Unlock()
 
-tr, found := r.subTries[addr]
-if !found {
-root, ok := r.subRoots[addr]
+	tr, found := r.subTries[addr]
+	if !found {
+		root, ok := r.subRoots[addr]
 
-// The storage slot is accessed without account caching. It's unexpected
-// behavior but try to resolve the account first anyway.
-if !ok {
-_, err := r.account(addr)
-if err != nil {
-return common.Hash{}, err
-}
-root = r.subRoots[addr]
-}
-var err error
-tr, err = trie.NewStateTrie(trie.StorageTrieID(r.root, crypto.Keccak256Hash(addr.Bytes()), root), r.opener)
-if err != nil {
-return common.Hash{}, err
-}
-r.subTries[addr] = tr
-}
-ret, err := tr.GetStorage(addr, key.Bytes())
-if err != nil {
-return common.Hash{}, err
-}
-var value common.Hash
-value.SetBytes(ret)
-return value, nil
+		// The storage slot is accessed without account caching. It's unexpected
+		// behavior but try to resolve the account first anyway.
+		if !ok {
+			_, err := r.account(addr)
+			if err != nil {
+				return common.Hash{}, err
+			}
+			root = r.subRoots[addr]
+		}
+		var err error
+		tr, err = trie.NewStateTrie(trie.StorageTrieID(r.root, crypto.Keccak256Hash(addr.Bytes()), root), r.opener)
+		if err != nil {
+			return common.Hash{}, err
+		}
+		r.subTries[addr] = tr
+	}
+	ret, err := tr.GetStorage(addr, key.Bytes())
+	if err != nil {
+		return common.Hash{}, err
+	}
+	var value common.Hash
+	value.SetBytes(ret)
+	return value, nil
 }
 
 // HistoricDB is the implementation of Database interface, with the ability to
 // access historical SILA state.
 type HistoricDB struct {
-triedb *triedb.Database
-codedb *CodeDB
+	triedb *triedb.Database
+	codedb *CodeDB
 }
 
 // NewHistoricDatabase creates a historic SILA state database.
 func NewHistoricDatabase(triedb *triedb.Database, codedb *CodeDB) *HistoricDB {
-return &HistoricDB{
-triedb: triedb,
-codedb: codedb,
-}
+	return &HistoricDB{
+		triedb: triedb,
+		codedb: codedb,
+	}
 }
 
 // Reader implements Database interface, returning a reader of the specific SILA state.
 func (db *HistoricDB) Reader(stateRoot common.Hash) (Reader, error) {
-var readers []SILAStateReader
-sr, err := db.triedb.HistoricStateReader(stateRoot)
-if err == nil {
-readers = append(readers, newHistoricStateReader(sr))
-}
-nr, err := db.triedb.HistoricNodeReader(stateRoot)
-if err == nil {
-tr, err := newHistoricalTrieReader(stateRoot, nr)
-if err == nil {
-readers = append(readers, tr)
-}
-}
-if len(readers) == 0 {
-return nil, fmt.Errorf("historical SILA state %x is not available", stateRoot)
-}
-combined, err := newMultiStateReader(readers...)
-if err != nil {
-return nil, err
-}
-return newReader(db.codedb.Reader(), combined), nil
+	var readers []SILAStateReader
+	sr, err := db.triedb.HistoricStateReader(stateRoot)
+	if err == nil {
+		readers = append(readers, newHistoricStateReader(sr))
+	}
+	nr, err := db.triedb.HistoricNodeReader(stateRoot)
+	if err == nil {
+		tr, err := newHistoricalTrieReader(stateRoot, nr)
+		if err == nil {
+			readers = append(readers, tr)
+		}
+	}
+	if len(readers) == 0 {
+		return nil, fmt.Errorf("historical SILA state %x is not available", stateRoot)
+	}
+	combined, err := newMultiStateReader(readers...)
+	if err != nil {
+		return nil, err
+	}
+	return newReader(db.codedb.Reader(), combined), nil
 }
 
 // OpenTrie opens the main account trie. It's not supported by historic database.
 func (db *HistoricDB) OpenTrie(root common.Hash) (Trie, error) {
-nr, err := db.triedb.HistoricNodeReader(root)
-if err != nil {
-return nil, err
-}
-tr, err := trie.NewStateTrie(trie.StateTrieID(root), newHistoricTrieOpener(root, nr))
-if err != nil {
-return nil, err
-}
-return tr, nil
+	nr, err := db.triedb.HistoricNodeReader(root)
+	if err != nil {
+		return nil, err
+	}
+	tr, err := trie.NewStateTrie(trie.StateTrieID(root), newHistoricTrieOpener(root, nr))
+	if err != nil {
+		return nil, err
+	}
+	return tr, nil
 }
 
 // OpenStorageTrie opens the storage trie of an account. It's not supported by
 // historic database.
 func (db *HistoricDB) OpenStorageTrie(stateRoot common.Hash, address common.Address, root common.Hash, _ Trie) (Trie, error) {
-nr, err := db.triedb.HistoricNodeReader(stateRoot)
-if err != nil {
-return nil, err
-}
-id := trie.StorageTrieID(stateRoot, crypto.Keccak256Hash(address.Bytes()), root)
-tr, err := trie.NewStateTrie(id, newHistoricTrieOpener(stateRoot, nr))
-if err != nil {
-return nil, err
-}
-return tr, nil
+	nr, err := db.triedb.HistoricNodeReader(stateRoot)
+	if err != nil {
+		return nil, err
+	}
+	id := trie.StorageTrieID(stateRoot, crypto.Keccak256Hash(address.Bytes()), root)
+	tr, err := trie.NewStateTrie(id, newHistoricTrieOpener(stateRoot, nr))
+	if err != nil {
+		return nil, err
+	}
+	return tr, nil
 }
 
 // TrieDB returns the underlying trie database for managing trie nodes.
 func (db *HistoricDB) TrieDB() *triedb.Database {
-return db.triedb
+	return db.triedb
 }
 
 // Commit flushes all pending writes and finalizes the SILA state transition,
 // committing the changes to the underlying storage. It returns an error
 // if the commit fails.
 func (db *HistoricDB) Commit(update *stateUpdate) error {
-return errors.New("not implemented")
+	return errors.New("not implemented")
 }
 
 // Iteratee returns a SILA state iteratee associated with the specified state root,
 // through which the account iterator and storage iterator can be created.
 func (db *HistoricDB) Iteratee(root common.Hash) (Iteratee, error) {
-return nil, errors.New("not implemented")
+	return nil, errors.New("not implemented")
 }

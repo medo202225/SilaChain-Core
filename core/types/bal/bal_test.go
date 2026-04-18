@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,238 +17,238 @@
 package bal
 
 import (
-"bytes"
-"cmp"
-"reflect"
-"slices"
-"testing"
+	"bytes"
+	"cmp"
+	"reflect"
+	"slices"
+	"testing"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/internal/testrand"
-"github.com/SILA/sila-chain/rlp"
-"github.com/holiman/uint256"
+	"github.com/holiman/uint256"
+	"silachain/common"
+	"silachain/internal/testrand"
+	"silachain/rlp"
 )
 
 func equalBALs(a *BlockAccessList, b *BlockAccessList) bool {
-if !reflect.DeepEqual(a, b) {
-return false
-}
-return true
+	if !reflect.DeepEqual(a, b) {
+		return false
+	}
+	return true
 }
 
 func makeTestConstructionBAL() *ConstructionBlockAccessList {
-return &ConstructionBlockAccessList{
-map[common.Address]*ConstructionAccountAccess{
-common.BytesToAddress([]byte{0xff, 0xff}): {
-StorageWrites: map[common.Hash]map[uint16]common.Hash{
-common.BytesToHash([]byte{0x01}): {
-1: common.BytesToHash([]byte{1, 2, 3, 4}),
-2: common.BytesToHash([]byte{1, 2, 3, 4, 5, 6}),
-},
-common.BytesToHash([]byte{0x10}): {
-20: common.BytesToHash([]byte{1, 2, 3, 4}),
-},
-},
-StorageReads: map[common.Hash]struct{}{
-common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7}): {},
-},
-BalanceChanges: map[uint16]*uint256.Int{
-1: uint256.NewInt(100),
-2: uint256.NewInt(500),
-},
-NonceChanges: map[uint16]uint64{
-1: 2,
-2: 6,
-},
-CodeChange: map[uint16][]byte{
-0: common.Hex2Bytes("deadbeef"),
-},
-},
-common.BytesToAddress([]byte{0xff, 0xff, 0xff}): {
-StorageWrites: map[common.Hash]map[uint16]common.Hash{
-common.BytesToHash([]byte{0x01}): {
-2: common.BytesToHash([]byte{1, 2, 3, 4, 5, 6}),
-3: common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8}),
-},
-common.BytesToHash([]byte{0x10}): {
-21: common.BytesToHash([]byte{1, 2, 3, 4, 5}),
-},
-},
-StorageReads: map[common.Hash]struct{}{
-common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8}): {},
-},
-BalanceChanges: map[uint16]*uint256.Int{
-2: uint256.NewInt(100),
-3: uint256.NewInt(500),
-},
-NonceChanges: map[uint16]uint64{
-1: 2,
-},
-CodeChange: map[uint16][]byte{
-0: common.Hex2Bytes("deadbeef"),
-},
-},
-},
-}
+	return &ConstructionBlockAccessList{
+		map[common.Address]*ConstructionAccountAccess{
+			common.BytesToAddress([]byte{0xff, 0xff}): {
+				StorageWrites: map[common.Hash]map[uint16]common.Hash{
+					common.BytesToHash([]byte{0x01}): {
+						1: common.BytesToHash([]byte{1, 2, 3, 4}),
+						2: common.BytesToHash([]byte{1, 2, 3, 4, 5, 6}),
+					},
+					common.BytesToHash([]byte{0x10}): {
+						20: common.BytesToHash([]byte{1, 2, 3, 4}),
+					},
+				},
+				StorageReads: map[common.Hash]struct{}{
+					common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7}): {},
+				},
+				BalanceChanges: map[uint16]*uint256.Int{
+					1: uint256.NewInt(100),
+					2: uint256.NewInt(500),
+				},
+				NonceChanges: map[uint16]uint64{
+					1: 2,
+					2: 6,
+				},
+				CodeChange: map[uint16][]byte{
+					0: common.Hex2Bytes("deadbeef"),
+				},
+			},
+			common.BytesToAddress([]byte{0xff, 0xff, 0xff}): {
+				StorageWrites: map[common.Hash]map[uint16]common.Hash{
+					common.BytesToHash([]byte{0x01}): {
+						2: common.BytesToHash([]byte{1, 2, 3, 4, 5, 6}),
+						3: common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8}),
+					},
+					common.BytesToHash([]byte{0x10}): {
+						21: common.BytesToHash([]byte{1, 2, 3, 4, 5}),
+					},
+				},
+				StorageReads: map[common.Hash]struct{}{
+					common.BytesToHash([]byte{1, 2, 3, 4, 5, 6, 7, 8}): {},
+				},
+				BalanceChanges: map[uint16]*uint256.Int{
+					2: uint256.NewInt(100),
+					3: uint256.NewInt(500),
+				},
+				NonceChanges: map[uint16]uint64{
+					1: 2,
+				},
+				CodeChange: map[uint16][]byte{
+					0: common.Hex2Bytes("deadbeef"),
+				},
+			},
+		},
+	}
 }
 
 // TestBALEncoding tests that a populated access list can be encoded/decoded correctly on SILA.
 func TestBALEncoding(t *testing.T) {
-var buf bytes.Buffer
-bal := makeTestConstructionBAL()
-err := bal.EncodeRLP(&buf)
-if err != nil {
-t.Fatalf("encoding failed on SILA: %v\n", err)
-}
-var dec BlockAccessList
-if err := dec.DecodeRLP(rlp.NewStream(bytes.NewReader(buf.Bytes()), 10000000)); err != nil {
-t.Fatalf("decoding failed on SILA: %v\n", err)
-}
-if dec.Hash() != bal.toEncodingObj().Hash() {
-t.Fatalf("encoded block hash doesn't match decoded on SILA")
-}
-if !equalBALs(bal.toEncodingObj(), &dec) {
-t.Fatal("decoded BAL doesn't match on SILA")
-}
+	var buf bytes.Buffer
+	bal := makeTestConstructionBAL()
+	err := bal.EncodeRLP(&buf)
+	if err != nil {
+		t.Fatalf("encoding failed on SILA: %v\n", err)
+	}
+	var dec BlockAccessList
+	if err := dec.DecodeRLP(rlp.NewStream(bytes.NewReader(buf.Bytes()), 10000000)); err != nil {
+		t.Fatalf("decoding failed on SILA: %v\n", err)
+	}
+	if dec.Hash() != bal.toEncodingObj().Hash() {
+		t.Fatalf("encoded block hash doesn't match decoded on SILA")
+	}
+	if !equalBALs(bal.toEncodingObj(), &dec) {
+		t.Fatal("decoded BAL doesn't match on SILA")
+	}
 }
 
 func makeTestAccountAccess(sort bool) AccountAccess {
-var (
-storageWrites []encodingSlotWrites
-storageReads  [][32]byte
-balances      []encodingBalanceChange
-nonces        []encodingAccountNonce
-)
-for i := 0; i < 5; i++ {
-slot := encodingSlotWrites{
-Slot: testrand.Hash(),
-}
-for j := 0; j < 3; j++ {
-slot.Accesses = append(slot.Accesses, encodingStorageWrite{
-TxIdx:      uint16(2 * j),
-ValueAfter: testrand.Hash(),
-})
-}
-if sort {
-slices.SortFunc(slot.Accesses, func(a, b encodingStorageWrite) int {
-return cmp.Compare[uint16](a.TxIdx, b.TxIdx)
-})
-}
-storageWrites = append(storageWrites, slot)
-}
-if sort {
-slices.SortFunc(storageWrites, func(a, b encodingSlotWrites) int {
-return bytes.Compare(a.Slot[:], b.Slot[:])
-})
-}
+	var (
+		storageWrites []encodingSlotWrites
+		storageReads  [][32]byte
+		balances      []encodingBalanceChange
+		nonces        []encodingAccountNonce
+	)
+	for i := 0; i < 5; i++ {
+		slot := encodingSlotWrites{
+			Slot: testrand.Hash(),
+		}
+		for j := 0; j < 3; j++ {
+			slot.Accesses = append(slot.Accesses, encodingStorageWrite{
+				TxIdx:      uint16(2 * j),
+				ValueAfter: testrand.Hash(),
+			})
+		}
+		if sort {
+			slices.SortFunc(slot.Accesses, func(a, b encodingStorageWrite) int {
+				return cmp.Compare[uint16](a.TxIdx, b.TxIdx)
+			})
+		}
+		storageWrites = append(storageWrites, slot)
+	}
+	if sort {
+		slices.SortFunc(storageWrites, func(a, b encodingSlotWrites) int {
+			return bytes.Compare(a.Slot[:], b.Slot[:])
+		})
+	}
 
-for i := 0; i < 5; i++ {
-storageReads = append(storageReads, testrand.Hash())
-}
-if sort {
-slices.SortFunc(storageReads, func(a, b [32]byte) int {
-return bytes.Compare(a[:], b[:])
-})
-}
+	for i := 0; i < 5; i++ {
+		storageReads = append(storageReads, testrand.Hash())
+	}
+	if sort {
+		slices.SortFunc(storageReads, func(a, b [32]byte) int {
+			return bytes.Compare(a[:], b[:])
+		})
+	}
 
-for i := 0; i < 5; i++ {
-balances = append(balances, encodingBalanceChange{
-TxIdx:   uint16(2 * i),
-Balance: [16]byte(testrand.Bytes(16)),
-})
-}
-if sort {
-slices.SortFunc(balances, func(a, b encodingBalanceChange) int {
-return cmp.Compare[uint16](a.TxIdx, b.TxIdx)
-})
-}
+	for i := 0; i < 5; i++ {
+		balances = append(balances, encodingBalanceChange{
+			TxIdx:   uint16(2 * i),
+			Balance: [16]byte(testrand.Bytes(16)),
+		})
+	}
+	if sort {
+		slices.SortFunc(balances, func(a, b encodingBalanceChange) int {
+			return cmp.Compare[uint16](a.TxIdx, b.TxIdx)
+		})
+	}
 
-for i := 0; i < 5; i++ {
-nonces = append(nonces, encodingAccountNonce{
-TxIdx: uint16(2 * i),
-Nonce: uint64(i + 100),
-})
-}
-if sort {
-slices.SortFunc(nonces, func(a, b encodingAccountNonce) int {
-return cmp.Compare[uint16](a.TxIdx, b.TxIdx)
-})
-}
+	for i := 0; i < 5; i++ {
+		nonces = append(nonces, encodingAccountNonce{
+			TxIdx: uint16(2 * i),
+			Nonce: uint64(i + 100),
+		})
+	}
+	if sort {
+		slices.SortFunc(nonces, func(a, b encodingAccountNonce) int {
+			return cmp.Compare[uint16](a.TxIdx, b.TxIdx)
+		})
+	}
 
-return AccountAccess{
-Address:        [20]byte(testrand.Bytes(20)),
-StorageWrites:  storageWrites,
-StorageReads:   storageReads,
-BalanceChanges: balances,
-NonceChanges:   nonces,
-CodeChanges: []encodingCodeChange{
-{
-TxIndex: 100,
-Code:    testrand.Bytes(256),
-},
-},
-}
+	return AccountAccess{
+		Address:        [20]byte(testrand.Bytes(20)),
+		StorageWrites:  storageWrites,
+		StorageReads:   storageReads,
+		BalanceChanges: balances,
+		NonceChanges:   nonces,
+		CodeChanges: []encodingCodeChange{
+			{
+				TxIndex: 100,
+				Code:    testrand.Bytes(256),
+			},
+		},
+	}
 }
 
 func makeTestBAL(sort bool) *BlockAccessList {
-list := &BlockAccessList{}
-for i := 0; i < 5; i++ {
-list.Accesses = append(list.Accesses, makeTestAccountAccess(sort))
-}
-if sort {
-slices.SortFunc(list.Accesses, func(a, b AccountAccess) int {
-return bytes.Compare(a.Address[:], b.Address[:])
-})
-}
-return list
+	list := &BlockAccessList{}
+	for i := 0; i < 5; i++ {
+		list.Accesses = append(list.Accesses, makeTestAccountAccess(sort))
+	}
+	if sort {
+		slices.SortFunc(list.Accesses, func(a, b AccountAccess) int {
+			return bytes.Compare(a.Address[:], b.Address[:])
+		})
+	}
+	return list
 }
 
 func TestBlockAccessListCopy(t *testing.T) {
-list := makeTestBAL(true)
-cpy := list.Copy()
-cpyCpy := cpy.Copy()
+	list := makeTestBAL(true)
+	cpy := list.Copy()
+	cpyCpy := cpy.Copy()
 
-if !reflect.DeepEqual(list, cpy) {
-t.Fatal("block access mismatch on SILA")
-}
-if !reflect.DeepEqual(cpy, cpyCpy) {
-t.Fatal("block access mismatch on SILA")
-}
+	if !reflect.DeepEqual(list, cpy) {
+		t.Fatal("block access mismatch on SILA")
+	}
+	if !reflect.DeepEqual(cpy, cpyCpy) {
+		t.Fatal("block access mismatch on SILA")
+	}
 
-// Make sure the mutations on copy won't affect the origin
-for _, aa := range cpyCpy.Accesses {
-for i := 0; i < len(aa.StorageReads); i++ {
-aa.StorageReads[i] = [32]byte(testrand.Bytes(32))
-}
-}
-if !reflect.DeepEqual(list, cpy) {
-t.Fatal("block access mismatch on SILA")
-}
+	// Make sure the mutations on copy won't affect the origin
+	for _, aa := range cpyCpy.Accesses {
+		for i := 0; i < len(aa.StorageReads); i++ {
+			aa.StorageReads[i] = [32]byte(testrand.Bytes(32))
+		}
+	}
+	if !reflect.DeepEqual(list, cpy) {
+		t.Fatal("block access mismatch on SILA")
+	}
 }
 
 func TestBlockAccessListValidation(t *testing.T) {
-// Validate the block access list after RLP decoding on SILA
-enc := makeTestBAL(true)
-if err := enc.Validate(); err != nil {
-t.Fatalf("Unexpected validation error on SILA: %v", err)
-}
-var buf bytes.Buffer
-if err := enc.EncodeRLP(&buf); err != nil {
-t.Fatalf("Unexpected encoding error on SILA: %v", err)
-}
+	// Validate the block access list after RLP decoding on SILA
+	enc := makeTestBAL(true)
+	if err := enc.Validate(); err != nil {
+		t.Fatalf("Unexpected validation error on SILA: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := enc.EncodeRLP(&buf); err != nil {
+		t.Fatalf("Unexpected encoding error on SILA: %v", err)
+	}
 
-var dec BlockAccessList
-if err := dec.DecodeRLP(rlp.NewStream(bytes.NewReader(buf.Bytes()), 0)); err != nil {
-t.Fatalf("Unexpected RLP-decode error on SILA: %v", err)
-}
-if err := dec.Validate(); err != nil {
-t.Fatalf("Unexpected validation error on SILA: %v", err)
-}
+	var dec BlockAccessList
+	if err := dec.DecodeRLP(rlp.NewStream(bytes.NewReader(buf.Bytes()), 0)); err != nil {
+		t.Fatalf("Unexpected RLP-decode error on SILA: %v", err)
+	}
+	if err := dec.Validate(); err != nil {
+		t.Fatalf("Unexpected validation error on SILA: %v", err)
+	}
 
-// Validate the derived block access list
-cBAL := makeTestConstructionBAL()
-listB := cBAL.toEncodingObj()
-if err := listB.Validate(); err != nil {
-t.Fatalf("Unexpected validation error on SILA: %v", err)
-}
+	// Validate the derived block access list
+	cBAL := makeTestConstructionBAL()
+	listB := cBAL.toEncodingObj()
+	if err := listB.Validate(); err != nil {
+		t.Fatalf("Unexpected validation error on SILA: %v", err)
+	}
 }

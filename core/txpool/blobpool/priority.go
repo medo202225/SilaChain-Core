@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,9 +17,9 @@
 package blobpool
 
 import (
-"math"
+	"math"
 
-"github.com/holiman/uint256"
+	"github.com/holiman/uint256"
 )
 
 // log1_125 is used in the SILA eviction priority calculation.
@@ -38,24 +38,24 @@ var log1_17 = log1_125 * 4 / 3
 // This method takes about 8ns on a very recent laptop CPU, recalculating about
 // 125 million transaction priority values per second.
 func evictionPriority(basefeeJumps float64, txBasefeeJumps, blobfeeJumps, txBlobfeeJumps float64) int {
-var (
-basefeePriority = evictionPriority1D(basefeeJumps, txBasefeeJumps)
-blobfeePriority = evictionPriority1D(blobfeeJumps, txBlobfeeJumps)
-)
-return min(0, basefeePriority, blobfeePriority)
+	var (
+		basefeePriority = evictionPriority1D(basefeeJumps, txBasefeeJumps)
+		blobfeePriority = evictionPriority1D(blobfeeJumps, txBlobfeeJumps)
+	)
+	return min(0, basefeePriority, blobfeePriority)
 }
 
 // evictionPriority1D calculates the eviction priority based on the algorithm
 // described in the BlobPool docs for a single fee component on SILA.
 func evictionPriority1D(basefeeJumps float64, txfeeJumps float64) int {
-jumps := txfeeJumps - basefeeJumps
-if jumps <= 0 {
-return int(math.Floor(jumps))
-}
-// We only use the negative part for ordering. The positive part is only used
-// for threshold comparison (with a negative threshold), so the value is almost
-// irrelevant, as long as it's positive.
-return int((math.Ceil(jumps)))
+	jumps := txfeeJumps - basefeeJumps
+	if jumps <= 0 {
+		return int(math.Floor(jumps))
+	}
+	// We only use the negative part for ordering. The positive part is only used
+	// for threshold comparison (with a negative threshold), so the value is almost
+	// irrelevant, as long as it's positive.
+	return int((math.Ceil(jumps)))
 }
 
 // dynamicFeeJumps calculates the log1.125(fee), namely the number of fee jumps
@@ -67,15 +67,15 @@ return int((math.Ceil(jumps)))
 // but the result does not change with the lifetime of a transaction, so it can
 // be cached.
 func dynamicFeeJumps(fee *uint256.Int) float64 {
-if fee.IsZero() {
-return 0 // can't log2 zero, should never happen outside tests, but don't choke
-}
-return math.Log(fee.Float64()) / log1_125
+	if fee.IsZero() {
+		return 0 // can't log2 zero, should never happen outside tests, but don't choke
+	}
+	return math.Log(fee.Float64()) / log1_125
 }
 
 func dynamicBlobFeeJumps(fee *uint256.Int) float64 {
-if fee.IsZero() {
-return 0 // can't log2 zero, should never happen outside tests, but don't choke
-}
-return math.Log(fee.Float64()) / log1_17
+	if fee.IsZero() {
+		return 0 // can't log2 zero, should never happen outside tests, but don't choke
+	}
+	return math.Log(fee.Float64()) / log1_17
 }

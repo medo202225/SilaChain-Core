@@ -1,4 +1,4 @@
-﻿// CookieJar - A contestant's algorithm toolbox
+// CookieJar - A contestant's algorithm toolbox
 // Copyright (c) 2013 Peter Szilagyi. All rights reserved.
 //
 // CookieJar is dual licensed: use of this source code is governed by a BSD
@@ -18,59 +18,59 @@
 package prque
 
 import (
-"cmp"
-"container/heap"
+	"cmp"
+	"container/heap"
 )
 
 // Prque is a priority queue data structure.
 type Prque[P cmp.Ordered, V any] struct {
-cont *sstack[P, V]
+	cont *sstack[P, V]
 }
 
 // New creates a new priority queue.
 func New[P cmp.Ordered, V any](setIndex SetIndexCallback[V]) *Prque[P, V] {
-return &Prque[P, V]{newSstack[P, V](setIndex)}
+	return &Prque[P, V]{newSstack[P, V](setIndex)}
 }
 
 // Push a value with a given priority into the queue, expanding if necessary.
 func (p *Prque[P, V]) Push(data V, priority P) {
-heap.Push(p.cont, &item[P, V]{data, priority})
+	heap.Push(p.cont, &item[P, V]{data, priority})
 }
 
 // Peek returns the value with the greatest priority but does not pop it off.
 func (p *Prque[P, V]) Peek() (V, P) {
-item := p.cont.blocks[0][0]
-return item.value, item.priority
+	item := p.cont.blocks[0][0]
+	return item.value, item.priority
 }
 
 // Pop the value with the greatest priority off the stack and returns it.
 // Currently no shrinking is done.
 func (p *Prque[P, V]) Pop() (V, P) {
-item := heap.Pop(p.cont).(*item[P, V])
-return item.value, item.priority
+	item := heap.Pop(p.cont).(*item[P, V])
+	return item.value, item.priority
 }
 
 // PopItem pops only the item from the queue, dropping the associated priority value.
 func (p *Prque[P, V]) PopItem() V {
-return heap.Pop(p.cont).(*item[P, V]).value
+	return heap.Pop(p.cont).(*item[P, V]).value
 }
 
 // Remove removes the element with the given index.
 func (p *Prque[P, V]) Remove(i int) V {
-return heap.Remove(p.cont, i).(*item[P, V]).value
+	return heap.Remove(p.cont, i).(*item[P, V]).value
 }
 
 // Empty checks whether the priority queue is empty.
 func (p *Prque[P, V]) Empty() bool {
-return p.cont.Len() == 0
+	return p.cont.Len() == 0
 }
 
 // Size returns the number of element in the priority queue.
 func (p *Prque[P, V]) Size() int {
-return p.cont.Len()
+	return p.cont.Len()
 }
 
 // Reset clears the contents of the priority queue.
 func (p *Prque[P, V]) Reset() {
-*p = *New[P, V](p.cont.setIndex)
+	*p = *New[P, V](p.cont.setIndex)
 }

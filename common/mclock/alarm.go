@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 package mclock
 
 import (
-"time"
+	"time"
 )
 
 // Alarm sends timed notifications on a channel. This is very similar to a regular timer,
@@ -27,80 +27,80 @@ import (
 // than the scheduled time. An Alarm can be reused after it has fired and can also be
 // canceled by calling Stop.
 type Alarm struct {
-ch       chan struct{}
-clock    Clock
-timer    Timer
-deadline AbsTime
+	ch       chan struct{}
+	clock    Clock
+	timer    Timer
+	deadline AbsTime
 }
 
 // NewAlarm creates an Alarm.
 func NewAlarm(clock Clock) *Alarm {
-if clock == nil {
-panic("nil clock")
-}
-return &Alarm{
-ch:    make(chan struct{}, 1),
-clock: clock,
-}
+	if clock == nil {
+		panic("nil clock")
+	}
+	return &Alarm{
+		ch:    make(chan struct{}, 1),
+		clock: clock,
+	}
 }
 
 // C returns the alarm notification channel. This channel remains identical for
 // the entire lifetime of the alarm, and is never closed.
 func (e *Alarm) C() <-chan struct{} {
-return e.ch
+	return e.ch
 }
 
 // Stop cancels the alarm and drains the channel.
 // This method is not safe for concurrent use.
 func (e *Alarm) Stop() {
-// Clear timer.
-if e.timer != nil {
-e.timer.Stop()
-}
-e.deadline = 0
+	// Clear timer.
+	if e.timer != nil {
+		e.timer.Stop()
+	}
+	e.deadline = 0
 
-// Drain the channel.
-select {
-case <-e.ch:
-default:
-}
+	// Drain the channel.
+	select {
+	case <-e.ch:
+	default:
+	}
 }
 
 // Schedule sets the alarm to fire no later than the given time. If the alarm was already
 // scheduled but has not fired yet, it may fire earlier than the newly-scheduled time.
 func (e *Alarm) Schedule(time AbsTime) {
-now := e.clock.Now()
-e.schedule(now, time)
+	now := e.clock.Now()
+	e.schedule(now, time)
 }
 
 func (e *Alarm) schedule(now, newDeadline AbsTime) {
-if e.timer != nil {
-if e.deadline > now && e.deadline <= newDeadline {
-// Here, the current timer can be reused because it is already scheduled to
-// occur earlier than the new deadline.
-//
-// The e.deadline > now part of the condition is important. If the old
-// deadline lies in the past, we assume the timer has already fired and needs
-// to be rescheduled.
-return
-}
-e.timer.Stop()
-}
+	if e.timer != nil {
+		if e.deadline > now && e.deadline <= newDeadline {
+			// Here, the current timer can be reused because it is already scheduled to
+			// occur earlier than the new deadline.
+			//
+			// The e.deadline > now part of the condition is important. If the old
+			// deadline lies in the past, we assume the timer has already fired and needs
+			// to be rescheduled.
+			return
+		}
+		e.timer.Stop()
+	}
 
-// Set the timer.
-d := time.Duration(0)
-if newDeadline < now {
-newDeadline = now
-} else {
-d = newDeadline.Sub(now)
-}
-e.timer = e.clock.AfterFunc(d, e.send)
-e.deadline = newDeadline
+	// Set the timer.
+	d := time.Duration(0)
+	if newDeadline < now {
+		newDeadline = now
+	} else {
+		d = newDeadline.Sub(now)
+	}
+	e.timer = e.clock.AfterFunc(d, e.send)
+	e.deadline = newDeadline
 }
 
 func (e *Alarm) send() {
-select {
-case e.ch <- struct{}{}:
-default:
-}
+	select {
+	case e.ch <- struct{}{}:
+	default:
+	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,119 +17,119 @@
 package history
 
 import (
-"fmt"
+	"fmt"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/params"
+	"silachain/common"
+	"silachain/params"
 )
 
 // HistoryMode configures history pruning.
 type HistoryMode uint32
 
 const (
-// KeepAll (default) means that all chain history down to genesis block will be kept.
-KeepAll HistoryMode = iota
+	// KeepAll (default) means that all chain history down to genesis block will be kept.
+	KeepAll HistoryMode = iota
 
-// KeepPostMerge sets the history pruning point to the merge activation block.
-KeepPostMerge
+	// KeepPostMerge sets the history pruning point to the merge activation block.
+	KeepPostMerge
 
-// KeepPostPrague sets the history pruning point to the Prague (Pectra) activation block.
-KeepPostPrague
+	// KeepPostPrague sets the history pruning point to the Prague (Pectra) activation block.
+	KeepPostPrague
 )
 
 func (m HistoryMode) IsValid() bool {
-return m <= KeepPostPrague
+	return m <= KeepPostPrague
 }
 
 func (m HistoryMode) String() string {
-switch m {
-case KeepAll:
-return "all"
-case KeepPostMerge:
-return "postmerge"
-case KeepPostPrague:
-return "postprague"
-default:
-return fmt.Sprintf("invalid HistoryMode(%d)", m)
-}
+	switch m {
+	case KeepAll:
+		return "all"
+	case KeepPostMerge:
+		return "postmerge"
+	case KeepPostPrague:
+		return "postprague"
+	default:
+		return fmt.Sprintf("invalid HistoryMode(%d)", m)
+	}
 }
 
 // MarshalText implements encoding.TextMarshaler.
 func (m HistoryMode) MarshalText() ([]byte, error) {
-if m.IsValid() {
-return []byte(m.String()), nil
-}
-return nil, fmt.Errorf("unknown history mode %d", m)
+	if m.IsValid() {
+		return []byte(m.String()), nil
+	}
+	return nil, fmt.Errorf("unknown history mode %d", m)
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.
 func (m *HistoryMode) UnmarshalText(text []byte) error {
-switch string(text) {
-case "all":
-*m = KeepAll
-case "postmerge":
-*m = KeepPostMerge
-case "postprague":
-*m = KeepPostPrague
-default:
-return fmt.Errorf("unknown history mode %q, want \"all\", \"postmerge\", or \"postprague\"", text)
-}
-return nil
+	switch string(text) {
+	case "all":
+		*m = KeepAll
+	case "postmerge":
+		*m = KeepPostMerge
+	case "postprague":
+		*m = KeepPostPrague
+	default:
+		return fmt.Errorf("unknown history mode %q, want \"all\", \"postmerge\", or \"postprague\"", text)
+	}
+	return nil
 }
 
 // PrunePoint identifies a specific block for history pruning.
 type PrunePoint struct {
-BlockNumber uint64
-BlockHash   common.Hash
+	BlockNumber uint64
+	BlockHash   common.Hash
 }
 
 // staticPrunePoints contains the pre-defined history pruning cutoff blocks for
 // known networks, keyed by history mode and genesis hash.
 var staticPrunePoints = map[HistoryMode]map[common.Hash]*PrunePoint{
-KeepPostMerge: {
-params.MainnetGenesisHash: {
-BlockNumber: 15537393,
-BlockHash:   common.HexToHash("0x55b11b918355b1ef9c5db810302ebad0bf2544255b530cdce90674d5887bb286"),
-},
-params.SepoliaGenesisHash: {
-BlockNumber: 1450409,
-BlockHash:   common.HexToHash("0x229f6b18ca1552f1d5146deceb5387333f40dc6275aebee3f2c5c4ece07d02db"),
-},
-},
-KeepPostPrague: {
-params.MainnetGenesisHash: {
-BlockNumber: 22431084,
-BlockHash:   common.HexToHash("0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8"),
-},
-params.SepoliaGenesisHash: {
-BlockNumber: 7836331,
-BlockHash:   common.HexToHash("0xe6571beb68bf24dbd8a6ba354518996920c55a3f8d8fdca423e391b8ad071f22"),
-},
-},
+	KeepPostMerge: {
+		params.MainnetGenesisHash: {
+			BlockNumber: 15537393,
+			BlockHash:   common.HexToHash("0x55b11b918355b1ef9c5db810302ebad0bf2544255b530cdce90674d5887bb286"),
+		},
+		params.SepoliaGenesisHash: {
+			BlockNumber: 1450409,
+			BlockHash:   common.HexToHash("0x229f6b18ca1552f1d5146deceb5387333f40dc6275aebee3f2c5c4ece07d02db"),
+		},
+	},
+	KeepPostPrague: {
+		params.MainnetGenesisHash: {
+			BlockNumber: 22431084,
+			BlockHash:   common.HexToHash("0x50c8cab760b2948349c590461b166773c45d8f4858cccf5a43025ab2960152e8"),
+		},
+		params.SepoliaGenesisHash: {
+			BlockNumber: 7836331,
+			BlockHash:   common.HexToHash("0xe6571beb68bf24dbd8a6ba354518996920c55a3f8d8fdca423e391b8ad071f22"),
+		},
+	},
 }
 
 // HistoryPolicy describes the configured history pruning strategy.
 type HistoryPolicy struct {
-Mode   HistoryMode
-Target *PrunePoint
+	Mode   HistoryMode
+	Target *PrunePoint
 }
 
 // NewPolicy constructs a HistoryPolicy from the given mode and genesis hash.
 func NewPolicy(mode HistoryMode, genesisHash common.Hash) (HistoryPolicy, error) {
-switch mode {
-case KeepAll:
-return HistoryPolicy{Mode: KeepAll}, nil
+	switch mode {
+	case KeepAll:
+		return HistoryPolicy{Mode: KeepAll}, nil
 
-case KeepPostMerge, KeepPostPrague:
-point := staticPrunePoints[mode][genesisHash]
-if point == nil {
-return HistoryPolicy{}, fmt.Errorf("%s history pruning not available for network %s", mode, genesisHash.Hex())
-}
-return HistoryPolicy{Mode: mode, Target: point}, nil
+	case KeepPostMerge, KeepPostPrague:
+		point := staticPrunePoints[mode][genesisHash]
+		if point == nil {
+			return HistoryPolicy{}, fmt.Errorf("%s history pruning not available for network %s", mode, genesisHash.Hex())
+		}
+		return HistoryPolicy{Mode: mode, Target: point}, nil
 
-default:
-return HistoryPolicy{}, fmt.Errorf("invalid history mode: %d", mode)
-}
+	default:
+		return HistoryPolicy{}, fmt.Errorf("invalid history mode: %d", mode)
+	}
 }
 
 // PrunedHistoryError is returned by APIs when the requested history is pruned.

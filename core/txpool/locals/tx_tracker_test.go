@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,192 +17,192 @@
 package locals
 
 import (
-"fmt"
-"maps"
-"math/big"
-"math/rand"
-"path/filepath"
-"testing"
-"time"
+	"fmt"
+	"maps"
+	"math/big"
+	"math/rand"
+	"path/filepath"
+	"testing"
+	"time"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/consensus/ethash"
-"github.com/SILA/sila-chain/core"
-"github.com/SILA/sila-chain/core/rawdb"
-"github.com/SILA/sila-chain/core/txpool"
-"github.com/SILA/sila-chain/core/txpool/legacypool"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/params"
+	"silachain/common"
+	"silachain/consensus/ethash"
+	"silachain/core"
+	"silachain/core/rawdb"
+	"silachain/core/txpool"
+	"silachain/core/txpool/legacypool"
+	"silachain/core/types"
+	"silachain/crypto"
+	"silachain/ethdb"
+	"silachain/params"
 )
 
 var (
-key, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
-address = crypto.PubkeyToAddress(key.PublicKey)
-funds   = big.NewInt(1000000000000000)
-gspec   = &core.Genesis{
-Config: params.TestChainConfig,
-Alloc: types.GenesisAlloc{
-address: {Balance: funds},
-},
-BaseFee: big.NewInt(params.InitialBaseFee),
-}
-signer = types.LatestSigner(gspec.Config)
+	key, _  = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
+	address = crypto.PubkeyToAddress(key.PublicKey)
+	funds   = big.NewInt(1000000000000000)
+	gspec   = &core.Genesis{
+		Config: params.TestChainConfig,
+		Alloc: types.GenesisAlloc{
+			address: {Balance: funds},
+		},
+		BaseFee: big.NewInt(params.InitialBaseFee),
+	}
+	signer = types.LatestSigner(gspec.Config)
 )
 
 type testEnv struct {
-chain   *core.BlockChain
-pool    *txpool.TxPool
-tracker *TxTracker
-genDb   ethdb.Database
+	chain   *core.BlockChain
+	pool    *txpool.TxPool
+	tracker *TxTracker
+	genDb   ethdb.Database
 }
 
 func newTestEnv(t *testing.T, n int, gasTip uint64, journal string) *testEnv {
-genDb, blocks, _ := core.GenerateChainWithGenesis(gspec, ethash.NewFaker(), n, func(i int, gen *core.BlockGen) {
-tx, err := types.SignTx(types.NewTransaction(gen.TxNonce(address), common.Address{0x00}, big.NewInt(1000), params.TxGas, gen.BaseFee(), nil), signer, key)
-if err != nil {
-panic(err)
-}
-gen.AddTx(tx)
-})
+	genDb, blocks, _ := core.GenerateChainWithGenesis(gspec, ethash.NewFaker(), n, func(i int, gen *core.BlockGen) {
+		tx, err := types.SignTx(types.NewTransaction(gen.TxNonce(address), common.Address{0x00}, big.NewInt(1000), params.TxGas, gen.BaseFee(), nil), signer, key)
+		if err != nil {
+			panic(err)
+		}
+		gen.AddTx(tx)
+	})
 
-db := rawdb.NewMemoryDatabase()
-chain, _ := core.NewBlockChain(db, gspec, ethash.NewFaker(), nil)
+	db := rawdb.NewMemoryDatabase()
+	chain, _ := core.NewBlockChain(db, gspec, ethash.NewFaker(), nil)
 
-legacyPool := legacypool.New(legacypool.DefaultConfig, chain)
-pool, err := txpool.New(gasTip, chain, []txpool.SubPool{legacyPool})
-if err != nil {
-t.Fatalf("Failed to create SILA tx pool: %v", err)
-}
-if n, err := chain.InsertChain(blocks); err != nil {
-t.Fatalf("Failed to process block %d on SILA: %v", n, err)
-}
-if err := pool.Sync(); err != nil {
-t.Fatalf("Failed to sync the SILA txpool, %v", err)
-}
-return &testEnv{
-chain:   chain,
-pool:    pool,
-tracker: New(journal, time.Minute, gspec.Config, pool),
-genDb:   genDb,
-}
+	legacyPool := legacypool.New(legacypool.DefaultConfig, chain)
+	pool, err := txpool.New(gasTip, chain, []txpool.SubPool{legacyPool})
+	if err != nil {
+		t.Fatalf("Failed to create SILA tx pool: %v", err)
+	}
+	if n, err := chain.InsertChain(blocks); err != nil {
+		t.Fatalf("Failed to process block %d on SILA: %v", n, err)
+	}
+	if err := pool.Sync(); err != nil {
+		t.Fatalf("Failed to sync the SILA txpool, %v", err)
+	}
+	return &testEnv{
+		chain:   chain,
+		pool:    pool,
+		tracker: New(journal, time.Minute, gspec.Config, pool),
+		genDb:   genDb,
+	}
 }
 
 func (env *testEnv) close() {
-env.chain.Stop()
+	env.chain.Stop()
 }
 
 // nolint:unused
 func (env *testEnv) setGasTip(gasTip uint64) {
-env.pool.SetGasTip(new(big.Int).SetUint64(gasTip))
+	env.pool.SetGasTip(new(big.Int).SetUint64(gasTip))
 }
 
 // nolint:unused
 func (env *testEnv) makeTx(nonce uint64, gasPrice *big.Int) *types.Transaction {
-if nonce == 0 {
-head := env.chain.CurrentHeader()
-state, _ := env.chain.StateAt(head.Root)
-nonce = state.GetNonce(address)
-}
-if gasPrice == nil {
-gasPrice = big.NewInt(params.GWei)
-}
-tx, _ := types.SignTx(types.NewTransaction(nonce, common.Address{0x00}, big.NewInt(1000), params.TxGas, gasPrice, nil), signer, key)
-return tx
+	if nonce == 0 {
+		head := env.chain.CurrentHeader()
+		state, _ := env.chain.StateAt(head.Root)
+		nonce = state.GetNonce(address)
+	}
+	if gasPrice == nil {
+		gasPrice = big.NewInt(params.GWei)
+	}
+	tx, _ := types.SignTx(types.NewTransaction(nonce, common.Address{0x00}, big.NewInt(1000), params.TxGas, gasPrice, nil), signer, key)
+	return tx
 }
 
 func (env *testEnv) makeTxs(n int) []*types.Transaction {
-head := env.chain.CurrentHeader()
-state, _ := env.chain.StateAt(head.Root)
-nonce := state.GetNonce(address)
+	head := env.chain.CurrentHeader()
+	state, _ := env.chain.StateAt(head.Root)
+	nonce := state.GetNonce(address)
 
-var txs []*types.Transaction
-for i := 0; i < n; i++ {
-tx, _ := types.SignTx(types.NewTransaction(nonce+uint64(i), common.Address{0x00}, big.NewInt(1000), params.TxGas, big.NewInt(params.GWei), nil), signer, key)
-txs = append(txs, tx)
-}
-return txs
+	var txs []*types.Transaction
+	for i := 0; i < n; i++ {
+		tx, _ := types.SignTx(types.NewTransaction(nonce+uint64(i), common.Address{0x00}, big.NewInt(1000), params.TxGas, big.NewInt(params.GWei), nil), signer, key)
+		txs = append(txs, tx)
+	}
+	return txs
 }
 
 // nolint:unused
 func (env *testEnv) commit() {
-head := env.chain.CurrentBlock()
-block := env.chain.GetBlock(head.Hash(), head.Number.Uint64())
-blocks, _ := core.GenerateChain(env.chain.Config(), block, ethash.NewFaker(), env.genDb, 1, func(i int, gen *core.BlockGen) {
-tx, err := types.SignTx(types.NewTransaction(gen.TxNonce(address), common.Address{0x00}, big.NewInt(1000), params.TxGas, gen.BaseFee(), nil), signer, key)
-if err != nil {
-panic(err)
-}
-gen.AddTx(tx)
-})
-env.chain.InsertChain(blocks)
-if err := env.pool.Sync(); err != nil {
-panic(err)
-}
+	head := env.chain.CurrentBlock()
+	block := env.chain.GetBlock(head.Hash(), head.Number.Uint64())
+	blocks, _ := core.GenerateChain(env.chain.Config(), block, ethash.NewFaker(), env.genDb, 1, func(i int, gen *core.BlockGen) {
+		tx, err := types.SignTx(types.NewTransaction(gen.TxNonce(address), common.Address{0x00}, big.NewInt(1000), params.TxGas, gen.BaseFee(), nil), signer, key)
+		if err != nil {
+			panic(err)
+		}
+		gen.AddTx(tx)
+	})
+	env.chain.InsertChain(blocks)
+	if err := env.pool.Sync(); err != nil {
+		panic(err)
+	}
 }
 
 func TestResubmit(t *testing.T) {
-env := newTestEnv(t, 10, 0, "")
-defer env.close()
+	env := newTestEnv(t, 10, 0, "")
+	defer env.close()
 
-txs := env.makeTxs(10)
-txsA := txs[:len(txs)/2]
-txsB := txs[len(txs)/2:]
-env.pool.Add(txsA, true)
+	txs := env.makeTxs(10)
+	txsA := txs[:len(txs)/2]
+	txsB := txs[len(txs)/2:]
+	env.pool.Add(txsA, true)
 
-pending, queued := env.pool.ContentFrom(address)
-if len(pending) != len(txsA) || len(queued) != 0 {
-t.Fatalf("Unexpected txpool content on SILA: %d, %d", len(pending), len(queued))
-}
-env.tracker.TrackAll(txs)
+	pending, queued := env.pool.ContentFrom(address)
+	if len(pending) != len(txsA) || len(queued) != 0 {
+		t.Fatalf("Unexpected txpool content on SILA: %d, %d", len(pending), len(queued))
+	}
+	env.tracker.TrackAll(txs)
 
-resubmit := env.tracker.recheck(true)
-if len(resubmit) != len(txsB) {
-t.Fatalf("Unexpected transactions to resubmit on SILA, got: %d, want: %d", len(resubmit), len(txsB))
-}
-env.tracker.mu.Lock()
-allCopy := maps.Clone(env.tracker.all)
-env.tracker.mu.Unlock()
+	resubmit := env.tracker.recheck(true)
+	if len(resubmit) != len(txsB) {
+		t.Fatalf("Unexpected transactions to resubmit on SILA, got: %d, want: %d", len(resubmit), len(txsB))
+	}
+	env.tracker.mu.Lock()
+	allCopy := maps.Clone(env.tracker.all)
+	env.tracker.mu.Unlock()
 
-if len(allCopy) != len(txs) {
-t.Fatalf("Unexpected transactions being tracked on SILA, got: %d, want: %d", len(allCopy), len(txs))
-}
+	if len(allCopy) != len(txs) {
+		t.Fatalf("Unexpected transactions being tracked on SILA, got: %d, want: %d", len(allCopy), len(txs))
+	}
 }
 
 func TestJournal(t *testing.T) {
-journalPath := filepath.Join(t.TempDir(), fmt.Sprintf("%d", rand.Int63()))
-env := newTestEnv(t, 10, 0, journalPath)
-defer env.close()
+	journalPath := filepath.Join(t.TempDir(), fmt.Sprintf("%d", rand.Int63()))
+	env := newTestEnv(t, 10, 0, journalPath)
+	defer env.close()
 
-env.tracker.Start()
-defer env.tracker.Stop()
+	env.tracker.Start()
+	defer env.tracker.Stop()
 
-txs := env.makeTxs(10)
-txsA := txs[:len(txs)/2]
-txsB := txs[len(txs)/2:]
-env.pool.Add(txsA, true)
+	txs := env.makeTxs(10)
+	txsA := txs[:len(txs)/2]
+	txsB := txs[len(txs)/2:]
+	env.pool.Add(txsA, true)
 
-pending, queued := env.pool.ContentFrom(address)
-if len(pending) != len(txsA) || len(queued) != 0 {
-t.Fatalf("Unexpected txpool content on SILA: %d, %d", len(pending), len(queued))
-}
-env.tracker.TrackAll(txsA)
-env.tracker.TrackAll(txsB)
-env.tracker.recheck(true) // manually rejournal the tracker
+	pending, queued := env.pool.ContentFrom(address)
+	if len(pending) != len(txsA) || len(queued) != 0 {
+		t.Fatalf("Unexpected txpool content on SILA: %d, %d", len(pending), len(queued))
+	}
+	env.tracker.TrackAll(txsA)
+	env.tracker.TrackAll(txsB)
+	env.tracker.recheck(true) // manually rejournal the tracker
 
-// Make sure all the transactions are properly journalled
-trackerB := New(journalPath, time.Minute, gspec.Config, env.pool)
-trackerB.journal.load(func(transactions []*types.Transaction) []error {
-trackerB.TrackAll(transactions)
-return nil
-})
+	// Make sure all the transactions are properly journalled
+	trackerB := New(journalPath, time.Minute, gspec.Config, env.pool)
+	trackerB.journal.load(func(transactions []*types.Transaction) []error {
+		trackerB.TrackAll(transactions)
+		return nil
+	})
 
-trackerB.mu.Lock()
-allCopy := maps.Clone(trackerB.all)
-trackerB.mu.Unlock()
+	trackerB.mu.Lock()
+	allCopy := maps.Clone(trackerB.all)
+	trackerB.mu.Unlock()
 
-if len(allCopy) != len(txs) {
-t.Fatalf("Unexpected transactions being tracked on SILA, got: %d, want: %d", len(allCopy), len(txs))
-}
+	if len(allCopy) != len(txs) {
+		t.Fatalf("Unexpected transactions being tracked on SILA, got: %d, want: %d", len(allCopy), len(txs))
+	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -23,20 +23,20 @@ allowing verification of blocks without requiring full state access.
 package core
 
 import (
-"context"
+	"context"
 
-"github.com/silachain/sila-library/common"
-"github.com/silachain/sila-library/common/lru"
-"github.com/silachain/sila-library/consensus/beacon"
-"github.com/silachain/sila-library/consensus/ethash"
-"github.com/silachain/sila-library/core/state"
-"github.com/silachain/sila-library/core/stateless"
-"github.com/silachain/sila-library/core/types"
-"github.com/silachain/sila-library/core/vm"
-"github.com/silachain/sila-library/log"
-"github.com/silachain/sila-library/params"
-"github.com/silachain/sila-library/trie"
-"github.com/silachain/sila-library/triedb"
+	"silachain/common"
+	"silachain/common/lru"
+	"silachain/consensus/beacon"
+	"silachain/consensus/ethash"
+	"silachain/core/state"
+	"silachain/core/stateless"
+	"silachain/core/types"
+	"silachain/core/vm"
+	"silachain/log"
+	"silachain/params"
+	"silachain/trie"
+	"silachain/triedb"
 )
 
 // ExecuteStateless runs a stateless execution based on a witness, verifies
@@ -49,40 +49,40 @@ import (
 //
 // TODO(karalabe): Would be nice to resolve both issues above somehow and move it.
 func ExecuteStateless(ctx context.Context, config *params.ChainConfig, vmconfig vm.Config, block *types.Block, witness *stateless.Witness) (common.Hash, common.Hash, error) {
-// Sanity check if the supplied block accidentally contains a set root or
-// receipt hash. If so, be very loud, but still continue.
-if block.Root() != (common.Hash{}) {
-log.Error("stateless runner received state root it's expected to calculate (faulty consensus client)", "block", block.Number())
-}
-if block.ReceiptHash() != (common.Hash{}) {
-log.Error("stateless runner received receipt root it's expected to calculate (faulty consensus client)", "block", block.Number())
-}
-// Create and populate the state database to serve as the stateless backend
-memdb := witness.MakeHashDB()
-db, err := state.New(witness.Root(), state.NewDatabase(triedb.NewDatabase(memdb, triedb.HashDefaults), state.NewCodeDB(memdb)))
-if err != nil {
-return common.Hash{}, common.Hash{}, err
-}
-// Create a blockchain that is idle, but can be used to access headers through
-chain := &HeaderChain{
-config:      config,
-chainDb:     memdb,
-headerCache: lru.NewCache[common.Hash, *types.Header](256),
-engine:      beacon.New(ethash.NewFaker()),
-}
-processor := NewStateProcessor(chain)
-validator := NewBlockValidator(config, nil) // No chain, we only validate the state, not the block
+	// Sanity check if the supplied block accidentally contains a set root or
+	// receipt hash. If so, be very loud, but still continue.
+	if block.Root() != (common.Hash{}) {
+		log.Error("stateless runner received state root it's expected to calculate (faulty consensus client)", "block", block.Number())
+	}
+	if block.ReceiptHash() != (common.Hash{}) {
+		log.Error("stateless runner received receipt root it's expected to calculate (faulty consensus client)", "block", block.Number())
+	}
+	// Create and populate the state database to serve as the stateless backend
+	memdb := witness.MakeHashDB()
+	db, err := state.New(witness.Root(), state.NewDatabase(triedb.NewDatabase(memdb, triedb.HashDefaults), state.NewCodeDB(memdb)))
+	if err != nil {
+		return common.Hash{}, common.Hash{}, err
+	}
+	// Create a blockchain that is idle, but can be used to access headers through
+	chain := &HeaderChain{
+		config:      config,
+		chainDb:     memdb,
+		headerCache: lru.NewCache[common.Hash, *types.Header](256),
+		engine:      beacon.New(ethash.NewFaker()),
+	}
+	processor := NewStateProcessor(chain)
+	validator := NewBlockValidator(config, nil) // No chain, we only validate the state, not the block
 
-// Run the stateless blocks processing and self-validate certain fields
-res, err := processor.Process(ctx, block, db, vmconfig)
-if err != nil {
-return common.Hash{}, common.Hash{}, err
-}
-if err = validator.ValidateState(block, db, res, true); err != nil {
-return common.Hash{}, common.Hash{}, err
-}
-// Almost everything validated, but receipt and state root needs to be returned
-receiptRoot := types.DeriveSha(res.Receipts, trie.NewStackTrie(nil))
-stateRoot := db.IntermediateRoot(config.IsEIP158(block.Number()))
-return stateRoot, receiptRoot, nil
+	// Run the stateless blocks processing and self-validate certain fields
+	res, err := processor.Process(ctx, block, db, vmconfig)
+	if err != nil {
+		return common.Hash{}, common.Hash{}, err
+	}
+	if err = validator.ValidateState(block, db, res, true); err != nil {
+		return common.Hash{}, common.Hash{}, err
+	}
+	// Almost everything validated, but receipt and state root needs to be returned
+	receiptRoot := types.DeriveSha(res.Receipts, trie.NewStackTrie(nil))
+	stateRoot := db.IntermediateRoot(config.IsEIP158(block.Number()))
+	return stateRoot, receiptRoot, nil
 }

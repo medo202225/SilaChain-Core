@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,256 +17,256 @@
 package state
 
 import (
-"errors"
-"fmt"
+	"errors"
+	"fmt"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/state/snapshot"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/trie"
-"github.com/SILA/sila-chain/triedb"
+	"silachain/common"
+	"silachain/core/state/snapshot"
+	"silachain/core/types"
+	"silachain/trie"
+	"silachain/triedb"
 )
 
 // Iterator is an iterator to step over all the SILA accounts or the specific
 // storage in the specific state.
 type Iterator interface {
-// Next steps the iterator forward one element. It returns false if the iterator
-// is exhausted or if an error occurs. Any error encountered is retained and
-// can be retrieved via Error().
-Next() bool
+	// Next steps the iterator forward one element. It returns false if the iterator
+	// is exhausted or if an error occurs. Any error encountered is retained and
+	// can be retrieved via Error().
+	Next() bool
 
-// Error returns any failure that occurred during iteration, which might have
-// caused a premature iteration exit.
-Error() error
+	// Error returns any failure that occurred during iteration, which might have
+	// caused a premature iteration exit.
+	Error() error
 
-// Hash returns the hash of the SILA account or storage slot the iterator is
-// currently at.
-Hash() common.Hash
+	// Hash returns the hash of the SILA account or storage slot the iterator is
+	// currently at.
+	Hash() common.Hash
 
-// Release releases associated resources. Release should always succeed and
-// can be called multiple times without causing error.
-Release()
+	// Release releases associated resources. Release should always succeed and
+	// can be called multiple times without causing error.
+	Release()
 }
 
 // AccountIterator is an iterator to step over all the SILA accounts in the
 // specific state.
 type AccountIterator interface {
-Iterator
+	Iterator
 
-// Address returns the raw SILA account address the iterator is currently at.
-// An error will be returned if the preimage is not available.
-Address() (common.Address, error)
+	// Address returns the raw SILA account address the iterator is currently at.
+	// An error will be returned if the preimage is not available.
+	Address() (common.Address, error)
 
-// Account returns the RLP encoded SILA account the iterator is currently at.
-// An error will be retained if the iterator becomes invalid.
-Account() []byte
+	// Account returns the RLP encoded SILA account the iterator is currently at.
+	// An error will be retained if the iterator becomes invalid.
+	Account() []byte
 }
 
 // StorageIterator is an iterator to step over the specific storage in the
 // specific state.
 type StorageIterator interface {
-Iterator
+	Iterator
 
-// Key returns the raw SILA storage slot key the iterator is currently at.
-// An error will be returned if the preimage is not available.
-Key() (common.Hash, error)
+	// Key returns the raw SILA storage slot key the iterator is currently at.
+	// An error will be returned if the preimage is not available.
+	Key() (common.Hash, error)
 
-// Slot returns the SILA storage slot the iterator is currently at. An error will
-// be retained if the iterator becomes invalid.
-Slot() []byte
+	// Slot returns the SILA storage slot the iterator is currently at. An error will
+	// be retained if the iterator becomes invalid.
+	Slot() []byte
 }
 
 // Iteratee wraps the NewIterator methods for traversing the accounts and
 // storages of the specific SILA state.
 type Iteratee interface {
-// NewAccountIterator creates a SILA account iterator for the state specified by
-// the given root. It begins at a specified starting position, corresponding
-// to a particular initial key (or the next key if the specified one does
-// not exist).
-//
-// The starting position here refers to the hash of the account address.
-NewAccountIterator(start common.Hash) (AccountIterator, error)
+	// NewAccountIterator creates a SILA account iterator for the state specified by
+	// the given root. It begins at a specified starting position, corresponding
+	// to a particular initial key (or the next key if the specified one does
+	// not exist).
+	//
+	// The starting position here refers to the hash of the account address.
+	NewAccountIterator(start common.Hash) (AccountIterator, error)
 
-// NewStorageIterator creates a SILA storage iterator for the state specified by
-// the address hash. It begins at a specified starting position, corresponding
-// to a particular initial key (or the next key if the specified one does
-// not exist).
-//
-// The starting position here refers to the hash of the slot key.
-NewStorageIterator(addressHash common.Hash, start common.Hash) (StorageIterator, error)
+	// NewStorageIterator creates a SILA storage iterator for the state specified by
+	// the address hash. It begins at a specified starting position, corresponding
+	// to a particular initial key (or the next key if the specified one does
+	// not exist).
+	//
+	// The starting position here refers to the hash of the slot key.
+	NewStorageIterator(addressHash common.Hash, start common.Hash) (StorageIterator, error)
 }
 
 // PreimageReader wraps the function Preimage for accessing the preimage of
 // a given hash.
 type PreimageReader interface {
-// Preimage returns the preimage of associated hash.
-Preimage(hash common.Hash) []byte
+	// Preimage returns the preimage of associated hash.
+	Preimage(hash common.Hash) []byte
 }
 
 // flatAccountIterator is a wrapper around the underlying flat state iterator.
 // Before returning data from the iterator, it performs an additional conversion
 // to bridge the slim encoding with the full encoding format.
 type flatAccountIterator struct {
-err      error
-it       snapshot.AccountIterator
-preimage PreimageReader
+	err      error
+	it       snapshot.AccountIterator
+	preimage PreimageReader
 }
 
 // newFlatAccountIterator constructs the SILA account iterator with the provided
 // flat state iterator.
 func newFlatAccountIterator(it snapshot.AccountIterator, preimage PreimageReader) *flatAccountIterator {
-return &flatAccountIterator{it: it, preimage: preimage}
+	return &flatAccountIterator{it: it, preimage: preimage}
 }
 
 // Next steps the iterator forward one element. It returns false if the iterator
 // is exhausted or if an error occurs. Any error encountered is retained and
 // can be retrieved via Error().
 func (ai *flatAccountIterator) Next() bool {
-if ai.err != nil {
-return false
-}
-return ai.it.Next()
+	if ai.err != nil {
+		return false
+	}
+	return ai.it.Next()
 }
 
 // Error returns any failure that occurred during iteration, which might have
 // caused a premature iteration exit.
 func (ai *flatAccountIterator) Error() error {
-if ai.err != nil {
-return ai.err
-}
-return ai.it.Error()
+	if ai.err != nil {
+		return ai.err
+	}
+	return ai.it.Error()
 }
 
 // Hash returns the hash of the SILA account or storage slot the iterator is
 // currently at.
 func (ai *flatAccountIterator) Hash() common.Hash {
-return ai.it.Hash()
+	return ai.it.Hash()
 }
 
 // Release releases associated resources. Release should always succeed and
 // can be called multiple times without causing error.
 func (ai *flatAccountIterator) Release() {
-ai.it.Release()
+	ai.it.Release()
 }
 
 // Address returns the raw SILA account address the iterator is currently at.
 // An error will be returned if the preimage is not available.
 func (ai *flatAccountIterator) Address() (common.Address, error) {
-if ai.preimage == nil {
-return common.Address{}, errors.New("SILA account address is not available")
-}
-preimage := ai.preimage.Preimage(ai.Hash())
-if preimage == nil {
-return common.Address{}, errors.New("SILA account address is not available")
-}
-return common.BytesToAddress(preimage), nil
+	if ai.preimage == nil {
+		return common.Address{}, errors.New("SILA account address is not available")
+	}
+	preimage := ai.preimage.Preimage(ai.Hash())
+	if preimage == nil {
+		return common.Address{}, errors.New("SILA account address is not available")
+	}
+	return common.BytesToAddress(preimage), nil
 }
 
 // Account returns the SILA account data the iterator is currently at. The account
 // data is encoded as slim format from the underlying iterator, the conversion
 // is required.
 func (ai *flatAccountIterator) Account() []byte {
-data, err := types.FullAccountRLP(ai.it.Account())
-if err != nil {
-ai.err = err
-return nil
-}
-return data
+	data, err := types.FullAccountRLP(ai.it.Account())
+	if err != nil {
+		ai.err = err
+		return nil
+	}
+	return data
 }
 
 // flatStorageIterator is a wrapper around the underlying flat state iterator.
 type flatStorageIterator struct {
-it       snapshot.StorageIterator
-preimage PreimageReader
+	it       snapshot.StorageIterator
+	preimage PreimageReader
 }
 
 // newFlatStorageIterator constructs the SILA storage iterator with the provided
 // flat state iterator.
 func newFlatStorageIterator(it snapshot.StorageIterator, preimage PreimageReader) *flatStorageIterator {
-return &flatStorageIterator{it: it, preimage: preimage}
+	return &flatStorageIterator{it: it, preimage: preimage}
 }
 
 // Next steps the iterator forward one element. It returns false if the iterator
 // is exhausted or if an error occurs. Any error encountered is retained and
 // can be retrieved via Error().
 func (si *flatStorageIterator) Next() bool {
-return si.it.Next()
+	return si.it.Next()
 }
 
 // Error returns any failure that occurred during iteration, which might have
 // caused a premature iteration exit.
 func (si *flatStorageIterator) Error() error {
-return si.it.Error()
+	return si.it.Error()
 }
 
 // Hash returns the hash of the SILA account or storage slot the iterator is
 // currently at.
 func (si *flatStorageIterator) Hash() common.Hash {
-return si.it.Hash()
+	return si.it.Hash()
 }
 
 // Release releases associated resources. Release should always succeed and
 // can be called multiple times without causing error.
 func (si *flatStorageIterator) Release() {
-si.it.Release()
+	si.it.Release()
 }
 
 // Key returns the raw SILA storage slot key the iterator is currently at.
 // An error will be returned if the preimage is not available.
 func (si *flatStorageIterator) Key() (common.Hash, error) {
-if si.preimage == nil {
-return common.Hash{}, errors.New("SILA slot key is not available")
-}
-preimage := si.preimage.Preimage(si.Hash())
-if preimage == nil {
-return common.Hash{}, errors.New("SILA slot key is not available")
-}
-return common.BytesToHash(preimage), nil
+	if si.preimage == nil {
+		return common.Hash{}, errors.New("SILA slot key is not available")
+	}
+	preimage := si.preimage.Preimage(si.Hash())
+	if preimage == nil {
+		return common.Hash{}, errors.New("SILA slot key is not available")
+	}
+	return common.BytesToHash(preimage), nil
 }
 
 // Slot returns the SILA storage slot data the iterator is currently at.
 func (si *flatStorageIterator) Slot() []byte {
-return si.it.Slot()
+	return si.it.Slot()
 }
 
 // merkleIterator implements the Iterator interface, providing functions to traverse
 // the SILA accounts or storages with the manner of Merkle-Patricia-Trie.
 type merkleIterator struct {
-tr      Trie
-it      *trie.Iterator
-account bool
+	tr      Trie
+	it      *trie.Iterator
+	account bool
 }
 
 // newMerkleTrieIterator constructs the SILA iterator with the given trie and starting position.
 func newMerkleTrieIterator(tr Trie, start common.Hash, account bool) (*merkleIterator, error) {
-it, err := tr.NodeIterator(start.Bytes())
-if err != nil {
-return nil, err
-}
-return &merkleIterator{
-tr:      tr,
-it:      trie.NewIterator(it),
-account: account,
-}, nil
+	it, err := tr.NodeIterator(start.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	return &merkleIterator{
+		tr:      tr,
+		it:      trie.NewIterator(it),
+		account: account,
+	}, nil
 }
 
 // Next steps the iterator forward one element. It returns false if the iterator
 // is exhausted or if an error occurs. Any error encountered is retained and
 // can be retrieved via Error().
 func (ti *merkleIterator) Next() bool {
-return ti.it.Next()
+	return ti.it.Next()
 }
 
 // Error returns any failure that occurred during iteration, which might have
 // caused a premature iteration exit.
 func (ti *merkleIterator) Error() error {
-return ti.it.Err
+	return ti.it.Err
 }
 
 // Hash returns the hash of the SILA account or storage slot the iterator is
 // currently at.
 func (ti *merkleIterator) Hash() common.Hash {
-return common.BytesToHash(ti.it.Key)
+	return common.BytesToHash(ti.it.Key)
 }
 
 // Release releases associated resources. Release should always succeed and
@@ -276,61 +276,61 @@ func (ti *merkleIterator) Release() {}
 // Address returns the raw SILA account address the iterator is currently at.
 // An error will be returned if the preimage is not available.
 func (ti *merkleIterator) Address() (common.Address, error) {
-if !ti.account {
-return common.Address{}, errors.New("SILA account address is not available")
-}
-preimage := ti.tr.GetKey(ti.it.Key)
-if preimage == nil {
-return common.Address{}, errors.New("SILA account address is not available")
-}
-return common.BytesToAddress(preimage), nil
+	if !ti.account {
+		return common.Address{}, errors.New("SILA account address is not available")
+	}
+	preimage := ti.tr.GetKey(ti.it.Key)
+	if preimage == nil {
+		return common.Address{}, errors.New("SILA account address is not available")
+	}
+	return common.BytesToAddress(preimage), nil
 }
 
 // Account returns the SILA account data the iterator is currently at.
 func (ti *merkleIterator) Account() []byte {
-if !ti.account {
-return nil
-}
-return ti.it.Value
+	if !ti.account {
+		return nil
+	}
+	return ti.it.Value
 }
 
 // Key returns the raw SILA storage slot key the iterator is currently at.
 // An error will be returned if the preimage is not available.
 func (ti *merkleIterator) Key() (common.Hash, error) {
-if ti.account {
-return common.Hash{}, errors.New("SILA slot key is not available")
-}
-preimage := ti.tr.GetKey(ti.it.Key)
-if preimage == nil {
-return common.Hash{}, errors.New("SILA slot key is not available")
-}
-return common.BytesToHash(preimage), nil
+	if ti.account {
+		return common.Hash{}, errors.New("SILA slot key is not available")
+	}
+	preimage := ti.tr.GetKey(ti.it.Key)
+	if preimage == nil {
+		return common.Hash{}, errors.New("SILA slot key is not available")
+	}
+	return common.BytesToHash(preimage), nil
 }
 
 // Slot returns the SILA storage slot the iterator is currently at.
 func (ti *merkleIterator) Slot() []byte {
-if ti.account {
-return nil
-}
-return ti.it.Value
+	if ti.account {
+		return nil
+	}
+	return ti.it.Value
 }
 
 // stateIteratee implements Iteratee interface, providing the SILA state traversal
 // functionalities of a specific state.
 type stateIteratee struct {
-merkle bool
-root   common.Hash
-triedb *triedb.Database
-snap   *snapshot.Tree
+	merkle bool
+	root   common.Hash
+	triedb *triedb.Database
+	snap   *snapshot.Tree
 }
 
 func newStateIteratee(merkle bool, root common.Hash, triedb *triedb.Database, snap *snapshot.Tree) (*stateIteratee, error) {
-return &stateIteratee{
-merkle: merkle,
-root:   root,
-triedb: triedb,
-snap:   snap,
-}, nil
+	return &stateIteratee{
+		merkle: merkle,
+		root:   root,
+		triedb: triedb,
+		snap:   snap,
+	}, nil
 }
 
 // NewAccountIterator creates a SILA account iterator for the state specified by
@@ -340,30 +340,30 @@ snap:   snap,
 //
 // The starting position here refers to the hash of the account address.
 func (si *stateIteratee) NewAccountIterator(start common.Hash) (AccountIterator, error) {
-// If the external snapshot is available (hash scheme), try to initialize
-// the account iterator from there first.
-if si.snap != nil {
-it, err := si.snap.AccountIterator(si.root, start)
-if err == nil {
-return newFlatAccountIterator(it, si.triedb), nil
-}
-}
-// If the external snapshot is not available, try to initialize the
-// account iterator from the trie database (path scheme)
-it, err := si.triedb.AccountIterator(si.root, start)
-if err == nil {
-return newFlatAccountIterator(it, si.triedb), nil
-}
-if !si.merkle {
-return nil, fmt.Errorf("SILA state %x is not available for account traversal", si.root)
-}
-// The snapshot is not usable so far, construct the account iterator from
-// the trie as the fallback. It's not as efficient as the flat state iterator.
-tr, err := trie.NewStateTrie(trie.StateTrieID(si.root), si.triedb)
-if err != nil {
-return nil, err
-}
-return newMerkleTrieIterator(tr, start, true)
+	// If the external snapshot is available (hash scheme), try to initialize
+	// the account iterator from there first.
+	if si.snap != nil {
+		it, err := si.snap.AccountIterator(si.root, start)
+		if err == nil {
+			return newFlatAccountIterator(it, si.triedb), nil
+		}
+	}
+	// If the external snapshot is not available, try to initialize the
+	// account iterator from the trie database (path scheme)
+	it, err := si.triedb.AccountIterator(si.root, start)
+	if err == nil {
+		return newFlatAccountIterator(it, si.triedb), nil
+	}
+	if !si.merkle {
+		return nil, fmt.Errorf("SILA state %x is not available for account traversal", si.root)
+	}
+	// The snapshot is not usable so far, construct the account iterator from
+	// the trie as the fallback. It's not as efficient as the flat state iterator.
+	tr, err := trie.NewStateTrie(trie.StateTrieID(si.root), si.triedb)
+	if err != nil {
+		return nil, err
+	}
+	return newMerkleTrieIterator(tr, start, true)
 }
 
 // NewStorageIterator creates a SILA storage iterator for the state specified by
@@ -372,64 +372,64 @@ return newMerkleTrieIterator(tr, start, true)
 //
 // The starting position here refers to the hash of the slot key.
 func (si *stateIteratee) NewStorageIterator(addressHash common.Hash, start common.Hash) (StorageIterator, error) {
-// If the external snapshot is available (hash scheme), try to initialize
-// the storage iterator from there first.
-if si.snap != nil {
-it, err := si.snap.StorageIterator(si.root, addressHash, start)
-if err == nil {
-return newFlatStorageIterator(it, si.triedb), nil
-}
-}
-// If the external snapshot is not available, try to initialize the
-// storage iterator from the trie database (path scheme)
-it, err := si.triedb.StorageIterator(si.root, addressHash, start)
-if err == nil {
-return newFlatStorageIterator(it, si.triedb), nil
-}
-if !si.merkle {
-return nil, fmt.Errorf("SILA state %x is not available for storage traversal", si.root)
-}
-// The snapshot is not usable so far, construct the storage iterator from
-// the trie as the fallback. It's not as efficient as the flat state iterator.
-tr, err := trie.NewStateTrie(trie.StateTrieID(si.root), si.triedb)
-if err != nil {
-return nil, err
-}
-acct, err := tr.GetAccountByHash(addressHash)
-if err != nil {
-return nil, err
-}
-if acct == nil || acct.Root == types.EmptyRootHash {
-return &exhaustedIterator{}, nil
-}
-storageTr, err := trie.NewStateTrie(trie.StorageTrieID(si.root, addressHash, acct.Root), si.triedb)
-if err != nil {
-return nil, err
-}
-return newMerkleTrieIterator(storageTr, start, false)
+	// If the external snapshot is available (hash scheme), try to initialize
+	// the storage iterator from there first.
+	if si.snap != nil {
+		it, err := si.snap.StorageIterator(si.root, addressHash, start)
+		if err == nil {
+			return newFlatStorageIterator(it, si.triedb), nil
+		}
+	}
+	// If the external snapshot is not available, try to initialize the
+	// storage iterator from the trie database (path scheme)
+	it, err := si.triedb.StorageIterator(si.root, addressHash, start)
+	if err == nil {
+		return newFlatStorageIterator(it, si.triedb), nil
+	}
+	if !si.merkle {
+		return nil, fmt.Errorf("SILA state %x is not available for storage traversal", si.root)
+	}
+	// The snapshot is not usable so far, construct the storage iterator from
+	// the trie as the fallback. It's not as efficient as the flat state iterator.
+	tr, err := trie.NewStateTrie(trie.StateTrieID(si.root), si.triedb)
+	if err != nil {
+		return nil, err
+	}
+	acct, err := tr.GetAccountByHash(addressHash)
+	if err != nil {
+		return nil, err
+	}
+	if acct == nil || acct.Root == types.EmptyRootHash {
+		return &exhaustedIterator{}, nil
+	}
+	storageTr, err := trie.NewStateTrie(trie.StorageTrieID(si.root, addressHash, acct.Root), si.triedb)
+	if err != nil {
+		return nil, err
+	}
+	return newMerkleTrieIterator(storageTr, start, false)
 }
 
 type exhaustedIterator struct{}
 
 func (e exhaustedIterator) Next() bool {
-return false
+	return false
 }
 
 func (e exhaustedIterator) Error() error {
-return nil
+	return nil
 }
 
 func (e exhaustedIterator) Hash() common.Hash {
-return common.Hash{}
+	return common.Hash{}
 }
 
 func (e exhaustedIterator) Release() {
 }
 
 func (e exhaustedIterator) Key() (common.Hash, error) {
-return common.Hash{}, nil
+	return common.Hash{}, nil
 }
 
 func (e exhaustedIterator) Slot() []byte {
-return nil
+	return nil
 }

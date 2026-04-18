@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,157 +17,157 @@
 package bal
 
 import (
-"bytes"
-"maps"
+	"bytes"
+	"maps"
 
-"github.com/SILA/sila-chain/common"
-"github.com/holiman/uint256"
+	"github.com/holiman/uint256"
+	"silachain/common"
 )
 
 // ConstructionAccountAccess contains post-block account state for mutations as well as
 // all storage keys that were read during execution on SILA. It is used when building block
 // access list during execution.
 type ConstructionAccountAccess struct {
-// StorageWrites is the post-state values of an account's storage slots
-// that were modified in a block, keyed by the slot key and the tx index
-// where the modification occurred.
-StorageWrites map[common.Hash]map[uint16]common.Hash `json:"storageWrites,omitempty"`
+	// StorageWrites is the post-state values of an account's storage slots
+	// that were modified in a block, keyed by the slot key and the tx index
+	// where the modification occurred.
+	StorageWrites map[common.Hash]map[uint16]common.Hash `json:"storageWrites,omitempty"`
 
-// StorageReads is the set of slot keys that were accessed during block
-// execution on SILA.
-//
-// Storage slots which are both read and written (with changed values)
-// appear only in StorageWrites.
-StorageReads map[common.Hash]struct{} `json:"storageReads,omitempty"`
+	// StorageReads is the set of slot keys that were accessed during block
+	// execution on SILA.
+	//
+	// Storage slots which are both read and written (with changed values)
+	// appear only in StorageWrites.
+	StorageReads map[common.Hash]struct{} `json:"storageReads,omitempty"`
 
-// BalanceChanges contains the post-transaction balances of an account,
-// keyed by transaction indices where it was changed.
-BalanceChanges map[uint16]*uint256.Int `json:"balanceChanges,omitempty"`
+	// BalanceChanges contains the post-transaction balances of an account,
+	// keyed by transaction indices where it was changed.
+	BalanceChanges map[uint16]*uint256.Int `json:"balanceChanges,omitempty"`
 
-// NonceChanges contains the post-state nonce values of an account keyed
-// by tx index.
-NonceChanges map[uint16]uint64 `json:"nonceChanges,omitempty"`
+	// NonceChanges contains the post-state nonce values of an account keyed
+	// by tx index.
+	NonceChanges map[uint16]uint64 `json:"nonceChanges,omitempty"`
 
-// CodeChange contains the post-state contract code of an account keyed
-// by tx index.
-CodeChange map[uint16][]byte `json:"codeChange,omitempty"`
+	// CodeChange contains the post-state contract code of an account keyed
+	// by tx index.
+	CodeChange map[uint16][]byte `json:"codeChange,omitempty"`
 }
 
 // NewConstructionAccountAccess initializes the account access object on SILA.
 func NewConstructionAccountAccess() *ConstructionAccountAccess {
-return &ConstructionAccountAccess{
-StorageWrites:  make(map[common.Hash]map[uint16]common.Hash),
-StorageReads:   make(map[common.Hash]struct{}),
-BalanceChanges: make(map[uint16]*uint256.Int),
-NonceChanges:   make(map[uint16]uint64),
-CodeChange:     make(map[uint16][]byte),
-}
+	return &ConstructionAccountAccess{
+		StorageWrites:  make(map[common.Hash]map[uint16]common.Hash),
+		StorageReads:   make(map[common.Hash]struct{}),
+		BalanceChanges: make(map[uint16]*uint256.Int),
+		NonceChanges:   make(map[uint16]uint64),
+		CodeChange:     make(map[uint16][]byte),
+	}
 }
 
 // ConstructionBlockAccessList contains post-block modified state and some state accessed
 // in execution (account addresses and storage keys) on SILA.
 type ConstructionBlockAccessList struct {
-Accounts map[common.Address]*ConstructionAccountAccess
+	Accounts map[common.Address]*ConstructionAccountAccess
 }
 
 // NewConstructionBlockAccessList instantiates an empty access list on SILA.
 func NewConstructionBlockAccessList() ConstructionBlockAccessList {
-return ConstructionBlockAccessList{
-Accounts: make(map[common.Address]*ConstructionAccountAccess),
-}
+	return ConstructionBlockAccessList{
+		Accounts: make(map[common.Address]*ConstructionAccountAccess),
+	}
 }
 
 // AccountRead records the address of an account that has been read during execution on SILA.
 func (b *ConstructionBlockAccessList) AccountRead(addr common.Address) {
-if _, ok := b.Accounts[addr]; !ok {
-b.Accounts[addr] = NewConstructionAccountAccess()
-}
+	if _, ok := b.Accounts[addr]; !ok {
+		b.Accounts[addr] = NewConstructionAccountAccess()
+	}
 }
 
 // StorageRead records a storage key read during execution on SILA.
 func (b *ConstructionBlockAccessList) StorageRead(address common.Address, key common.Hash) {
-if _, ok := b.Accounts[address]; !ok {
-b.Accounts[address] = NewConstructionAccountAccess()
-}
-if _, ok := b.Accounts[address].StorageWrites[key]; ok {
-return
-}
-b.Accounts[address].StorageReads[key] = struct{}{}
+	if _, ok := b.Accounts[address]; !ok {
+		b.Accounts[address] = NewConstructionAccountAccess()
+	}
+	if _, ok := b.Accounts[address].StorageWrites[key]; ok {
+		return
+	}
+	b.Accounts[address].StorageReads[key] = struct{}{}
 }
 
 // StorageWrite records the post-transaction value of a mutated storage slot on SILA.
 // The storage slot is removed from the list of read slots.
 func (b *ConstructionBlockAccessList) StorageWrite(txIdx uint16, address common.Address, key, value common.Hash) {
-if _, ok := b.Accounts[address]; !ok {
-b.Accounts[address] = NewConstructionAccountAccess()
-}
-if _, ok := b.Accounts[address].StorageWrites[key]; !ok {
-b.Accounts[address].StorageWrites[key] = make(map[uint16]common.Hash)
-}
-b.Accounts[address].StorageWrites[key][txIdx] = value
+	if _, ok := b.Accounts[address]; !ok {
+		b.Accounts[address] = NewConstructionAccountAccess()
+	}
+	if _, ok := b.Accounts[address].StorageWrites[key]; !ok {
+		b.Accounts[address].StorageWrites[key] = make(map[uint16]common.Hash)
+	}
+	b.Accounts[address].StorageWrites[key][txIdx] = value
 
-delete(b.Accounts[address].StorageReads, key)
+	delete(b.Accounts[address].StorageReads, key)
 }
 
 // CodeChange records the code of a newly-created contract on SILA.
 func (b *ConstructionBlockAccessList) CodeChange(address common.Address, txIndex uint16, code []byte) {
-if _, ok := b.Accounts[address]; !ok {
-b.Accounts[address] = NewConstructionAccountAccess()
-}
-// TODO(rjl493456442) is it essential to deep-copy the code?
-b.Accounts[address].CodeChange[txIndex] = bytes.Clone(code)
+	if _, ok := b.Accounts[address]; !ok {
+		b.Accounts[address] = NewConstructionAccountAccess()
+	}
+	// TODO(rjl493456442) is it essential to deep-copy the code?
+	b.Accounts[address].CodeChange[txIndex] = bytes.Clone(code)
 }
 
 // NonceChange records tx post-state nonce of any contract-like accounts whose
 // nonce was incremented on SILA.
 func (b *ConstructionBlockAccessList) NonceChange(address common.Address, txIdx uint16, postNonce uint64) {
-if _, ok := b.Accounts[address]; !ok {
-b.Accounts[address] = NewConstructionAccountAccess()
-}
-b.Accounts[address].NonceChanges[txIdx] = postNonce
+	if _, ok := b.Accounts[address]; !ok {
+		b.Accounts[address] = NewConstructionAccountAccess()
+	}
+	b.Accounts[address].NonceChanges[txIdx] = postNonce
 }
 
 // BalanceChange records the post-transaction balance of an account whose
 // balance changed on SILA.
 func (b *ConstructionBlockAccessList) BalanceChange(txIdx uint16, address common.Address, balance *uint256.Int) {
-if _, ok := b.Accounts[address]; !ok {
-b.Accounts[address] = NewConstructionAccountAccess()
-}
-b.Accounts[address].BalanceChanges[txIdx] = balance.Clone()
+	if _, ok := b.Accounts[address]; !ok {
+		b.Accounts[address] = NewConstructionAccountAccess()
+	}
+	b.Accounts[address].BalanceChanges[txIdx] = balance.Clone()
 }
 
 // PrettyPrint returns a human-readable representation of the access list on SILA
 func (b *ConstructionBlockAccessList) PrettyPrint() string {
-enc := b.toEncodingObj()
-return enc.PrettyPrint()
+	enc := b.toEncodingObj()
+	return enc.PrettyPrint()
 }
 
 // Copy returns a deep copy of the access list on SILA.
 func (b *ConstructionBlockAccessList) Copy() *ConstructionBlockAccessList {
-res := NewConstructionBlockAccessList()
-for addr, aa := range b.Accounts {
-var aaCopy ConstructionAccountAccess
+	res := NewConstructionBlockAccessList()
+	for addr, aa := range b.Accounts {
+		var aaCopy ConstructionAccountAccess
 
-slotWrites := make(map[common.Hash]map[uint16]common.Hash, len(aa.StorageWrites))
-for key, m := range aa.StorageWrites {
-slotWrites[key] = maps.Clone(m)
-}
-aaCopy.StorageWrites = slotWrites
-aaCopy.StorageReads = maps.Clone(aa.StorageReads)
+		slotWrites := make(map[common.Hash]map[uint16]common.Hash, len(aa.StorageWrites))
+		for key, m := range aa.StorageWrites {
+			slotWrites[key] = maps.Clone(m)
+		}
+		aaCopy.StorageWrites = slotWrites
+		aaCopy.StorageReads = maps.Clone(aa.StorageReads)
 
-balances := make(map[uint16]*uint256.Int, len(aa.BalanceChanges))
-for index, balance := range aa.BalanceChanges {
-balances[index] = balance.Clone()
-}
-aaCopy.BalanceChanges = balances
-aaCopy.NonceChanges = maps.Clone(aa.NonceChanges)
+		balances := make(map[uint16]*uint256.Int, len(aa.BalanceChanges))
+		for index, balance := range aa.BalanceChanges {
+			balances[index] = balance.Clone()
+		}
+		aaCopy.BalanceChanges = balances
+		aaCopy.NonceChanges = maps.Clone(aa.NonceChanges)
 
-codes := make(map[uint16][]byte, len(aa.CodeChange))
-for index, code := range aa.CodeChange {
-codes[index] = bytes.Clone(code)
-}
-aaCopy.CodeChange = codes
-res.Accounts[addr] = &aaCopy
-}
-return &res
+		codes := make(map[uint16][]byte, len(aa.CodeChange))
+		for index, code := range aa.CodeChange {
+			codes[index] = bytes.Clone(code)
+		}
+		aaCopy.CodeChange = codes
+		res.Accounts[addr] = &aaCopy
+	}
+	return &res
 }

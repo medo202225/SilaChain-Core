@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,100 +17,100 @@
 package stateless
 
 import (
-"encoding/json"
-"maps"
-"slices"
-"sort"
-"strconv"
-"strings"
+	"encoding/json"
+	"maps"
+	"slices"
+	"sort"
+	"strconv"
+	"strings"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/metrics"
-"github.com/SILA/sila-chain/trie"
+	"silachain/common"
+	"silachain/log"
+	"silachain/metrics"
+	"silachain/trie"
 )
 
 var accountTrieLeavesAtDepth [16]*metrics.Counter
 var storageTrieLeavesAtDepth [16]*metrics.Counter
 
 func init() {
-for i := 0; i < 16; i++ {
-accountTrieLeavesAtDepth[i] = metrics.NewRegisteredCounter("sila/witness/trie/account/leaves/depth_"+strconv.Itoa(i), nil)
-storageTrieLeavesAtDepth[i] = metrics.NewRegisteredCounter("sila/witness/trie/storage/leaves/depth_"+strconv.Itoa(i), nil)
-}
+	for i := 0; i < 16; i++ {
+		accountTrieLeavesAtDepth[i] = metrics.NewRegisteredCounter("sila/witness/trie/account/leaves/depth_"+strconv.Itoa(i), nil)
+		storageTrieLeavesAtDepth[i] = metrics.NewRegisteredCounter("sila/witness/trie/storage/leaves/depth_"+strconv.Itoa(i), nil)
+	}
 }
 
 // WitnessStats aggregates statistics for SILA account and storage trie accesses.
 type WitnessStats struct {
-accountTrie *trie.LevelStats
-storageTrie *trie.LevelStats
+	accountTrie *trie.LevelStats
+	storageTrie *trie.LevelStats
 }
 
 // NewWitnessStats creates a new WitnessStats collector for SILA.
 func NewWitnessStats() *WitnessStats {
-return &WitnessStats{
-accountTrie: trie.NewLevelStats(),
-storageTrie: trie.NewLevelStats(),
-}
+	return &WitnessStats{
+		accountTrie: trie.NewLevelStats(),
+		storageTrie: trie.NewLevelStats(),
+	}
 }
 
 func (s *WitnessStats) copy() *WitnessStats {
-return &WitnessStats{
-accountTrie: s.accountTrie.Copy(),
-storageTrie: s.storageTrie.Copy(),
-}
+	return &WitnessStats{
+		accountTrie: s.accountTrie.Copy(),
+		storageTrie: s.storageTrie.Copy(),
+	}
 }
 
 func (s *WitnessStats) init() {
-if s.accountTrie == nil {
-s.accountTrie = trie.NewLevelStats()
-}
-if s.storageTrie == nil {
-s.storageTrie = trie.NewLevelStats()
-}
+	if s.accountTrie == nil {
+		s.accountTrie = trie.NewLevelStats()
+	}
+	if s.storageTrie == nil {
+		s.storageTrie = trie.NewLevelStats()
+	}
 }
 
 // Add records trie access depths from the given node paths.
 // If `owner` is the zero hash, accesses are attributed to the account trie;
 // otherwise, they are attributed to the storage trie of that account.
 func (s *WitnessStats) Add(nodes map[string][]byte, owner common.Hash) {
-s.init()
+	s.init()
 
-// Extract paths from the nodes map.
-paths := slices.Collect(maps.Keys(nodes))
-sort.Strings(paths)
+	// Extract paths from the nodes map.
+	paths := slices.Collect(maps.Keys(nodes))
+	sort.Strings(paths)
 
-ownerStat := s.accountTrie
-if owner != (common.Hash{}) {
-ownerStat = s.storageTrie
-}
+	ownerStat := s.accountTrie
+	if owner != (common.Hash{}) {
+		ownerStat = s.storageTrie
+	}
 
-for i, path := range paths {
-// If current path is a prefix of the next path, it's not a leaf.
-// The last path is always a leaf.
-if i == len(paths)-1 || !strings.HasPrefix(paths[i+1], paths[i]) {
-ownerStat.AddLeaf(len(path))
-}
-}
+	for i, path := range paths {
+		// If current path is a prefix of the next path, it's not a leaf.
+		// The last path is always a leaf.
+		if i == len(paths)-1 || !strings.HasPrefix(paths[i+1], paths[i]) {
+			ownerStat.AddLeaf(len(path))
+		}
+	}
 }
 
 // ReportMetrics reports the collected statistics to the global metrics registry.
 func (s *WitnessStats) ReportMetrics(blockNumber uint64) {
-s.init()
+	s.init()
 
-accountTrieLeaves := s.accountTrie.LeafDepths()
-storageTrieLeaves := s.storageTrie.LeafDepths()
+	accountTrieLeaves := s.accountTrie.LeafDepths()
+	storageTrieLeaves := s.storageTrie.LeafDepths()
 
-// Encode the metrics as JSON for easier consumption.
-accountLeavesJSON, _ := json.Marshal(accountTrieLeaves)
-storageLeavesJSON, _ := json.Marshal(storageTrieLeaves)
+	// Encode the metrics as JSON for easier consumption.
+	accountLeavesJSON, _ := json.Marshal(accountTrieLeaves)
+	storageLeavesJSON, _ := json.Marshal(storageTrieLeaves)
 
-// Log SILA account trie depth statistics.
-log.Info("SILA account trie depth stats", "block", blockNumber, "leavesAtDepth", string(accountLeavesJSON))
-log.Info("SILA storage trie depth stats", "block", blockNumber, "leavesAtDepth", string(storageLeavesJSON))
+	// Log SILA account trie depth statistics.
+	log.Info("SILA account trie depth stats", "block", blockNumber, "leavesAtDepth", string(accountLeavesJSON))
+	log.Info("SILA storage trie depth stats", "block", blockNumber, "leavesAtDepth", string(storageLeavesJSON))
 
-for i := 0; i < len(accountTrieLeavesAtDepth); i++ {
-accountTrieLeavesAtDepth[i].Inc(accountTrieLeaves[i])
-storageTrieLeavesAtDepth[i].Inc(storageTrieLeaves[i])
-}
+	for i := 0; i < len(accountTrieLeavesAtDepth); i++ {
+		accountTrieLeavesAtDepth[i].Inc(accountTrieLeaves[i])
+		storageTrieLeavesAtDepth[i].Inc(storageTrieLeaves[i])
+	}
 }

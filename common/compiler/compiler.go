@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -18,33 +18,33 @@
 package compiler
 
 import (
-"encoding/json"
-"fmt"
+	"encoding/json"
+	"fmt"
 )
 
 // --combined-output format (legacy)
 type compilerOutput struct {
-Contracts map[string]struct {
-BinRuntime                                  string `json:"bin-runtime"`
-SrcMapRuntime                               string `json:"srcmap-runtime"`
-Bin, SrcMap, Abi, Devdoc, Userdoc, Metadata string
-Hashes                                      map[string]string
-}
-Version string
+	Contracts map[string]struct {
+		BinRuntime                                  string `json:"bin-runtime"`
+		SrcMapRuntime                               string `json:"srcmap-runtime"`
+		Bin, SrcMap, Abi, Devdoc, Userdoc, Metadata string
+		Hashes                                      map[string]string
+	}
+	Version string
 }
 
 // compiler v.0.8+ changes the way ABI, Devdoc and Userdoc are serialized
 type compilerOutputV8 struct {
-Contracts map[string]struct {
-BinRuntime            string `json:"bin-runtime"`
-SrcMapRuntime         string `json:"srcmap-runtime"`
-Bin, SrcMap, Metadata string
-Abi                   interface{}
-Devdoc                interface{}
-Userdoc               interface{}
-Hashes                map[string]string
-}
-Version string
+	Contracts map[string]struct {
+		BinRuntime            string `json:"bin-runtime"`
+		SrcMapRuntime         string `json:"srcmap-runtime"`
+		Bin, SrcMap, Metadata string
+		Abi                   interface{}
+		Devdoc                interface{}
+		Userdoc               interface{}
+		Hashes                map[string]string
+	}
+	Version string
 }
 
 // ParseCombinedJSON takes the direct output of a compiler --combined-output run and
@@ -57,76 +57,76 @@ Version string
 // Returns an error if the JSON is malformed or missing data, or if the JSON
 // embedded within the JSON is malformed.
 func ParseCombinedJSON(combinedJSON []byte, source string, languageVersion string, compilerVersion string, compilerOptions string) (map[string]*Contract, error) {
-var output compilerOutput
-if err := json.Unmarshal(combinedJSON, &output); err != nil {
-// Try to parse the output with the new compiler v.0.8.0+ rules
-return parseCombinedJSONV8(combinedJSON, source, languageVersion, compilerVersion, compilerOptions)
-}
-// Compilation succeeded, assemble and return the contracts.
-contracts := make(map[string]*Contract)
-for name, info := range output.Contracts {
-// Parse the individual compilation results.
-var abi, userdoc, devdoc interface{}
-if err := json.Unmarshal([]byte(info.Abi), &abi); err != nil {
-return nil, fmt.Errorf("compiler: error reading abi definition (%v)", err)
-}
-if err := json.Unmarshal([]byte(info.Userdoc), &userdoc); err != nil {
-return nil, fmt.Errorf("compiler: error reading userdoc definition (%v)", err)
-}
-if err := json.Unmarshal([]byte(info.Devdoc), &devdoc); err != nil {
-return nil, fmt.Errorf("compiler: error reading devdoc definition (%v)", err)
-}
+	var output compilerOutput
+	if err := json.Unmarshal(combinedJSON, &output); err != nil {
+		// Try to parse the output with the new compiler v.0.8.0+ rules
+		return parseCombinedJSONV8(combinedJSON, source, languageVersion, compilerVersion, compilerOptions)
+	}
+	// Compilation succeeded, assemble and return the contracts.
+	contracts := make(map[string]*Contract)
+	for name, info := range output.Contracts {
+		// Parse the individual compilation results.
+		var abi, userdoc, devdoc interface{}
+		if err := json.Unmarshal([]byte(info.Abi), &abi); err != nil {
+			return nil, fmt.Errorf("compiler: error reading abi definition (%v)", err)
+		}
+		if err := json.Unmarshal([]byte(info.Userdoc), &userdoc); err != nil {
+			return nil, fmt.Errorf("compiler: error reading userdoc definition (%v)", err)
+		}
+		if err := json.Unmarshal([]byte(info.Devdoc), &devdoc); err != nil {
+			return nil, fmt.Errorf("compiler: error reading devdoc definition (%v)", err)
+		}
 
-contracts[name] = &Contract{
-Code:        "0x" + info.Bin,
-RuntimeCode: "0x" + info.BinRuntime,
-Hashes:      info.Hashes,
-Info: ContractInfo{
-Source:          source,
-Language:        languageVersion, // Language info passed from caller
-LanguageVersion: languageVersion,
-CompilerVersion: compilerVersion,
-CompilerOptions: compilerOptions,
-SrcMap:          info.SrcMap,
-SrcMapRuntime:   info.SrcMapRuntime,
-AbiDefinition:   abi,
-UserDoc:         userdoc,
-DeveloperDoc:    devdoc,
-Metadata:        info.Metadata,
-},
-}
-}
-return contracts, nil
+		contracts[name] = &Contract{
+			Code:        "0x" + info.Bin,
+			RuntimeCode: "0x" + info.BinRuntime,
+			Hashes:      info.Hashes,
+			Info: ContractInfo{
+				Source:          source,
+				Language:        languageVersion, // Language info passed from caller
+				LanguageVersion: languageVersion,
+				CompilerVersion: compilerVersion,
+				CompilerOptions: compilerOptions,
+				SrcMap:          info.SrcMap,
+				SrcMapRuntime:   info.SrcMapRuntime,
+				AbiDefinition:   abi,
+				UserDoc:         userdoc,
+				DeveloperDoc:    devdoc,
+				Metadata:        info.Metadata,
+			},
+		}
+	}
+	return contracts, nil
 }
 
 // parseCombinedJSONV8 parses the direct output of compiler --combined-output
 // and parses it using the rules from compiler v.0.8.0 and later.
 func parseCombinedJSONV8(combinedJSON []byte, source string, languageVersion string, compilerVersion string, compilerOptions string) (map[string]*Contract, error) {
-var output compilerOutputV8
-if err := json.Unmarshal(combinedJSON, &output); err != nil {
-return nil, err
-}
-// Compilation succeeded, assemble and return the contracts.
-contracts := make(map[string]*Contract)
-for name, info := range output.Contracts {
-contracts[name] = &Contract{
-Code:        "0x" + info.Bin,
-RuntimeCode: "0x" + info.BinRuntime,
-Hashes:      info.Hashes,
-Info: ContractInfo{
-Source:          source,
-Language:        languageVersion,
-LanguageVersion: languageVersion,
-CompilerVersion: compilerVersion,
-CompilerOptions: compilerOptions,
-SrcMap:          info.SrcMap,
-SrcMapRuntime:   info.SrcMapRuntime,
-AbiDefinition:   info.Abi,
-UserDoc:         info.Userdoc,
-DeveloperDoc:    info.Devdoc,
-Metadata:        info.Metadata,
-},
-}
-}
-return contracts, nil
+	var output compilerOutputV8
+	if err := json.Unmarshal(combinedJSON, &output); err != nil {
+		return nil, err
+	}
+	// Compilation succeeded, assemble and return the contracts.
+	contracts := make(map[string]*Contract)
+	for name, info := range output.Contracts {
+		contracts[name] = &Contract{
+			Code:        "0x" + info.Bin,
+			RuntimeCode: "0x" + info.BinRuntime,
+			Hashes:      info.Hashes,
+			Info: ContractInfo{
+				Source:          source,
+				Language:        languageVersion,
+				LanguageVersion: languageVersion,
+				CompilerVersion: compilerVersion,
+				CompilerOptions: compilerOptions,
+				SrcMap:          info.SrcMap,
+				SrcMapRuntime:   info.SrcMapRuntime,
+				AbiDefinition:   info.Abi,
+				UserDoc:         info.Userdoc,
+				DeveloperDoc:    info.Devdoc,
+				Metadata:        info.Metadata,
+			},
+		}
+	}
+	return contracts, nil
 }

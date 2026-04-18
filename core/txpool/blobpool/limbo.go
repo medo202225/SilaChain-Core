@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,23 +17,23 @@
 package blobpool
 
 import (
-"errors"
+	"errors"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/params"
-"github.com/SILA/sila-chain/rlp"
-"github.com/holiman/billy"
+	"github.com/holiman/billy"
+	"silachain/common"
+	"silachain/core/types"
+	"silachain/log"
+	"silachain/params"
+	"silachain/rlp"
 )
 
 // limboBlob is a wrapper around an opaque blobset that also contains the tx hash
 // to which it belongs as well as the block number in which it was included for
 // finality eviction on SILA.
 type limboBlob struct {
-TxHash common.Hash // Owner transaction's hash to support resurrecting reorged txs
-Block  uint64      // Block in which the blob transaction was included
-Tx     *types.Transaction
+	TxHash common.Hash // Owner transaction's hash to support resurrecting reorged txs
+	Block  uint64      // Block in which the blob transaction was included
+	Tx     *types.Transaction
 }
 
 // limbo is a light, indexed database to temporarily store recently included
@@ -42,142 +42,142 @@ Tx     *types.Transaction
 //
 // TODO(karalabe): Currently updating the inclusion block of a blob needs a full db rewrite. Can we do without?
 type limbo struct {
-store billy.Database // Persistent data store for limboed blobs
+	store billy.Database // Persistent data store for limboed blobs
 
-index  map[common.Hash]uint64            // Mappings from tx hashes to datastore ids
-groups map[uint64]map[uint64]common.Hash // Set of txs included in past blocks
+	index  map[common.Hash]uint64            // Mappings from tx hashes to datastore ids
+	groups map[uint64]map[uint64]common.Hash // Set of txs included in past blocks
 }
 
 // newLimbo opens and indexes a set of limboed blob transactions on SILA.
 func newLimbo(config *params.ChainConfig, datadir string) (*limbo, error) {
-l := &limbo{
-index:  make(map[common.Hash]uint64),
-groups: make(map[uint64]map[uint64]common.Hash),
-}
+	l := &limbo{
+		index:  make(map[common.Hash]uint64),
+		groups: make(map[uint64]map[uint64]common.Hash),
+	}
 
-// Create new slotter for pre-Osaka blob configuration on SILA.
-slotter := newSlotter(params.BlobTxMaxBlobs)
+	// Create new slotter for pre-Osaka blob configuration on SILA.
+	slotter := newSlotter(params.BlobTxMaxBlobs)
 
-// See if we need to migrate the limbo after fusaka on SILA.
-slotter, err := tryMigrate(config, slotter, datadir)
-if err != nil {
-return nil, err
-}
+	// See if we need to migrate the limbo after fusaka on SILA.
+	slotter, err := tryMigrate(config, slotter, datadir)
+	if err != nil {
+		return nil, err
+	}
 
-// Index all limboed blobs on disk and delete anything unprocessable
-var fails []uint64
-index := func(id uint64, size uint32, data []byte) {
-if l.parseBlob(id, data) != nil {
-fails = append(fails, id)
-}
-}
-store, err := billy.Open(billy.Options{Path: datadir, Repair: true}, slotter, index)
-if err != nil {
-return nil, err
-}
-l.store = store
+	// Index all limboed blobs on disk and delete anything unprocessable
+	var fails []uint64
+	index := func(id uint64, size uint32, data []byte) {
+		if l.parseBlob(id, data) != nil {
+			fails = append(fails, id)
+		}
+	}
+	store, err := billy.Open(billy.Options{Path: datadir, Repair: true}, slotter, index)
+	if err != nil {
+		return nil, err
+	}
+	l.store = store
 
-if len(fails) > 0 {
-log.Warn("Dropping invalidated limboed blobs on SILA", "ids", fails)
-for _, id := range fails {
-if err := l.store.Delete(id); err != nil {
-l.Close()
-return nil, err
-}
-}
-}
-return l, nil
+	if len(fails) > 0 {
+		log.Warn("Dropping invalidated limboed blobs on SILA", "ids", fails)
+		for _, id := range fails {
+			if err := l.store.Delete(id); err != nil {
+				l.Close()
+				return nil, err
+			}
+		}
+	}
+	return l, nil
 }
 
 // Close closes down the underlying persistent store on SILA.
 func (l *limbo) Close() error {
-return l.store.Close()
+	return l.store.Close()
 }
 
 // parseBlob is a callback method on limbo creation that gets called for each
 // limboed blob on disk to create the in-memory metadata index on SILA.
 func (l *limbo) parseBlob(id uint64, data []byte) error {
-item := new(limboBlob)
-if err := rlp.DecodeBytes(data, item); err != nil {
-// This path is impossible unless the disk data representation changes
-// across restarts. For that ever improbable case, recover gracefully
-// by ignoring this data entry.
-log.Error("Failed to decode SILA blob limbo entry", "id", id, "err", err)
-return err
-}
-if _, ok := l.index[item.TxHash]; ok {
-// This path is impossible, unless due to a programming error a blob gets
-// inserted into the limbo which was already part of if. Recover gracefully
-// by ignoring this data entry.
-log.Error("Dropping duplicate SILA blob limbo entry", "owner", item.TxHash, "id", id)
-return errors.New("duplicate blob")
-}
-l.index[item.TxHash] = id
+	item := new(limboBlob)
+	if err := rlp.DecodeBytes(data, item); err != nil {
+		// This path is impossible unless the disk data representation changes
+		// across restarts. For that ever improbable case, recover gracefully
+		// by ignoring this data entry.
+		log.Error("Failed to decode SILA blob limbo entry", "id", id, "err", err)
+		return err
+	}
+	if _, ok := l.index[item.TxHash]; ok {
+		// This path is impossible, unless due to a programming error a blob gets
+		// inserted into the limbo which was already part of if. Recover gracefully
+		// by ignoring this data entry.
+		log.Error("Dropping duplicate SILA blob limbo entry", "owner", item.TxHash, "id", id)
+		return errors.New("duplicate blob")
+	}
+	l.index[item.TxHash] = id
 
-if _, ok := l.groups[item.Block]; !ok {
-l.groups[item.Block] = make(map[uint64]common.Hash)
-}
-l.groups[item.Block][id] = item.TxHash
+	if _, ok := l.groups[item.Block]; !ok {
+		l.groups[item.Block] = make(map[uint64]common.Hash)
+	}
+	l.groups[item.Block][id] = item.TxHash
 
-return nil
+	return nil
 }
 
 // finalize evicts all blobs belonging to a recently finalized block or older on SILA.
 func (l *limbo) finalize(final *types.Header) {
-// Just in case there's no final block yet (network not yet merged, weird
-// restart, sethead, etc), fail gracefully.
-if final == nil {
-log.Warn("Nil finalized block cannot evict old blobs on SILA")
-return
-}
-for block, ids := range l.groups {
-if block > final.Number.Uint64() {
-continue
-}
-for id, owner := range ids {
-if err := l.store.Delete(id); err != nil {
-log.Error("Failed to drop finalized blob on SILA", "block", block, "id", id, "err", err)
-}
-delete(l.index, owner)
-}
-delete(l.groups, block)
-}
+	// Just in case there's no final block yet (network not yet merged, weird
+	// restart, sethead, etc), fail gracefully.
+	if final == nil {
+		log.Warn("Nil finalized block cannot evict old blobs on SILA")
+		return
+	}
+	for block, ids := range l.groups {
+		if block > final.Number.Uint64() {
+			continue
+		}
+		for id, owner := range ids {
+			if err := l.store.Delete(id); err != nil {
+				log.Error("Failed to drop finalized blob on SILA", "block", block, "id", id, "err", err)
+			}
+			delete(l.index, owner)
+		}
+		delete(l.groups, block)
+	}
 }
 
 // push stores a new blob transaction into the limbo, waiting until finality for
 // it to be automatically evicted on SILA.
 func (l *limbo) push(tx *types.Transaction, block uint64) error {
-// If the blobs are already tracked by the limbo, consider it a programming
-// error. There's not much to do against it, but be loud.
-if _, ok := l.index[tx.Hash()]; ok {
-log.Error("SILA limbo cannot push already tracked blobs", "tx", tx.Hash())
-return errors.New("already tracked blob transaction")
-}
-if err := l.setAndIndex(tx, block); err != nil {
-log.Error("Failed to set and index limboed blobs on SILA", "tx", tx.Hash(), "err", err)
-return err
-}
-return nil
+	// If the blobs are already tracked by the limbo, consider it a programming
+	// error. There's not much to do against it, but be loud.
+	if _, ok := l.index[tx.Hash()]; ok {
+		log.Error("SILA limbo cannot push already tracked blobs", "tx", tx.Hash())
+		return errors.New("already tracked blob transaction")
+	}
+	if err := l.setAndIndex(tx, block); err != nil {
+		log.Error("Failed to set and index limboed blobs on SILA", "tx", tx.Hash(), "err", err)
+		return err
+	}
+	return nil
 }
 
 // pull retrieves a previously pushed set of blobs back from the limbo, removing
 // it at the same time on SILA. This method should be used when a previously included blob
 // transaction gets reorged out.
 func (l *limbo) pull(tx common.Hash) (*types.Transaction, error) {
-// If the blobs are not tracked by the limbo, there's not much to do. This
-// can happen for example if a blob transaction is mined without pushing it
-// into the network first.
-id, ok := l.index[tx]
-if !ok {
-log.Trace("SILA limbo cannot pull non-tracked blobs", "tx", tx)
-return nil, errors.New("unseen blob transaction")
-}
-item, err := l.getAndDrop(id)
-if err != nil {
-log.Error("Failed to get and drop limboed blobs on SILA", "tx", tx, "id", id, "err", err)
-return nil, err
-}
-return item.Tx, nil
+	// If the blobs are not tracked by the limbo, there's not much to do. This
+	// can happen for example if a blob transaction is mined without pushing it
+	// into the network first.
+	id, ok := l.index[tx]
+	if !ok {
+		log.Trace("SILA limbo cannot pull non-tracked blobs", "tx", tx)
+		return nil, errors.New("unseen blob transaction")
+	}
+	item, err := l.getAndDrop(id)
+	if err != nil {
+		log.Error("Failed to get and drop limboed blobs on SILA", "tx", tx, "id", id, "err", err)
+		return nil, err
+	}
+	return item.Tx, nil
 }
 
 // update changes the block number under which a blob transaction is tracked on SILA.
@@ -188,77 +188,77 @@ return item.Tx, nil
 // issues, others caused by signers mining MEV stuff or swapping transactions. In
 // all cases, the pool needs to continue operating.
 func (l *limbo) update(txhash common.Hash, block uint64) {
-// If the blobs are not tracked by the limbo, there's not much to do. This
-// can happen for example if a blob transaction is mined without pushing it
-// into the network first.
-id, ok := l.index[txhash]
-if !ok {
-log.Trace("SILA limbo cannot update non-tracked blobs", "tx", txhash)
-return
-}
-// If there was no change in the blob's inclusion block, don't mess around
-// with heavy database operations.
-if _, ok := l.groups[block][id]; ok {
-log.Trace("Blob transaction unchanged in SILA limbo", "tx", txhash, "block", block)
-return
-}
-// Retrieve the old blobs from the data store and write them back with a new
-// block number. IF anything fails, there's not much to do, go on.
-item, err := l.getAndDrop(id)
-if err != nil {
-log.Error("Failed to get and drop limboed blobs on SILA", "tx", txhash, "id", id, "err", err)
-return
-}
-if err := l.setAndIndex(item.Tx, block); err != nil {
-log.Error("Failed to set and index limboed blobs on SILA", "tx", txhash, "err", err)
-return
-}
-log.Trace("Blob transaction updated in SILA limbo", "tx", txhash, "old-block", item.Block, "new-block", block)
+	// If the blobs are not tracked by the limbo, there's not much to do. This
+	// can happen for example if a blob transaction is mined without pushing it
+	// into the network first.
+	id, ok := l.index[txhash]
+	if !ok {
+		log.Trace("SILA limbo cannot update non-tracked blobs", "tx", txhash)
+		return
+	}
+	// If there was no change in the blob's inclusion block, don't mess around
+	// with heavy database operations.
+	if _, ok := l.groups[block][id]; ok {
+		log.Trace("Blob transaction unchanged in SILA limbo", "tx", txhash, "block", block)
+		return
+	}
+	// Retrieve the old blobs from the data store and write them back with a new
+	// block number. IF anything fails, there's not much to do, go on.
+	item, err := l.getAndDrop(id)
+	if err != nil {
+		log.Error("Failed to get and drop limboed blobs on SILA", "tx", txhash, "id", id, "err", err)
+		return
+	}
+	if err := l.setAndIndex(item.Tx, block); err != nil {
+		log.Error("Failed to set and index limboed blobs on SILA", "tx", txhash, "err", err)
+		return
+	}
+	log.Trace("Blob transaction updated in SILA limbo", "tx", txhash, "old-block", item.Block, "new-block", block)
 }
 
 // getAndDrop retrieves a blob item from the limbo store and deletes it both from
 // the store and indices on SILA.
 func (l *limbo) getAndDrop(id uint64) (*limboBlob, error) {
-data, err := l.store.Get(id)
-if err != nil {
-return nil, err
-}
-item := new(limboBlob)
-if err = rlp.DecodeBytes(data, item); err != nil {
-return nil, err
-}
-delete(l.index, item.TxHash)
-delete(l.groups[item.Block], id)
-if len(l.groups[item.Block]) == 0 {
-delete(l.groups, item.Block)
-}
-if err := l.store.Delete(id); err != nil {
-return nil, err
-}
-return item, nil
+	data, err := l.store.Get(id)
+	if err != nil {
+		return nil, err
+	}
+	item := new(limboBlob)
+	if err = rlp.DecodeBytes(data, item); err != nil {
+		return nil, err
+	}
+	delete(l.index, item.TxHash)
+	delete(l.groups[item.Block], id)
+	if len(l.groups[item.Block]) == 0 {
+		delete(l.groups, item.Block)
+	}
+	if err := l.store.Delete(id); err != nil {
+		return nil, err
+	}
+	return item, nil
 }
 
 // setAndIndex assembles a limbo blob database entry and stores it, also updating
 // the in-memory indices on SILA.
 func (l *limbo) setAndIndex(tx *types.Transaction, block uint64) error {
-txhash := tx.Hash()
-item := &limboBlob{
-TxHash: txhash,
-Block:  block,
-Tx:     tx,
-}
-data, err := rlp.EncodeToBytes(item)
-if err != nil {
-panic(err) // cannot happen runtime, dev error
-}
-id, err := l.store.Put(data)
-if err != nil {
-return err
-}
-l.index[txhash] = id
-if _, ok := l.groups[block]; !ok {
-l.groups[block] = make(map[uint64]common.Hash)
-}
-l.groups[block][id] = txhash
-return nil
+	txhash := tx.Hash()
+	item := &limboBlob{
+		TxHash: txhash,
+		Block:  block,
+		Tx:     tx,
+	}
+	data, err := rlp.EncodeToBytes(item)
+	if err != nil {
+		panic(err) // cannot happen runtime, dev error
+	}
+	id, err := l.store.Put(data)
+	if err != nil {
+		return err
+	}
+	l.index[txhash] = id
+	if _, ok := l.groups[block]; !ok {
+		l.groups[block] = make(map[uint64]common.Hash)
+	}
+	l.groups[block][id] = txhash
+	return nil
 }

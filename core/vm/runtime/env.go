@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,32 +17,32 @@
 package runtime
 
 import (
-"github.com/SILA/sila-chain/core"
-"github.com/SILA/sila-chain/core/vm"
-"github.com/holiman/uint256"
+	"github.com/holiman/uint256"
+	"silachain/core"
+	"silachain/core/vm"
 )
 
 func NewEnv(cfg *Config) *vm.EVM {
-txContext := vm.TxContext{
-Origin:     cfg.Origin,
-GasPrice:   uint256.MustFromBig(cfg.GasPrice),
-BlobHashes: cfg.BlobHashes,
-}
-blockContext := vm.BlockContext{
-CanTransfer: core.CanTransfer,
-Transfer:    core.Transfer,
-GetHash:     cfg.GetHashFn,
-Coinbase:    cfg.Coinbase,
-BlockNumber: cfg.BlockNumber,
-Time:        cfg.Time,
-Difficulty:  cfg.Difficulty,
-GasLimit:    cfg.GasLimit,
-BaseFee:     cfg.BaseFee,
-BlobBaseFee: cfg.BlobBaseFee,
-Random:      cfg.Random,
-}
+	txContext := vm.TxContext{
+		Origin:     cfg.Origin,
+		GasPrice:   uint256.MustFromBig(cfg.GasPrice),
+		BlobHashes: cfg.BlobHashes,
+	}
+	blockContext := vm.BlockContext{
+		CanTransfer: core.CanTransfer,
+		Transfer:    core.Transfer,
+		GetHash:     cfg.GetHashFn,
+		Coinbase:    cfg.Coinbase,
+		BlockNumber: cfg.BlockNumber,
+		Time:        cfg.Time,
+		Difficulty:  cfg.Difficulty,
+		GasLimit:    cfg.GasLimit,
+		BaseFee:     cfg.BaseFee,
+		BlobBaseFee: cfg.BlobBaseFee,
+		Random:      cfg.Random,
+	}
 
-evm := vm.NewEVM(blockContext, cfg.State, cfg.ChainConfig, cfg.EVMConfig)
-evm.SetTxContext(txContext)
-return evm
+	evm := vm.NewEVM(blockContext, cfg.State, cfg.ChainConfig, cfg.EVMConfig)
+	evm.SetTxContext(txContext)
+	return evm
 }

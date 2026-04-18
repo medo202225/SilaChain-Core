@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,37 +17,37 @@
 package common
 
 import (
-"encoding/json"
-"fmt"
-"os"
+	"encoding/json"
+	"fmt"
+	"os"
 )
 
 // LoadJSON reads the given file and unmarshals its content.
 func LoadJSON(file string, val interface{}) error {
-content, err := os.ReadFile(file)
-if err != nil {
-return err
-}
-if err := json.Unmarshal(content, val); err != nil {
-if syntaxerr, ok := err.(*json.SyntaxError); ok {
-line := findLine(content, syntaxerr.Offset)
-return fmt.Errorf("JSON syntax error at %v:%v: %v", file, line, err)
-}
-return fmt.Errorf("JSON unmarshal error in %v: %v", file, err)
-}
-return nil
+	content, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(content, val); err != nil {
+		if syntaxerr, ok := err.(*json.SyntaxError); ok {
+			line := findLine(content, syntaxerr.Offset)
+			return fmt.Errorf("JSON syntax error at %v:%v: %v", file, line, err)
+		}
+		return fmt.Errorf("JSON unmarshal error in %v: %v", file, err)
+	}
+	return nil
 }
 
 // findLine returns the line number for the given offset into data.
 func findLine(data []byte, offset int64) (line int) {
-line = 1
-for i, r := range string(data) {
-if int64(i) >= offset {
-return
-}
-if r == '\n' {
-line++
-}
-}
-return
+	line = 1
+	for i, r := range string(data) {
+		if int64(i) >= offset {
+			return
+		}
+		if r == '\n' {
+			line++
+		}
+	}
+	return
 }

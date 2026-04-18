@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,17 +17,17 @@
 package state
 
 import (
-"fmt"
-"maps"
-"slices"
-"strings"
+	"fmt"
+	"maps"
+	"slices"
+	"strings"
 
-"github.com/SILA/sila-chain/common"
+	"silachain/common"
 )
 
 type transientStorageKey struct {
-addr common.Address
-key  common.Hash
+	addr common.Address
+	key  common.Hash
 }
 
 // transientStorage is a representation of EIP-1153 "Transient Storage".
@@ -35,49 +35,49 @@ type transientStorage map[transientStorageKey]common.Hash
 
 // newTransientStorage creates a new instance of a transientStorage.
 func newTransientStorage() transientStorage {
-return make(transientStorage)
+	return make(transientStorage)
 }
 
 // Set sets the transient-storage `value` for `key` at the given `addr`.
 func (t transientStorage) Set(addr common.Address, key, value common.Hash) {
-tsKey := transientStorageKey{addr: addr, key: key}
-if value == (common.Hash{}) { // this is a 'delete'
-delete(t, tsKey)
-} else {
-t[tsKey] = value
-}
+	tsKey := transientStorageKey{addr: addr, key: key}
+	if value == (common.Hash{}) { // this is a 'delete'
+		delete(t, tsKey)
+	} else {
+		t[tsKey] = value
+	}
 }
 
 // Get gets the transient storage for `key` at the given `addr`.
 func (t transientStorage) Get(addr common.Address, key common.Hash) common.Hash {
-tsKey := transientStorageKey{addr: addr, key: key}
-return t[tsKey]
+	tsKey := transientStorageKey{addr: addr, key: key}
+	return t[tsKey]
 }
 
 // Copy does a deep copy of the transientStorage
 func (t transientStorage) Copy() transientStorage {
-return maps.Clone(t)
+	return maps.Clone(t)
 }
 
 // PrettyPrint prints the contents of the access list in a human-readable form
 func (t transientStorage) PrettyPrint() string {
-out := new(strings.Builder)
-sortedTSKeys := slices.Collect(maps.Keys(t))
-slices.SortFunc(sortedTSKeys, func(a, b transientStorageKey) int {
-r := a.addr.Cmp(b.addr)
-if r != 0 {
-return r
-}
-return a.key.Cmp(b.key)
-})
+	out := new(strings.Builder)
+	sortedTSKeys := slices.Collect(maps.Keys(t))
+	slices.SortFunc(sortedTSKeys, func(a, b transientStorageKey) int {
+		r := a.addr.Cmp(b.addr)
+		if r != 0 {
+			return r
+		}
+		return a.key.Cmp(b.key)
+	})
 
-for i := 0; i < len(sortedTSKeys); {
-tsKey := sortedTSKeys[i]
-fmt.Fprintf(out, "%#x:", tsKey.addr)
-for ; i < len(sortedTSKeys) && sortedTSKeys[i].addr == tsKey.addr; i++ {
-tsKey2 := sortedTSKeys[i]
-fmt.Fprintf(out, "  %X : %X\n", tsKey2.key, t[tsKey2])
-}
-}
-return out.String()
+	for i := 0; i < len(sortedTSKeys); {
+		tsKey := sortedTSKeys[i]
+		fmt.Fprintf(out, "%#x:", tsKey.addr)
+		for ; i < len(sortedTSKeys) && sortedTSKeys[i].addr == tsKey.addr; i++ {
+			tsKey2 := sortedTSKeys[i]
+			fmt.Fprintf(out, "  %X : %X\n", tsKey2.key, t[tsKey2])
+		}
+	}
+	return out.String()
 }

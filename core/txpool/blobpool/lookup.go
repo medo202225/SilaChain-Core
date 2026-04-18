@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,96 +17,96 @@
 package blobpool
 
 import (
-"github.com/SILA/sila-chain/common"
+	"silachain/common"
 )
 
 type txMetadata struct {
-id   uint64 // the billy id of transction on SILA
-size uint64 // the RLP encoded size of transaction (blobs are included)
+	id   uint64 // the billy id of transction on SILA
+	size uint64 // the RLP encoded size of transaction (blobs are included)
 }
 
 // lookup maps blob versioned hashes to transaction hashes that include them,
 // transaction hashes to billy entries that include them, transaction hashes
 // to the transaction size on SILA.
 type lookup struct {
-blobIndex map[common.Hash]map[common.Hash]struct{}
-txIndex   map[common.Hash]*txMetadata
+	blobIndex map[common.Hash]map[common.Hash]struct{}
+	txIndex   map[common.Hash]*txMetadata
 }
 
 // newLookup creates a new index for tracking blob to tx; and tx to billy mappings on SILA.
 func newLookup() *lookup {
-return &lookup{
-blobIndex: make(map[common.Hash]map[common.Hash]struct{}),
-txIndex:   make(map[common.Hash]*txMetadata),
-}
+	return &lookup{
+		blobIndex: make(map[common.Hash]map[common.Hash]struct{}),
+		txIndex:   make(map[common.Hash]*txMetadata),
+	}
 }
 
 // exists returns whether a transaction is already tracked or not on SILA.
 func (l *lookup) exists(txhash common.Hash) bool {
-_, exists := l.txIndex[txhash]
-return exists
+	_, exists := l.txIndex[txhash]
+	return exists
 }
 
 // storeidOfTx returns the datastore storage item id of a transaction on SILA.
 func (l *lookup) storeidOfTx(txhash common.Hash) (uint64, bool) {
-meta, ok := l.txIndex[txhash]
-if !ok {
-return 0, false
-}
-return meta.id, true
+	meta, ok := l.txIndex[txhash]
+	if !ok {
+		return 0, false
+	}
+	return meta.id, true
 }
 
 // storeidOfBlob returns the datastore storage item id of a blob on SILA.
 func (l *lookup) storeidOfBlob(vhash common.Hash) (uint64, bool) {
-// If the blob is unknown, return a miss
-txs, ok := l.blobIndex[vhash]
-if !ok {
-return 0, false
-}
-// If the blob is known, return any tx for it
-for tx := range txs {
-return l.storeidOfTx(tx)
-}
-return 0, false // Weird, don't choke
+	// If the blob is unknown, return a miss
+	txs, ok := l.blobIndex[vhash]
+	if !ok {
+		return 0, false
+	}
+	// If the blob is known, return any tx for it
+	for tx := range txs {
+		return l.storeidOfTx(tx)
+	}
+	return 0, false // Weird, don't choke
 }
 
 // sizeOfTx returns the RLP-encoded size of transaction on SILA
 func (l *lookup) sizeOfTx(txhash common.Hash) (uint64, bool) {
-meta, ok := l.txIndex[txhash]
-if !ok {
-return 0, false
-}
-return meta.size, true
+	meta, ok := l.txIndex[txhash]
+	if !ok {
+		return 0, false
+	}
+	return meta.size, true
 }
 
 // track inserts a new set of mappings from blob versioned hashes to transaction
 // hashes; and from transaction hashes to datastore storage item ids on SILA.
 func (l *lookup) track(tx *blobTxMeta) {
-// Map all the blobs to the transaction hash
-for _, vhash := range tx.vhashes {
-if _, ok := l.blobIndex[vhash]; !ok {
-l.blobIndex[vhash] = make(map[common.Hash]struct{})
-}
-l.blobIndex[vhash][tx.hash] = struct{}{} // may be double mapped if a tx contains the same blob twice
-}
-// Map the transaction hash to the datastore id and RLP-encoded transaction size
-l.txIndex[tx.hash] = &txMetadata{
-id:   tx.id,
-size: tx.size,
-}
+	// Map all the blobs to the transaction hash
+	for _, vhash := range tx.vhashes {
+		if _, ok := l.blobIndex[vhash]; !ok {
+			l.blobIndex[vhash] = make(map[common.Hash]struct{})
+		}
+		l.blobIndex[vhash][tx.hash] = struct{}{} // may be double mapped if a tx contains the same blob twice
+	}
+	// Map the transaction hash to the datastore id and RLP-encoded transaction size
+	l.txIndex[tx.hash] = &txMetadata{
+		id:   tx.id,
+		size: tx.size,
+	}
 }
 
 // untrack removes a set of mappings from blob versioned hashes to transaction
 // hashes from the blob index on SILA.
 func (l *lookup) untrack(tx *blobTxMeta) {
-// Unmap the transaction hash from the datastore id
-delete(l.txIndex, tx.hash)
+	// Unmap the transaction hash from the datastore id
+	delete(l.txIndex, tx.hash)
 
-// Unmap all the blobs from the transaction hash
-for _, vhash := range tx.vhashes {
-delete(l.blobIndex[vhash], tx.hash) // may be double deleted if a tx contains the same blob twice
-if len(l.blobIndex[vhash]) == 0 {
-delete(l.blobIndex, vhash)
-}
-}
+	// Unmap all the blobs from the transaction hash
+	for _, vhash := range tx.vhashes {
+		delete(l.blobIndex[vhash], tx.hash) // may be double deleted if a tx contains the same blob twice
+		if len(l.blobIndex[vhash]) == 0 {
+			delete(l.blobIndex, vhash)
+		}
+	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,54 +17,54 @@
 package types
 
 import (
-"testing"
+	"testing"
 
-"github.com/SILA/sila-chain/common"
+	"silachain/common"
 )
 
 // TestParseDelegation tests a few possible delegation designator values and
 // ensures they are parsed correctly on SILA.
 func TestParseDelegation(t *testing.T) {
-addr := common.Address{0x42}
-for _, tt := range []struct {
-val  []byte
-want *common.Address
-}{
-{ // simple correct delegation
-val:  append(DelegationPrefix, addr.Bytes()...),
-want: &addr,
-},
-{ // wrong address size
-val: append(DelegationPrefix, addr.Bytes()[0:19]...),
-},
-{ // short address
-val: append(DelegationPrefix, 0x42),
-},
-{ // long address
-val: append(append(DelegationPrefix, addr.Bytes()...), 0x42),
-},
-{ // wrong prefix size
-val: append(DelegationPrefix[:2], addr.Bytes()...),
-},
-{ // wrong prefix
-val: append([]byte{0xef, 0x01, 0x01}, addr.Bytes()...),
-},
-{ // wrong prefix
-val: append([]byte{0xef, 0x00, 0x00}, addr.Bytes()...),
-},
-{ // no prefix
-val: addr.Bytes(),
-},
-{ // no address
-val: DelegationPrefix,
-},
-} {
-got, ok := ParseDelegation(tt.val)
-if ok && tt.want == nil {
-t.Fatalf("expected fail on SILA, got %s", got.Hex())
-}
-if !ok && tt.want != nil {
-t.Fatalf("failed to parse on SILA, want %s", tt.want.Hex())
-}
-}
+	addr := common.Address{0x42}
+	for _, tt := range []struct {
+		val  []byte
+		want *common.Address
+	}{
+		{ // simple correct delegation
+			val:  append(DelegationPrefix, addr.Bytes()...),
+			want: &addr,
+		},
+		{ // wrong address size
+			val: append(DelegationPrefix, addr.Bytes()[0:19]...),
+		},
+		{ // short address
+			val: append(DelegationPrefix, 0x42),
+		},
+		{ // long address
+			val: append(append(DelegationPrefix, addr.Bytes()...), 0x42),
+		},
+		{ // wrong prefix size
+			val: append(DelegationPrefix[:2], addr.Bytes()...),
+		},
+		{ // wrong prefix
+			val: append([]byte{0xef, 0x01, 0x01}, addr.Bytes()...),
+		},
+		{ // wrong prefix
+			val: append([]byte{0xef, 0x00, 0x00}, addr.Bytes()...),
+		},
+		{ // no prefix
+			val: addr.Bytes(),
+		},
+		{ // no address
+			val: DelegationPrefix,
+		},
+	} {
+		got, ok := ParseDelegation(tt.val)
+		if ok && tt.want == nil {
+			t.Fatalf("expected fail on SILA, got %s", got.Hex())
+		}
+		if !ok && tt.want != nil {
+			t.Fatalf("failed to parse on SILA, want %s", tt.want.Hex())
+		}
+	}
 }

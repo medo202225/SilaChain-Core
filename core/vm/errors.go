@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -23,74 +23,74 @@ including execution errors, stack errors, and opcode errors.
 package vm
 
 import (
-"errors"
-"fmt"
-"math"
+	"errors"
+	"fmt"
+	"math"
 )
 
 // List SILA VM execution errors
 var (
-ErrOutOfGas                 = errors.New("out of gas")
-ErrCodeStoreOutOfGas        = errors.New("contract creation code storage out of gas")
-ErrDepth                    = errors.New("max call depth exceeded")
-ErrInsufficientBalance      = errors.New("insufficient balance for transfer")
-ErrContractAddressCollision = errors.New("contract address collision")
-ErrExecutionReverted        = errors.New("execution reverted")
-ErrMaxCodeSizeExceeded      = errors.New("max code size exceeded")
-ErrMaxInitCodeSizeExceeded  = errors.New("max initcode size exceeded")
-ErrInvalidJump              = errors.New("invalid jump destination")
-ErrWriteProtection          = errors.New("write protection")
-ErrReturnDataOutOfBounds    = errors.New("return data out of bounds")
-ErrGasUintOverflow          = errors.New("gas uint64 overflow")
-ErrInvalidCode              = errors.New("invalid code: must not begin with 0xef")
-ErrNonceUintOverflow        = errors.New("nonce uint64 overflow")
+	ErrOutOfGas                 = errors.New("out of gas")
+	ErrCodeStoreOutOfGas        = errors.New("contract creation code storage out of gas")
+	ErrDepth                    = errors.New("max call depth exceeded")
+	ErrInsufficientBalance      = errors.New("insufficient balance for transfer")
+	ErrContractAddressCollision = errors.New("contract address collision")
+	ErrExecutionReverted        = errors.New("execution reverted")
+	ErrMaxCodeSizeExceeded      = errors.New("max code size exceeded")
+	ErrMaxInitCodeSizeExceeded  = errors.New("max initcode size exceeded")
+	ErrInvalidJump              = errors.New("invalid jump destination")
+	ErrWriteProtection          = errors.New("write protection")
+	ErrReturnDataOutOfBounds    = errors.New("return data out of bounds")
+	ErrGasUintOverflow          = errors.New("gas uint64 overflow")
+	ErrInvalidCode              = errors.New("invalid code: must not begin with 0xef")
+	ErrNonceUintOverflow        = errors.New("nonce uint64 overflow")
 
-// errStopToken is an internal token indicating interpreter loop termination,
-// never returned to outside callers.
-errStopToken = errors.New("stop token")
+	// errStopToken is an internal token indicating interpreter loop termination,
+	// never returned to outside callers.
+	errStopToken = errors.New("stop token")
 )
 
 // ErrStackUnderflow wraps an VM error when the items on the stack less
 // than the minimal requirement.
 type ErrStackUnderflow struct {
-stackLen int
-required int
+	stackLen int
+	required int
 }
 
 func (e ErrStackUnderflow) Error() string {
-return fmt.Sprintf("stack underflow (%d <=> %d)", e.stackLen, e.required)
+	return fmt.Sprintf("stack underflow (%d <=> %d)", e.stackLen, e.required)
 }
 
 func (e ErrStackUnderflow) Unwrap() error {
-return errors.New("stack underflow")
+	return errors.New("stack underflow")
 }
 
 // ErrStackOverflow wraps an VM error when the items on the stack exceeds
 // the maximum allowance.
 type ErrStackOverflow struct {
-stackLen int
-limit    int
+	stackLen int
+	limit    int
 }
 
 func (e ErrStackOverflow) Error() string {
-return fmt.Sprintf("stack limit reached %d (%d)", e.stackLen, e.limit)
+	return fmt.Sprintf("stack limit reached %d (%d)", e.stackLen, e.limit)
 }
 
 func (e ErrStackOverflow) Unwrap() error {
-return errors.New("stack overflow")
+	return errors.New("stack overflow")
 }
 
 // ErrInvalidOpCode wraps an VM error when an invalid opcode is encountered.
 type ErrInvalidOpCode struct {
-opcode  OpCode
-operand *byte
+	opcode  OpCode
+	operand *byte
 }
 
 func (e *ErrInvalidOpCode) Error() string {
-if e.operand != nil {
-return fmt.Sprintf("invalid opcode: %s (operand: 0x%02x)", e.opcode, *e.operand)
-}
-return fmt.Sprintf("invalid opcode: %s", e.opcode)
+	if e.operand != nil {
+		return fmt.Sprintf("invalid opcode: %s (operand: 0x%02x)", e.opcode, *e.operand)
+	}
+	return fmt.Sprintf("invalid opcode: %s", e.opcode)
 }
 
 // rpcError is the same interface as the one defined in rpc/errors.go
@@ -98,8 +98,8 @@ return fmt.Sprintf("invalid opcode: %s", e.opcode)
 //
 // It's used to ensure that the VMError implements the RPC error interface.
 type rpcError interface {
-Error() string  // returns the message
-ErrorCode() int // returns the code
+	Error() string  // returns the message
+	ErrorCode() int // returns the code
 }
 
 var _ rpcError = (*VMError)(nil)
@@ -111,103 +111,103 @@ var _ rpcError = (*VMError)(nil)
 // If the error is not one of the known error above, the error code will be
 // set to VMErrorCodeUnknown.
 type VMError struct {
-error
-code int
+	error
+	code int
 }
 
 func VMErrorFromErr(err error) error {
-if err == nil {
-return nil
-}
+	if err == nil {
+		return nil
+	}
 
-return &VMError{
-error: err,
-code:  vmErrorCodeFromErr(err),
-}
+	return &VMError{
+		error: err,
+		code:  vmErrorCodeFromErr(err),
+	}
 }
 
 func (e *VMError) Error() string {
-return e.error.Error()
+	return e.error.Error()
 }
 
 func (e *VMError) Unwrap() error {
-return e.error
+	return e.error
 }
 
 func (e *VMError) ErrorCode() int {
-return e.code
+	return e.code
 }
 
 const (
-// We start the error code at 1 so that we can use 0 later for some possible extension. There
-// is no unspecified value for the code today because it should always be set to a valid value
-// that could be VMErrorCodeUnknown if the error is not mapped to a known error code.
+	// We start the error code at 1 so that we can use 0 later for some possible extension. There
+	// is no unspecified value for the code today because it should always be set to a valid value
+	// that could be VMErrorCodeUnknown if the error is not mapped to a known error code.
 
-VMErrorCodeOutOfGas = 1 + iota
-VMErrorCodeCodeStoreOutOfGas
-VMErrorCodeDepth
-VMErrorCodeInsufficientBalance
-VMErrorCodeContractAddressCollision
-VMErrorCodeExecutionReverted
-VMErrorCodeMaxCodeSizeExceeded
-VMErrorCodeInvalidJump
-VMErrorCodeWriteProtection
-VMErrorCodeReturnDataOutOfBounds
-VMErrorCodeGasUintOverflow
-VMErrorCodeInvalidCode
-VMErrorCodeNonceUintOverflow
-VMErrorCodeStackUnderflow
-VMErrorCodeStackOverflow
-VMErrorCodeInvalidOpCode
+	VMErrorCodeOutOfGas = 1 + iota
+	VMErrorCodeCodeStoreOutOfGas
+	VMErrorCodeDepth
+	VMErrorCodeInsufficientBalance
+	VMErrorCodeContractAddressCollision
+	VMErrorCodeExecutionReverted
+	VMErrorCodeMaxCodeSizeExceeded
+	VMErrorCodeInvalidJump
+	VMErrorCodeWriteProtection
+	VMErrorCodeReturnDataOutOfBounds
+	VMErrorCodeGasUintOverflow
+	VMErrorCodeInvalidCode
+	VMErrorCodeNonceUintOverflow
+	VMErrorCodeStackUnderflow
+	VMErrorCodeStackOverflow
+	VMErrorCodeInvalidOpCode
 
-// VMErrorCodeUnknown explicitly marks an error as unknown, this is useful when error is converted
-// from an actual `error` in which case if the mapping is not known, we can use this value to indicate that.
-VMErrorCodeUnknown = math.MaxInt - 1
+	// VMErrorCodeUnknown explicitly marks an error as unknown, this is useful when error is converted
+	// from an actual `error` in which case if the mapping is not known, we can use this value to indicate that.
+	VMErrorCodeUnknown = math.MaxInt - 1
 )
 
 func vmErrorCodeFromErr(err error) int {
-switch {
-case errors.Is(err, ErrOutOfGas):
-return VMErrorCodeOutOfGas
-case errors.Is(err, ErrCodeStoreOutOfGas):
-return VMErrorCodeCodeStoreOutOfGas
-case errors.Is(err, ErrDepth):
-return VMErrorCodeDepth
-case errors.Is(err, ErrInsufficientBalance):
-return VMErrorCodeInsufficientBalance
-case errors.Is(err, ErrContractAddressCollision):
-return VMErrorCodeContractAddressCollision
-case errors.Is(err, ErrExecutionReverted):
-return VMErrorCodeExecutionReverted
-case errors.Is(err, ErrMaxCodeSizeExceeded):
-return VMErrorCodeMaxCodeSizeExceeded
-case errors.Is(err, ErrInvalidJump):
-return VMErrorCodeInvalidJump
-case errors.Is(err, ErrWriteProtection):
-return VMErrorCodeWriteProtection
-case errors.Is(err, ErrReturnDataOutOfBounds):
-return VMErrorCodeReturnDataOutOfBounds
-case errors.Is(err, ErrGasUintOverflow):
-return VMErrorCodeGasUintOverflow
-case errors.Is(err, ErrInvalidCode):
-return VMErrorCodeInvalidCode
-case errors.Is(err, ErrNonceUintOverflow):
-return VMErrorCodeNonceUintOverflow
+	switch {
+	case errors.Is(err, ErrOutOfGas):
+		return VMErrorCodeOutOfGas
+	case errors.Is(err, ErrCodeStoreOutOfGas):
+		return VMErrorCodeCodeStoreOutOfGas
+	case errors.Is(err, ErrDepth):
+		return VMErrorCodeDepth
+	case errors.Is(err, ErrInsufficientBalance):
+		return VMErrorCodeInsufficientBalance
+	case errors.Is(err, ErrContractAddressCollision):
+		return VMErrorCodeContractAddressCollision
+	case errors.Is(err, ErrExecutionReverted):
+		return VMErrorCodeExecutionReverted
+	case errors.Is(err, ErrMaxCodeSizeExceeded):
+		return VMErrorCodeMaxCodeSizeExceeded
+	case errors.Is(err, ErrInvalidJump):
+		return VMErrorCodeInvalidJump
+	case errors.Is(err, ErrWriteProtection):
+		return VMErrorCodeWriteProtection
+	case errors.Is(err, ErrReturnDataOutOfBounds):
+		return VMErrorCodeReturnDataOutOfBounds
+	case errors.Is(err, ErrGasUintOverflow):
+		return VMErrorCodeGasUintOverflow
+	case errors.Is(err, ErrInvalidCode):
+		return VMErrorCodeInvalidCode
+	case errors.Is(err, ErrNonceUintOverflow):
+		return VMErrorCodeNonceUintOverflow
 
-default:
-// Dynamic errors
-if v := (*ErrStackUnderflow)(nil); errors.As(err, &v) {
-return VMErrorCodeStackUnderflow
-}
+	default:
+		// Dynamic errors
+		if v := (*ErrStackUnderflow)(nil); errors.As(err, &v) {
+			return VMErrorCodeStackUnderflow
+		}
 
-if v := (*ErrStackOverflow)(nil); errors.As(err, &v) {
-return VMErrorCodeStackOverflow
-}
+		if v := (*ErrStackOverflow)(nil); errors.As(err, &v) {
+			return VMErrorCodeStackOverflow
+		}
 
-if v := (*ErrInvalidOpCode)(nil); errors.As(err, &v) {
-return VMErrorCodeInvalidOpCode
-}
+		if v := (*ErrInvalidOpCode)(nil); errors.As(err, &v) {
+			return VMErrorCodeInvalidOpCode
+		}
 
-return VMErrorCodeUnknown
-}
+		return VMErrorCodeUnknown
+	}
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,87 +17,87 @@
 package eradb
 
 import (
-"sync"
-"testing"
+	"sync"
+	"testing"
 
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/rlp"
-"github.com/stretchr/testify/assert"
-"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"silachain/core/types"
+	"silachain/rlp"
 )
 
 func TestEraDatabase(t *testing.T) {
-db, err := New("testdata")
-require.NoError(t, err)
-defer db.Close()
+	db, err := New("testdata")
+	require.NoError(t, err)
+	defer db.Close()
 
-r, err := db.GetRawBody(175881)
-require.NoError(t, err)
-var body *types.Body
-err = rlp.DecodeBytes(r, &body)
-require.NoError(t, err)
-require.NotNil(t, body, "block body not found")
-assert.Equal(t, 3, len(body.Transactions))
+	r, err := db.GetRawBody(175881)
+	require.NoError(t, err)
+	var body *types.Body
+	err = rlp.DecodeBytes(r, &body)
+	require.NoError(t, err)
+	require.NotNil(t, body, "block body not found")
+	assert.Equal(t, 3, len(body.Transactions))
 
-r, err = db.GetRawReceipts(175881)
-require.NoError(t, err)
-var receipts []*types.ReceiptForStorage
-err = rlp.DecodeBytes(r, &receipts)
-require.NoError(t, err)
-require.NotNil(t, receipts, "receipts not found")
-assert.Equal(t, 3, len(receipts), "receipts length mismatch")
+	r, err = db.GetRawReceipts(175881)
+	require.NoError(t, err)
+	var receipts []*types.ReceiptForStorage
+	err = rlp.DecodeBytes(r, &receipts)
+	require.NoError(t, err)
+	require.NotNil(t, receipts, "receipts not found")
+	assert.Equal(t, 3, len(receipts), "receipts length mismatch")
 }
 
 func TestEraDatabaseConcurrentOpen(t *testing.T) {
-db, err := New("testdata")
-require.NoError(t, err)
-defer db.Close()
+	db, err := New("testdata")
+	require.NoError(t, err)
+	defer db.Close()
 
-const N = 25
-var wg sync.WaitGroup
-wg.Add(N)
-for range N {
-go func() {
-defer wg.Done()
-r, err := db.GetRawBody(1024)
-if err != nil {
-t.Error("err:", err)
-}
-if len(r) == 0 {
-t.Error("empty body")
-}
-}()
-}
-wg.Wait()
+	const N = 25
+	var wg sync.WaitGroup
+	wg.Add(N)
+	for range N {
+		go func() {
+			defer wg.Done()
+			r, err := db.GetRawBody(1024)
+			if err != nil {
+				t.Error("err:", err)
+			}
+			if len(r) == 0 {
+				t.Error("empty body")
+			}
+		}()
+	}
+	wg.Wait()
 }
 
 func TestEraDatabaseConcurrentOpenClose(t *testing.T) {
-db, err := New("testdata")
-require.NoError(t, err)
-defer db.Close()
+	db, err := New("testdata")
+	require.NoError(t, err)
+	defer db.Close()
 
-const N = 10
-var wg sync.WaitGroup
-wg.Add(N)
-for range N {
-go func() {
-defer wg.Done()
-r, err := db.GetRawBody(1024)
-if err == errClosed {
-return
-}
-if err != nil {
-t.Error("err:", err)
-}
-if len(r) == 0 {
-t.Error("empty body")
-}
-}()
-}
-wg.Add(1)
-go func() {
-defer wg.Done()
-db.Close()
-}()
-wg.Wait()
+	const N = 10
+	var wg sync.WaitGroup
+	wg.Add(N)
+	for range N {
+		go func() {
+			defer wg.Done()
+			r, err := db.GetRawBody(1024)
+			if err == errClosed {
+				return
+			}
+			if err != nil {
+				t.Error("err:", err)
+			}
+			if len(r) == 0 {
+				t.Error("empty body")
+			}
+		}()
+	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		db.Close()
+	}()
+	wg.Wait()
 }

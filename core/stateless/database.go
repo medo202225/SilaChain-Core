@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,10 +17,10 @@
 package stateless
 
 import (
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/rawdb"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/ethdb"
+	"silachain/common"
+	"silachain/core/rawdb"
+	"silachain/crypto"
+	"silachain/ethdb"
 )
 
 // MakeHashDB imports tries, codes and block hashes from a SILA witness into a new
@@ -34,34 +34,34 @@ import (
 //
 // Acceleration structures built would need to explicitly validate the SILA witness.
 func (w *Witness) MakeHashDB() ethdb.Database {
-var (
-memdb  = rawdb.NewMemoryDatabase()
-hasher = crypto.NewKeccakState()
-hash   = make([]byte, 32)
-)
-// Inject all the "block hashes" (i.e. headers) into the ephemeral database
-for _, header := range w.Headers {
-rawdb.WriteHeader(memdb, header)
-}
-// Inject all the bytecodes into the ephemeral database
-for code := range w.Codes {
-blob := []byte(code)
+	var (
+		memdb  = rawdb.NewMemoryDatabase()
+		hasher = crypto.NewKeccakState()
+		hash   = make([]byte, 32)
+	)
+	// Inject all the "block hashes" (i.e. headers) into the ephemeral database
+	for _, header := range w.Headers {
+		rawdb.WriteHeader(memdb, header)
+	}
+	// Inject all the bytecodes into the ephemeral database
+	for code := range w.Codes {
+		blob := []byte(code)
 
-hasher.Reset()
-hasher.Write(blob)
-hasher.Read(hash)
+		hasher.Reset()
+		hasher.Write(blob)
+		hasher.Read(hash)
 
-rawdb.WriteCode(memdb, common.BytesToHash(hash), blob)
-}
-// Inject all the MPT trie nodes into the ephemeral database
-for node := range w.State {
-blob := []byte(node)
+		rawdb.WriteCode(memdb, common.BytesToHash(hash), blob)
+	}
+	// Inject all the MPT trie nodes into the ephemeral database
+	for node := range w.State {
+		blob := []byte(node)
 
-hasher.Reset()
-hasher.Write(blob)
-hasher.Read(hash)
+		hasher.Reset()
+		hasher.Write(blob)
+		hasher.Read(hash)
 
-rawdb.WriteLegacyTrieNode(memdb, common.BytesToHash(hash), blob)
-}
-return memdb
+		rawdb.WriteLegacyTrieNode(memdb, common.BytesToHash(hash), blob)
+	}
+	return memdb
 }

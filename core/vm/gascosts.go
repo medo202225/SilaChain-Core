@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -27,16 +27,16 @@ import "fmt"
 // GasCosts denotes a vector of gas costs in the
 // multidimensional metering paradigm.
 type GasCosts struct {
-RegularGas uint64
-StateGas   uint64
+	RegularGas uint64
+	StateGas   uint64
 }
 
 // Sum returns the total gas (regular + state).
 func (g GasCosts) Sum() uint64 {
-return g.RegularGas + g.StateGas
+	return g.RegularGas + g.StateGas
 }
 
 // String returns a visual representation of the gas vector.
 func (g GasCosts) String() string {
-return fmt.Sprintf("<%v,%v>", g.RegularGas, g.StateGas)
+	return fmt.Sprintf("<%v,%v>", g.RegularGas, g.StateGas)
 }

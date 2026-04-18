@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,151 +17,151 @@
 package rawdb
 
 import (
-"fmt"
-"path/filepath"
+	"fmt"
+	"path/filepath"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/ethdb"
+	"silachain/common"
+	"silachain/ethdb"
 )
 
 type tableSize struct {
-name string
-size common.StorageSize
+	name string
+	size common.StorageSize
 }
 
 // freezerInfo contains the basic information of the freezer.
 type freezerInfo struct {
-name  string
-head  uint64
-tail  uint64
-count uint64
-sizes []tableSize
+	name  string
+	head  uint64
+	tail  uint64
+	count uint64
+	sizes []tableSize
 }
 
 // size returns the storage size of the entire freezer.
 func (info *freezerInfo) size() common.StorageSize {
-var total common.StorageSize
-for _, table := range info.sizes {
-total += table.size
-}
-return total
+	var total common.StorageSize
+	for _, table := range info.sizes {
+		total += table.size
+	}
+	return total
 }
 
 func inspect(name string, order map[string]freezerTableConfig, reader ethdb.AncientReader) (freezerInfo, error) {
-info := freezerInfo{name: name}
-for t := range order {
-size, err := reader.AncientSize(t)
-if err != nil {
-return freezerInfo{}, err
-}
-info.sizes = append(info.sizes, tableSize{name: t, size: common.StorageSize(size)})
-}
-ancients, err := reader.Ancients()
-if err != nil {
-return freezerInfo{}, err
-}
-if ancients > 0 {
-info.head = ancients - 1
-} else {
-info.head = 0
-}
+	info := freezerInfo{name: name}
+	for t := range order {
+		size, err := reader.AncientSize(t)
+		if err != nil {
+			return freezerInfo{}, err
+		}
+		info.sizes = append(info.sizes, tableSize{name: t, size: common.StorageSize(size)})
+	}
+	ancients, err := reader.Ancients()
+	if err != nil {
+		return freezerInfo{}, err
+	}
+	if ancients > 0 {
+		info.head = ancients - 1
+	} else {
+		info.head = 0
+	}
 
-tail, err := reader.Tail()
-if err != nil {
-return freezerInfo{}, err
-}
-info.tail = tail
+	tail, err := reader.Tail()
+	if err != nil {
+		return freezerInfo{}, err
+	}
+	info.tail = tail
 
-if ancients == 0 {
-info.count = 0
-} else {
-info.count = info.head - info.tail + 1
-}
-return info, nil
+	if ancients == 0 {
+		info.count = 0
+	} else {
+		info.count = info.head - info.tail + 1
+	}
+	return info, nil
 }
 
 // inspectFreezers inspects all freezers registered in the system.
 func inspectFreezers(db ethdb.Database) ([]freezerInfo, error) {
-var infos []freezerInfo
-for _, freezer := range freezers {
-switch freezer {
-case ChainFreezerName:
-info, err := inspect(ChainFreezerName, chainFreezerTableConfigs, db)
-if err != nil {
-return nil, err
-}
-infos = append(infos, info)
+	var infos []freezerInfo
+	for _, freezer := range freezers {
+		switch freezer {
+		case ChainFreezerName:
+			info, err := inspect(ChainFreezerName, chainFreezerTableConfigs, db)
+			if err != nil {
+				return nil, err
+			}
+			infos = append(infos, info)
 
-case MerkleStateFreezerName:
-datadir, err := db.AncientDatadir()
-if err != nil {
-return nil, err
-}
-f, err := NewStateFreezer(datadir, true)
-if err != nil {
-continue
-}
-defer f.Close()
+		case MerkleStateFreezerName:
+			datadir, err := db.AncientDatadir()
+			if err != nil {
+				return nil, err
+			}
+			f, err := NewStateFreezer(datadir, true)
+			if err != nil {
+				continue
+			}
+			defer f.Close()
 
-info, err := inspect(freezer, stateFreezerTableConfigs, f)
-if err != nil {
-return nil, err
-}
-infos = append(infos, info)
+			info, err := inspect(freezer, stateFreezerTableConfigs, f)
+			if err != nil {
+				return nil, err
+			}
+			infos = append(infos, info)
 
-case MerkleTrienodeFreezerName:
-datadir, err := db.AncientDatadir()
-if err != nil {
-return nil, err
-}
-f, err := NewTrienodeFreezer(datadir, true)
-if err != nil {
-continue
-}
-defer f.Close()
+		case MerkleTrienodeFreezerName:
+			datadir, err := db.AncientDatadir()
+			if err != nil {
+				return nil, err
+			}
+			f, err := NewTrienodeFreezer(datadir, true)
+			if err != nil {
+				continue
+			}
+			defer f.Close()
 
-info, err := inspect(freezer, trienodeFreezerTableConfigs, f)
-if err != nil {
-return nil, err
-}
-infos = append(infos, info)
+			info, err := inspect(freezer, trienodeFreezerTableConfigs, f)
+			if err != nil {
+				return nil, err
+			}
+			infos = append(infos, info)
 
-default:
-return nil, fmt.Errorf("unknown freezer, supported ones: %v", freezers)
-}
-}
-return infos, nil
+		default:
+			return nil, fmt.Errorf("unknown freezer, supported ones: %v", freezers)
+		}
+	}
+	return infos, nil
 }
 
 // InspectFreezerTable dumps out the index of a specific freezer table.
 func InspectFreezerTable(ancient string, freezerName string, tableName string, start, end int64) error {
-var (
-path   string
-tables map[string]freezerTableConfig
-)
-switch freezerName {
-case ChainFreezerName:
-path, tables = resolveChainFreezerDir(ancient), chainFreezerTableConfigs
-case MerkleStateFreezerName:
-path, tables = filepath.Join(ancient, freezerName), stateFreezerTableConfigs
-case MerkleTrienodeFreezerName:
-path, tables = filepath.Join(ancient, freezerName), trienodeFreezerTableConfigs
-default:
-return fmt.Errorf("unknown freezer, supported ones: %v", freezers)
-}
-noSnappy, exist := tables[tableName]
-if !exist {
-var names []string
-for name := range tables {
-names = append(names, name)
-}
-return fmt.Errorf("unknown table, supported ones: %v", names)
-}
-table, err := newFreezerTable(path, tableName, noSnappy, true)
-if err != nil {
-return err
-}
-defer table.Close()
-table.dumpIndexStdout(start, end)
-return nil
+	var (
+		path   string
+		tables map[string]freezerTableConfig
+	)
+	switch freezerName {
+	case ChainFreezerName:
+		path, tables = resolveChainFreezerDir(ancient), chainFreezerTableConfigs
+	case MerkleStateFreezerName:
+		path, tables = filepath.Join(ancient, freezerName), stateFreezerTableConfigs
+	case MerkleTrienodeFreezerName:
+		path, tables = filepath.Join(ancient, freezerName), trienodeFreezerTableConfigs
+	default:
+		return fmt.Errorf("unknown freezer, supported ones: %v", freezers)
+	}
+	noSnappy, exist := tables[tableName]
+	if !exist {
+		var names []string
+		for name := range tables {
+			names = append(names, name)
+		}
+		return fmt.Errorf("unknown table, supported ones: %v", names)
+	}
+	table, err := newFreezerTable(path, tableName, noSnappy, true)
+	if err != nil {
+		return err
+	}
+	defer table.Close()
+	table.dumpIndexStdout(start, end)
+	return nil
 }

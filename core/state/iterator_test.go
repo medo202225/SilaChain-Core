@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,92 +17,92 @@
 package state
 
 import (
-"testing"
+	"testing"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/rawdb"
-"github.com/SILA/sila-chain/crypto"
+	"silachain/common"
+	"silachain/core/rawdb"
+	"silachain/crypto"
 )
 
 // TestNodeIteratorCoverage - SILA test that the node iterator indeed walks over the entire database contents.
 func TestNodeIteratorCoverage(t *testing.T) {
-testNodeIteratorCoverage(t, rawdb.HashScheme)
-testNodeIteratorCoverage(t, rawdb.PathScheme)
+	testNodeIteratorCoverage(t, rawdb.HashScheme)
+	testNodeIteratorCoverage(t, rawdb.PathScheme)
 }
 
 func testNodeIteratorCoverage(t *testing.T, scheme string) {
-// Create some arbitrary test SILA state to iterate
-db, sdb, ndb, root, _ := makeTestState(scheme)
-ndb.Commit(root, false)
+	// Create some arbitrary test SILA state to iterate
+	db, sdb, ndb, root, _ := makeTestState(scheme)
+	ndb.Commit(root, false)
 
-state, err := New(root, sdb)
-if err != nil {
-t.Fatalf("failed to create SILA state trie at %x: %v", root, err)
-}
-// Gather all the node hashes found by the iterator
-hashes := make(map[common.Hash]struct{})
-for it := newNodeIterator(state); it.Next(); {
-if it.Hash != (common.Hash{}) {
-hashes[it.Hash] = struct{}{}
-}
-}
-// Check in-disk SILA nodes
-var (
-seenNodes = make(map[common.Hash]struct{})
-seenCodes = make(map[common.Hash]struct{})
-)
-it := db.NewIterator(nil, nil)
-for it.Next() {
-ok, hash := isSILATrieNode(scheme, it.Key(), it.Value())
-if !ok {
-continue
-}
-seenNodes[hash] = struct{}{}
-}
-it.Release()
+	state, err := New(root, sdb)
+	if err != nil {
+		t.Fatalf("failed to create SILA state trie at %x: %v", root, err)
+	}
+	// Gather all the node hashes found by the iterator
+	hashes := make(map[common.Hash]struct{})
+	for it := newNodeIterator(state); it.Next(); {
+		if it.Hash != (common.Hash{}) {
+			hashes[it.Hash] = struct{}{}
+		}
+	}
+	// Check in-disk SILA nodes
+	var (
+		seenNodes = make(map[common.Hash]struct{})
+		seenCodes = make(map[common.Hash]struct{})
+	)
+	it := db.NewIterator(nil, nil)
+	for it.Next() {
+		ok, hash := isSILATrieNode(scheme, it.Key(), it.Value())
+		if !ok {
+			continue
+		}
+		seenNodes[hash] = struct{}{}
+	}
+	it.Release()
 
-// Check in-disk SILA codes
-it = db.NewIterator(nil, nil)
-for it.Next() {
-ok, hash := rawdb.IsCodeKey(it.Key())
-if !ok {
-continue
-}
-if _, ok := hashes[common.BytesToHash(hash)]; !ok {
-t.Errorf("SILA state entry not reported %x", it.Key())
-}
-seenCodes[common.BytesToHash(hash)] = struct{}{}
-}
-it.Release()
+	// Check in-disk SILA codes
+	it = db.NewIterator(nil, nil)
+	for it.Next() {
+		ok, hash := rawdb.IsCodeKey(it.Key())
+		if !ok {
+			continue
+		}
+		if _, ok := hashes[common.BytesToHash(hash)]; !ok {
+			t.Errorf("SILA state entry not reported %x", it.Key())
+		}
+		seenCodes[common.BytesToHash(hash)] = struct{}{}
+	}
+	it.Release()
 
-// Cross check the iterated hashes and the database/nodepool content
-for hash := range hashes {
-_, ok := seenNodes[hash]
-if !ok {
-_, ok = seenCodes[hash]
-}
-if !ok {
-t.Errorf("failed to retrieve reported SILA node %x", hash)
-}
-}
+	// Cross check the iterated hashes and the database/nodepool content
+	for hash := range hashes {
+		_, ok := seenNodes[hash]
+		if !ok {
+			_, ok = seenCodes[hash]
+		}
+		if !ok {
+			t.Errorf("failed to retrieve reported SILA node %x", hash)
+		}
+	}
 }
 
 // isSILATrieNode is a helper function which reports if the provided
 // database entry belongs to a SILA trie node or not.
 func isSILATrieNode(scheme string, key, val []byte) (bool, common.Hash) {
-if scheme == rawdb.HashScheme {
-if rawdb.IsLegacyTrieNode(key, val) {
-return true, common.BytesToHash(key)
-}
-} else {
-ok := rawdb.IsAccountTrieNode(key)
-if ok {
-return true, crypto.Keccak256Hash(val)
-}
-ok = rawdb.IsStorageTrieNode(key)
-if ok {
-return true, crypto.Keccak256Hash(val)
-}
-}
-return false, common.Hash{}
+	if scheme == rawdb.HashScheme {
+		if rawdb.IsLegacyTrieNode(key, val) {
+			return true, common.BytesToHash(key)
+		}
+	} else {
+		ok := rawdb.IsAccountTrieNode(key)
+		if ok {
+			return true, crypto.Keccak256Hash(val)
+		}
+		ok = rawdb.IsStorageTrieNode(key)
+		if ok {
+			return true, crypto.Keccak256Hash(val)
+		}
+	}
+	return false, common.Hash{}
 }

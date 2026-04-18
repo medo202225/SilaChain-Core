@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -25,12 +25,12 @@ import (
 "time"
 
 "github.com/VictoriaMetrics/fastcache"
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/rawdb"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/rlp"
-"github.com/SILA/sila-chain/triedb"
+"silachain/common"
+"silachain/core/rawdb"
+"silachain/ethdb"
+"silachain/log"
+"silachain/rlp"
+"silachain/triedb"
 )
 
 const (

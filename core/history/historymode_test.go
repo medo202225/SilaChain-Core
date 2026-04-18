@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,42 +17,42 @@
 package history
 
 import (
-"testing"
+	"testing"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/params"
+	"silachain/common"
+	"silachain/params"
 )
 
 func TestNewPolicy(t *testing.T) {
-// KeepAll: no target.
-p, err := NewPolicy(KeepAll, params.MainnetGenesisHash)
-if err != nil {
-t.Fatalf("KeepAll: %v", err)
-}
-if p.Mode != KeepAll || p.Target != nil {
-t.Errorf("KeepAll: unexpected policy %+v", p)
-}
+	// KeepAll: no target.
+	p, err := NewPolicy(KeepAll, params.MainnetGenesisHash)
+	if err != nil {
+		t.Fatalf("KeepAll: %v", err)
+	}
+	if p.Mode != KeepAll || p.Target != nil {
+		t.Errorf("KeepAll: unexpected policy %+v", p)
+	}
 
-// PostMerge: resolves known mainnet prune point.
-p, err = NewPolicy(KeepPostMerge, params.MainnetGenesisHash)
-if err != nil {
-t.Fatalf("PostMerge: %v", err)
-}
-if p.Target == nil || p.Target.BlockNumber != 15537393 {
-t.Errorf("PostMerge: unexpected target %+v", p.Target)
-}
+	// PostMerge: resolves known mainnet prune point.
+	p, err = NewPolicy(KeepPostMerge, params.MainnetGenesisHash)
+	if err != nil {
+		t.Fatalf("PostMerge: %v", err)
+	}
+	if p.Target == nil || p.Target.BlockNumber != 15537393 {
+		t.Errorf("PostMerge: unexpected target %+v", p.Target)
+	}
 
-// PostPrague: resolves known mainnet prune point.
-p, err = NewPolicy(KeepPostPrague, params.MainnetGenesisHash)
-if err != nil {
-t.Fatalf("PostPrague: %v", err)
-}
-if p.Target == nil || p.Target.BlockNumber != 22431084 {
-t.Errorf("PostPrague: unexpected target %+v", p.Target)
-}
+	// PostPrague: resolves known mainnet prune point.
+	p, err = NewPolicy(KeepPostPrague, params.MainnetGenesisHash)
+	if err != nil {
+		t.Fatalf("PostPrague: %v", err)
+	}
+	if p.Target == nil || p.Target.BlockNumber != 22431084 {
+		t.Errorf("PostPrague: unexpected target %+v", p.Target)
+	}
 
-// PostMerge on unknown network: error.
-if _, err = NewPolicy(KeepPostMerge, common.HexToHash("0xdeadbeef")); err == nil {
-t.Fatal("PostMerge unknown network: expected error")
-}
+	// PostMerge on unknown network: error.
+	if _, err = NewPolicy(KeepPostMerge, common.HexToHash("0xdeadbeef")); err == nil {
+		t.Fatal("PostMerge unknown network: expected error")
+	}
 }

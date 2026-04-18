@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,10 +17,10 @@
 package filtermaps
 
 import (
-_ "embed"
-"encoding/json"
+	_ "embed"
+	"encoding/json"
 
-"github.com/SILA/sila-chain/common"
+	"silachain/common"
 )
 
 // checkpointList lists checkpoints for finalized epochs of a given chain.
@@ -32,9 +32,9 @@ type checkpointList []epochCheckpoint
 // value index where that block starts. This allows a log value iterator to
 // be initialized at the epoch boundary.
 type epochCheckpoint struct {
-BlockNumber uint64 // block that generated the last log value of the given epoch
-BlockId     common.Hash
-FirstIndex  uint64 // first log value index of the given block
+	BlockNumber uint64 // block that generated the last log value of the given epoch
+	BlockId     common.Hash
+	FirstIndex  uint64 // first log value index of the given block
 }
 
 //go:embed checkpoints_mainnet.json
@@ -43,12 +43,12 @@ var checkpointsMainnetJSON []byte
 // checkpoints lists sets of checkpoints for the SILA chain.
 // Additional checkpoint sets can be added for testnets as needed.
 var checkpoints = []checkpointList{
-decodeCheckpoints(checkpointsMainnetJSON),
+	decodeCheckpoints(checkpointsMainnetJSON),
 }
 
 func decodeCheckpoints(encoded []byte) (result checkpointList) {
-if err := json.Unmarshal(encoded, &result); err != nil {
-panic(err)
-}
-return
+	if err := json.Unmarshal(encoded, &result); err != nil {
+		panic(err)
+	}
+	return
 }

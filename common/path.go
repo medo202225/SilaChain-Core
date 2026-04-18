@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,33 +17,33 @@
 package common
 
 import (
-"errors"
-"io/fs"
-"os"
-"path/filepath"
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
 )
 
 // FileExist checks if a file exists at filePath.
 func FileExist(filePath string) bool {
-_, err := os.Stat(filePath)
-return !errors.Is(err, fs.ErrNotExist)
+	_, err := os.Stat(filePath)
+	return !errors.Is(err, fs.ErrNotExist)
 }
 
 // AbsolutePath returns datadir + filename, or filename if it is absolute.
 func AbsolutePath(datadir string, filename string) string {
-if filepath.IsAbs(filename) {
-return filename
-}
-return filepath.Join(datadir, filename)
+	if filepath.IsAbs(filename) {
+		return filename
+	}
+	return filepath.Join(datadir, filename)
 }
 
 // IsNonEmptyDir checks if a directory exists and is non-empty.
 func IsNonEmptyDir(dir string) bool {
-f, err := os.Open(dir)
-if err != nil {
-return false
-}
-defer f.Close()
-names, _ := f.Readdirnames(1)
-return len(names) > 0
+	f, err := os.Open(dir)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	names, _ := f.Readdirnames(1)
+	return len(names) > 0
 }

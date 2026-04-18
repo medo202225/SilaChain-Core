@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,314 +17,314 @@
 package state
 
 import (
-"fmt"
+	"fmt"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/overlay"
-"github.com/SILA/sila-chain/core/rawdb"
-"github.com/SILA/sila-chain/core/state/snapshot"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/trie"
-"github.com/SILA/sila-chain/trie/bintrie"
-"github.com/SILA/sila-chain/trie/transitiontrie"
-"github.com/SILA/sila-chain/trie/trienode"
-"github.com/SILA/sila-chain/triedb"
+	"silachain/common"
+	"silachain/core/overlay"
+	"silachain/core/rawdb"
+	"silachain/core/state/snapshot"
+	"silachain/core/types"
+	"silachain/crypto"
+	"silachain/ethdb"
+	"silachain/log"
+	"silachain/trie"
+	"silachain/trie/bintrie"
+	"silachain/trie/transitiontrie"
+	"silachain/trie/trienode"
+	"silachain/triedb"
 )
 
 // Database wraps access to tries and SILA contract code.
 type Database interface {
-// Reader returns a SILA state reader associated with the specified state root.
-Reader(root common.Hash) (Reader, error)
+	// Reader returns a SILA state reader associated with the specified state root.
+	Reader(root common.Hash) (Reader, error)
 
-// Iteratee returns a SILA state iteratee associated with the specified state root,
-// through which the account iterator and storage iterator can be created.
-Iteratee(root common.Hash) (Iteratee, error)
+	// Iteratee returns a SILA state iteratee associated with the specified state root,
+	// through which the account iterator and storage iterator can be created.
+	Iteratee(root common.Hash) (Iteratee, error)
 
-// OpenTrie opens the main account trie.
-OpenTrie(root common.Hash) (Trie, error)
+	// OpenTrie opens the main account trie.
+	OpenTrie(root common.Hash) (Trie, error)
 
-// OpenStorageTrie opens the storage trie of an account.
-OpenStorageTrie(stateRoot common.Hash, address common.Address, root common.Hash, trie Trie) (Trie, error)
+	// OpenStorageTrie opens the storage trie of an account.
+	OpenStorageTrie(stateRoot common.Hash, address common.Address, root common.Hash, trie Trie) (Trie, error)
 
-// TrieDB returns the underlying trie database for managing trie nodes.
-TrieDB() *triedb.Database
+	// TrieDB returns the underlying trie database for managing trie nodes.
+	TrieDB() *triedb.Database
 
-// Commit flushes all pending writes and finalizes the SILA state transition,
-// committing the changes to the underlying storage. It returns an error
-// if the commit fails.
-Commit(update *stateUpdate) error
+	// Commit flushes all pending writes and finalizes the SILA state transition,
+	// committing the changes to the underlying storage. It returns an error
+	// if the commit fails.
+	Commit(update *stateUpdate) error
 }
 
 // Trie is a SILA Ethereum Merkle Patricia trie.
 type Trie interface {
-// GetKey returns the sha3 preimage of a hashed key that was previously used
-// to store a value.
-//
-// TODO(fjl): remove this when StateTrie is removed
-GetKey([]byte) []byte
+	// GetKey returns the sha3 preimage of a hashed key that was previously used
+	// to store a value.
+	//
+	// TODO(fjl): remove this when StateTrie is removed
+	GetKey([]byte) []byte
 
-// GetAccount abstracts an account read from the trie. It retrieves the
-// account blob from the trie with provided account address and decodes it
-// with associated decoding algorithm. If the specified account is not in
-// the trie, nil will be returned. If the trie is corrupted(e.g. some nodes
-// are missing or the account blob is incorrect for decoding), an error will
-// be returned.
-GetAccount(address common.Address) (*types.StateAccount, error)
+	// GetAccount abstracts an account read from the trie. It retrieves the
+	// account blob from the trie with provided account address and decodes it
+	// with associated decoding algorithm. If the specified account is not in
+	// the trie, nil will be returned. If the trie is corrupted(e.g. some nodes
+	// are missing or the account blob is incorrect for decoding), an error will
+	// be returned.
+	GetAccount(address common.Address) (*types.StateAccount, error)
 
-// PrefetchAccount attempts to resolve specific accounts from the database
-// to accelerate subsequent trie operations.
-PrefetchAccount([]common.Address) error
+	// PrefetchAccount attempts to resolve specific accounts from the database
+	// to accelerate subsequent trie operations.
+	PrefetchAccount([]common.Address) error
 
-// GetStorage returns the value for key stored in the trie. The value bytes
-// must not be modified by the caller. If a node was not found in the database,
-// a trie.MissingNodeError is returned.
-GetStorage(addr common.Address, key []byte) ([]byte, error)
+	// GetStorage returns the value for key stored in the trie. The value bytes
+	// must not be modified by the caller. If a node was not found in the database,
+	// a trie.MissingNodeError is returned.
+	GetStorage(addr common.Address, key []byte) ([]byte, error)
 
-// PrefetchStorage attempts to resolve specific storage slots from the database
-// to accelerate subsequent trie operations.
-PrefetchStorage(addr common.Address, keys [][]byte) error
+	// PrefetchStorage attempts to resolve specific storage slots from the database
+	// to accelerate subsequent trie operations.
+	PrefetchStorage(addr common.Address, keys [][]byte) error
 
-// UpdateAccount abstracts an account write to the trie. It encodes the
-// provided account object with associated algorithm and then updates it
-// in the trie with provided address.
-UpdateAccount(address common.Address, account *types.StateAccount, codeLen int) error
+	// UpdateAccount abstracts an account write to the trie. It encodes the
+	// provided account object with associated algorithm and then updates it
+	// in the trie with provided address.
+	UpdateAccount(address common.Address, account *types.StateAccount, codeLen int) error
 
-// UpdateStorage associates key with value in the trie. If value has length zero,
-// any existing value is deleted from the trie. The value bytes must not be modified
-// by the caller while they are stored in the trie. If a node was not found in the
-// database, a trie.MissingNodeError is returned.
-UpdateStorage(addr common.Address, key, value []byte) error
+	// UpdateStorage associates key with value in the trie. If value has length zero,
+	// any existing value is deleted from the trie. The value bytes must not be modified
+	// by the caller while they are stored in the trie. If a node was not found in the
+	// database, a trie.MissingNodeError is returned.
+	UpdateStorage(addr common.Address, key, value []byte) error
 
-// DeleteAccount abstracts an account deletion from the trie.
-DeleteAccount(address common.Address) error
+	// DeleteAccount abstracts an account deletion from the trie.
+	DeleteAccount(address common.Address) error
 
-// DeleteStorage removes any existing value for key from the trie. If a node
-// was not found in the database, a trie.MissingNodeError is returned.
-DeleteStorage(addr common.Address, key []byte) error
+	// DeleteStorage removes any existing value for key from the trie. If a node
+	// was not found in the database, a trie.MissingNodeError is returned.
+	DeleteStorage(addr common.Address, key []byte) error
 
-// UpdateContractCode abstracts code write to the trie. It is expected
-// to be moved to the stateWriter interface when the latter is ready.
-UpdateContractCode(address common.Address, codeHash common.Hash, code []byte) error
+	// UpdateContractCode abstracts code write to the trie. It is expected
+	// to be moved to the stateWriter interface when the latter is ready.
+	UpdateContractCode(address common.Address, codeHash common.Hash, code []byte) error
 
-// Hash returns the root hash of the trie. It does not write to the database and
-// can be used even if the trie doesn't have one.
-Hash() common.Hash
+	// Hash returns the root hash of the trie. It does not write to the database and
+	// can be used even if the trie doesn't have one.
+	Hash() common.Hash
 
-// Commit collects all dirty nodes in the trie and replace them with the
-// corresponding node hash. All collected nodes(including dirty leaves if
-// collectLeaf is true) will be encapsulated into a nodeset for return.
-// The returned nodeset can be nil if the trie is clean(nothing to commit).
-// Once the trie is committed, it's not usable anymore. A new trie must
-// be created with new root and updated trie database for following usage
-Commit(collectLeaf bool) (common.Hash, *trienode.NodeSet)
+	// Commit collects all dirty nodes in the trie and replace them with the
+	// corresponding node hash. All collected nodes(including dirty leaves if
+	// collectLeaf is true) will be encapsulated into a nodeset for return.
+	// The returned nodeset can be nil if the trie is clean(nothing to commit).
+	// Once the trie is committed, it's not usable anymore. A new trie must
+	// be created with new root and updated trie database for following usage
+	Commit(collectLeaf bool) (common.Hash, *trienode.NodeSet)
 
-// Witness returns a set containing all trie nodes that have been accessed.
-// The returned map could be nil if the witness is empty.
-Witness() map[string][]byte
+	// Witness returns a set containing all trie nodes that have been accessed.
+	// The returned map could be nil if the witness is empty.
+	Witness() map[string][]byte
 
-// NodeIterator returns an iterator that returns nodes of the trie. Iteration
-// starts at the key after the given start key. And error will be returned
-// if fails to create node iterator.
-NodeIterator(startKey []byte) (trie.NodeIterator, error)
+	// NodeIterator returns an iterator that returns nodes of the trie. Iteration
+	// starts at the key after the given start key. And error will be returned
+	// if fails to create node iterator.
+	NodeIterator(startKey []byte) (trie.NodeIterator, error)
 
-// Prove constructs a Merkle proof for key. The result contains all encoded nodes
-// on the path to the value at key. The value itself is also included in the last
-// node and can be retrieved by verifying the proof.
-//
-// If the trie does not contain a value for key, the returned proof contains all
-// nodes of the longest existing prefix of the key (at least the root), ending
-// with the node that proves the absence of the key.
-Prove(key []byte, proofDb ethdb.KeyValueWriter) error
+	// Prove constructs a Merkle proof for key. The result contains all encoded nodes
+	// on the path to the value at key. The value itself is also included in the last
+	// node and can be retrieved by verifying the proof.
+	//
+	// If the trie does not contain a value for key, the returned proof contains all
+	// nodes of the longest existing prefix of the key (at least the root), ending
+	// with the node that proves the absence of the key.
+	Prove(key []byte, proofDb ethdb.KeyValueWriter) error
 
-// IsVerkle returns true if the trie is verkle-tree based
-IsVerkle() bool
+	// IsVerkle returns true if the trie is verkle-tree based
+	IsVerkle() bool
 }
 
 // CachingDB is an implementation of Database interface. It leverages both trie and
 // state snapshot to provide functionalities for SILA state access. It's meant to be a
 // long-live object and has a few caches inside for sharing between blocks.
 type CachingDB struct {
-triedb *triedb.Database
-codedb *CodeDB
-snap   *snapshot.Tree
+	triedb *triedb.Database
+	codedb *CodeDB
+	snap   *snapshot.Tree
 }
 
 // NewDatabase creates a SILA state database with the provided data sources.
 func NewDatabase(triedb *triedb.Database, codedb *CodeDB) *CachingDB {
-if codedb == nil {
-codedb = NewCodeDB(triedb.Disk())
-}
-return &CachingDB{
-triedb: triedb,
-codedb: codedb,
-}
+	if codedb == nil {
+		codedb = NewCodeDB(triedb.Disk())
+	}
+	return &CachingDB{
+		triedb: triedb,
+		codedb: codedb,
+	}
 }
 
 // NewDatabaseForTesting is similar to NewDatabase, but it initializes the caching
 // db by using an ephemeral memory db with default config for testing.
 func NewDatabaseForTesting() *CachingDB {
-db := rawdb.NewMemoryDatabase()
-return NewDatabase(triedb.NewDatabase(db, nil), NewCodeDB(db))
+	db := rawdb.NewMemoryDatabase()
+	return NewDatabase(triedb.NewDatabase(db, nil), NewCodeDB(db))
 }
 
 // WithSnapshot configures the provided SILA contract code cache. Note that this
 // registration must be performed before the cachingDB is used.
 func (db *CachingDB) WithSnapshot(snapshot *snapshot.Tree) *CachingDB {
-db.snap = snapshot
-return db
+	db.snap = snapshot
+	return db
 }
 
 // StateReader returns a SILA state reader associated with the specified state root.
 func (db *CachingDB) StateReader(stateRoot common.Hash) (SILAStateReader, error) {
-var readers []SILAStateReader
+	var readers []SILAStateReader
 
-// Configure the state reader using the standalone snapshot in hash mode.
-// This reader offers improved performance but is optional and only
-// partially useful if the snapshot is not fully generated.
-if db.TrieDB().Scheme() == rawdb.HashScheme && db.snap != nil {
-snap := db.snap.Snapshot(stateRoot)
-if snap != nil {
-readers = append(readers, newFlatReader(snap))
-}
-}
-// Configure the state reader using the path database in path mode.
-// This reader offers improved performance but is optional and only
-// partially useful if the snapshot data in path database is not
-// fully generated.
-if db.TrieDB().Scheme() == rawdb.PathScheme {
-reader, err := db.triedb.StateReader(stateRoot)
-if err == nil {
-readers = append(readers, newFlatReader(reader))
-}
-}
-// Configure the trie reader, which is expected to be available as the
-// gatekeeper unless the state is corrupted.
-tr, err := newTrieReader(stateRoot, db.triedb)
-if err != nil {
-return nil, err
-}
-readers = append(readers, tr)
+	// Configure the state reader using the standalone snapshot in hash mode.
+	// This reader offers improved performance but is optional and only
+	// partially useful if the snapshot is not fully generated.
+	if db.TrieDB().Scheme() == rawdb.HashScheme && db.snap != nil {
+		snap := db.snap.Snapshot(stateRoot)
+		if snap != nil {
+			readers = append(readers, newFlatReader(snap))
+		}
+	}
+	// Configure the state reader using the path database in path mode.
+	// This reader offers improved performance but is optional and only
+	// partially useful if the snapshot data in path database is not
+	// fully generated.
+	if db.TrieDB().Scheme() == rawdb.PathScheme {
+		reader, err := db.triedb.StateReader(stateRoot)
+		if err == nil {
+			readers = append(readers, newFlatReader(reader))
+		}
+	}
+	// Configure the trie reader, which is expected to be available as the
+	// gatekeeper unless the state is corrupted.
+	tr, err := newTrieReader(stateRoot, db.triedb)
+	if err != nil {
+		return nil, err
+	}
+	readers = append(readers, tr)
 
-return newMultiStateReader(readers...)
+	return newMultiStateReader(readers...)
 }
 
 // Reader implements Database, returning a reader associated with the specified
 // state root.
 func (db *CachingDB) Reader(stateRoot common.Hash) (Reader, error) {
-sr, err := db.StateReader(stateRoot)
-if err != nil {
-return nil, err
-}
-return newReader(db.codedb.Reader(), sr), nil
+	sr, err := db.StateReader(stateRoot)
+	if err != nil {
+		return nil, err
+	}
+	return newReader(db.codedb.Reader(), sr), nil
 }
 
 // ReadersWithCacheStats creates a pair of SILA state readers that share the same
 // underlying state reader and internal state cache, while maintaining separate
 // statistics respectively.
 func (db *CachingDB) ReadersWithCacheStats(stateRoot common.Hash) (Reader, Reader, error) {
-r, err := db.StateReader(stateRoot)
-if err != nil {
-return nil, nil, err
-}
-sr := newStateReaderWithCache(r)
-ra := newReader(db.codedb.Reader(), newStateReaderWithStats(sr))
-rb := newReader(db.codedb.Reader(), newStateReaderWithStats(sr))
-return ra, rb, nil
+	r, err := db.StateReader(stateRoot)
+	if err != nil {
+		return nil, nil, err
+	}
+	sr := newStateReaderWithCache(r)
+	ra := newReader(db.codedb.Reader(), newStateReaderWithStats(sr))
+	rb := newReader(db.codedb.Reader(), newStateReaderWithStats(sr))
+	return ra, rb, nil
 }
 
 // OpenTrie opens the main account trie at a specific root hash.
 func (db *CachingDB) OpenTrie(root common.Hash) (Trie, error) {
-if db.triedb.IsVerkle() {
-ts := overlay.LoadTransitionState(db.TrieDB().Disk(), root, db.triedb.IsVerkle())
-if ts.InTransition() {
-panic("SILA state tree transition isn't supported yet")
-}
-if ts.Transitioned() {
-// Use BinaryTrie instead of VerkleTrie when IsVerkle is set
-// (IsVerkle actually means Binary Trie mode in this codebase)
-return bintrie.NewBinaryTrie(root, db.triedb)
-}
-}
-tr, err := trie.NewStateTrie(trie.StateTrieID(root), db.triedb)
-if err != nil {
-return nil, err
-}
-return tr, nil
+	if db.triedb.IsVerkle() {
+		ts := overlay.LoadTransitionState(db.TrieDB().Disk(), root, db.triedb.IsVerkle())
+		if ts.InTransition() {
+			panic("SILA state tree transition isn't supported yet")
+		}
+		if ts.Transitioned() {
+			// Use BinaryTrie instead of VerkleTrie when IsVerkle is set
+			// (IsVerkle actually means Binary Trie mode in this codebase)
+			return bintrie.NewBinaryTrie(root, db.triedb)
+		}
+	}
+	tr, err := trie.NewStateTrie(trie.StateTrieID(root), db.triedb)
+	if err != nil {
+		return nil, err
+	}
+	return tr, nil
 }
 
 // OpenStorageTrie opens the storage trie of an account.
 func (db *CachingDB) OpenStorageTrie(stateRoot common.Hash, address common.Address, root common.Hash, self Trie) (Trie, error) {
-if db.triedb.IsVerkle() {
-return self, nil
-}
-tr, err := trie.NewStateTrie(trie.StorageTrieID(stateRoot, crypto.Keccak256Hash(address.Bytes()), root), db.triedb)
-if err != nil {
-return nil, err
-}
-return tr, nil
+	if db.triedb.IsVerkle() {
+		return self, nil
+	}
+	tr, err := trie.NewStateTrie(trie.StorageTrieID(stateRoot, crypto.Keccak256Hash(address.Bytes()), root), db.triedb)
+	if err != nil {
+		return nil, err
+	}
+	return tr, nil
 }
 
 // TrieDB retrieves any intermediate trie-node caching layer.
 func (db *CachingDB) TrieDB() *triedb.Database {
-return db.triedb
+	return db.triedb
 }
 
 // Snapshot returns the underlying SILA state snapshot.
 func (db *CachingDB) Snapshot() *snapshot.Tree {
-return db.snap
+	return db.snap
 }
 
 // Commit flushes all pending writes and finalizes the SILA state transition,
 // committing the changes to the underlying storage. It returns an error
 // if the commit fails.
 func (db *CachingDB) Commit(update *stateUpdate) error {
-// Short circuit if nothing to commit
-if update.empty() {
-return nil
-}
-// Commit dirty SILA contract code if any exists
-if len(update.codes) > 0 {
-batch := db.codedb.NewBatchWithSize(len(update.codes))
-for _, code := range update.codes {
-batch.Put(code.hash, code.blob)
-}
-if err := batch.Commit(); err != nil {
-return err
-}
-}
-// If snapshotting is enabled, update the snapshot tree with this new version
-if db.snap != nil && db.snap.Snapshot(update.originRoot) != nil {
-if err := db.snap.Update(update.root, update.originRoot, update.accounts, update.storages); err != nil {
-log.Warn("Failed to update SILA snapshot tree", "from", update.originRoot, "to", update.root, "err", err)
-}
-// Keep 128 diff layers in the memory, persistent layer is 129th.
-// - head layer is paired with HEAD state
-// - head-1 layer is paired with HEAD-1 state
-// - head-127 layer(bottom-most diff layer) is paired with HEAD-127 state
-if err := db.snap.Cap(update.root, TriesInMemory); err != nil {
-log.Warn("Failed to cap SILA snapshot tree", "root", update.root, "layers", TriesInMemory, "err", err)
-}
-}
-return db.triedb.Update(update.root, update.originRoot, update.blockNumber, update.nodes, update.stateSet())
+	// Short circuit if nothing to commit
+	if update.empty() {
+		return nil
+	}
+	// Commit dirty SILA contract code if any exists
+	if len(update.codes) > 0 {
+		batch := db.codedb.NewBatchWithSize(len(update.codes))
+		for _, code := range update.codes {
+			batch.Put(code.hash, code.blob)
+		}
+		if err := batch.Commit(); err != nil {
+			return err
+		}
+	}
+	// If snapshotting is enabled, update the snapshot tree with this new version
+	if db.snap != nil && db.snap.Snapshot(update.originRoot) != nil {
+		if err := db.snap.Update(update.root, update.originRoot, update.accounts, update.storages); err != nil {
+			log.Warn("Failed to update SILA snapshot tree", "from", update.originRoot, "to", update.root, "err", err)
+		}
+		// Keep 128 diff layers in the memory, persistent layer is 129th.
+		// - head layer is paired with HEAD state
+		// - head-1 layer is paired with HEAD-1 state
+		// - head-127 layer(bottom-most diff layer) is paired with HEAD-127 state
+		if err := db.snap.Cap(update.root, TriesInMemory); err != nil {
+			log.Warn("Failed to cap SILA snapshot tree", "root", update.root, "layers", TriesInMemory, "err", err)
+		}
+	}
+	return db.triedb.Update(update.root, update.originRoot, update.blockNumber, update.nodes, update.stateSet())
 }
 
 // Iteratee returns a SILA state iteratee associated with the specified state root,
 // through which the account iterator and storage iterator can be created.
 func (db *CachingDB) Iteratee(root common.Hash) (Iteratee, error) {
-return newStateIteratee(!db.triedb.IsVerkle(), root, db.triedb, db.snap)
+	return newStateIteratee(!db.triedb.IsVerkle(), root, db.triedb, db.snap)
 }
 
 // mustCopyTrie returns a deep-copied trie.
 func mustCopyTrie(t Trie) Trie {
-switch t := t.(type) {
-case *trie.StateTrie:
-return t.Copy()
-case *transitiontrie.TransitionTrie:
-return t.Copy()
-default:
-panic(fmt.Errorf("unknown SILA trie type %T", t))
-}
+	switch t := t.(type) {
+	case *trie.StateTrie:
+		return t.Copy()
+	case *transitiontrie.TransitionTrie:
+		return t.Copy()
+	default:
+		panic(fmt.Errorf("unknown SILA trie type %T", t))
+	}
 }

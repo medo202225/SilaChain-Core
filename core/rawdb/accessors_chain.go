@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -23,15 +23,15 @@ import (
 "math/big"
 "slices"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/consensus/misc/eip4844"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/core/types/bal"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/params"
-"github.com/SILA/sila-chain/rlp"
+"silachain/common"
+"silachain/consensus/misc/eip4844"
+"silachain/core/types"
+"silachain/core/types/bal"
+"silachain/crypto"
+"silachain/ethdb"
+"silachain/log"
+"silachain/params"
+"silachain/rlp"
 )
 
 // ReadCanonicalHash retrieves the hash assigned to a canonical block number.

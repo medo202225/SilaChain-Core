@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -23,82 +23,82 @@ for state querying, modification, and transaction management.
 package vm
 
 import (
-"github.com/silachain/sila-library/common"
-"github.com/silachain/sila-library/core/state"
-"github.com/silachain/sila-library/core/stateless"
-"github.com/silachain/sila-library/core/tracing"
-"github.com/silachain/sila-library/core/types"
-"github.com/silachain/sila-library/params"
-"github.com/holiman/uint256"
+	"github.com/holiman/uint256"
+	"silachain/common"
+	"silachain/core/state"
+	"silachain/core/stateless"
+	"silachain/core/tracing"
+	"silachain/core/types"
+	"silachain/params"
 )
 
 // StateDB is an SILA VM database for full state querying.
 type StateDB interface {
-CreateAccount(common.Address)
-CreateContract(common.Address)
+	CreateAccount(common.Address)
+	CreateContract(common.Address)
 
-SubBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
-AddBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
-GetBalance(common.Address) *uint256.Int
+	SubBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
+	AddBalance(common.Address, *uint256.Int, tracing.BalanceChangeReason) uint256.Int
+	GetBalance(common.Address) *uint256.Int
 
-GetNonce(common.Address) uint64
-SetNonce(common.Address, uint64, tracing.NonceChangeReason)
+	GetNonce(common.Address) uint64
+	SetNonce(common.Address, uint64, tracing.NonceChangeReason)
 
-GetCodeHash(common.Address) common.Hash
-GetCode(common.Address) []byte
+	GetCodeHash(common.Address) common.Hash
+	GetCode(common.Address) []byte
 
-// SetCode sets the new code for the address, and returns the previous code, if any.
-SetCode(common.Address, []byte, tracing.CodeChangeReason) []byte
-GetCodeSize(common.Address) int
+	// SetCode sets the new code for the address, and returns the previous code, if any.
+	SetCode(common.Address, []byte, tracing.CodeChangeReason) []byte
+	GetCodeSize(common.Address) int
 
-AddRefund(uint64)
-SubRefund(uint64)
-GetRefund() uint64
+	AddRefund(uint64)
+	SubRefund(uint64)
+	GetRefund() uint64
 
-GetStateAndCommittedState(common.Address, common.Hash) (common.Hash, common.Hash)
-GetState(common.Address, common.Hash) common.Hash
-SetState(common.Address, common.Hash, common.Hash) common.Hash
+	GetStateAndCommittedState(common.Address, common.Hash) (common.Hash, common.Hash)
+	GetState(common.Address, common.Hash) common.Hash
+	SetState(common.Address, common.Hash, common.Hash) common.Hash
 
-GetTransientState(addr common.Address, key common.Hash) common.Hash
-SetTransientState(addr common.Address, key, value common.Hash)
+	GetTransientState(addr common.Address, key common.Hash) common.Hash
+	SetTransientState(addr common.Address, key, value common.Hash)
 
-SelfDestruct(common.Address)
-HasSelfDestructed(common.Address) bool
+	SelfDestruct(common.Address)
+	HasSelfDestructed(common.Address) bool
 
-// Exist reports whether the given account exists in state.
-// Notably this also returns true for self-destructed accounts within the current transaction.
-Exist(common.Address) bool
+	// Exist reports whether the given account exists in state.
+	// Notably this also returns true for self-destructed accounts within the current transaction.
+	Exist(common.Address) bool
 
-// IsNewContract reports whether the contract at the given address was deployed
-// during the current transaction.
-IsNewContract(addr common.Address) bool
+	// IsNewContract reports whether the contract at the given address was deployed
+	// during the current transaction.
+	IsNewContract(addr common.Address) bool
 
-// Empty returns whether the given account is empty. Empty
-// is defined according to EIP161 (balance = nonce = code = 0).
-Empty(common.Address) bool
+	// Empty returns whether the given account is empty. Empty
+	// is defined according to EIP161 (balance = nonce = code = 0).
+	Empty(common.Address) bool
 
-AddressInAccessList(addr common.Address) bool
-SlotInAccessList(addr common.Address, slot common.Hash) (addressOk bool, slotOk bool)
-// AddAddressToAccessList adds the given address to the access list. This operation is safe to perform
-// even if the feature/fork is not active yet
-AddAddressToAccessList(addr common.Address)
-// AddSlotToAccessList adds the given (address,slot) to the access list. This operation is safe to perform
-// even if the feature/fork is not active yet
-AddSlotToAccessList(addr common.Address, slot common.Hash)
+	AddressInAccessList(addr common.Address) bool
+	SlotInAccessList(addr common.Address, slot common.Hash) (addressOk bool, slotOk bool)
+	// AddAddressToAccessList adds the given address to the access list. This operation is safe to perform
+	// even if the feature/fork is not active yet
+	AddAddressToAccessList(addr common.Address)
+	// AddSlotToAccessList adds the given (address,slot) to the access list. This operation is safe to perform
+	// even if the feature/fork is not active yet
+	AddSlotToAccessList(addr common.Address, slot common.Hash)
 
-Prepare(rules params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
+	Prepare(rules params.Rules, sender, coinbase common.Address, dest *common.Address, precompiles []common.Address, txAccesses types.AccessList)
 
-RevertToSnapshot(int)
-Snapshot() int
+	RevertToSnapshot(int)
+	Snapshot() int
 
-AddLog(*types.Log)
-LogsForBurnAccounts() []*types.Log
-AddPreimage(common.Hash, []byte)
+	AddLog(*types.Log)
+	LogsForBurnAccounts() []*types.Log
+	AddPreimage(common.Hash, []byte)
 
-Witness() *stateless.Witness
+	Witness() *stateless.Witness
 
-AccessEvents() *state.AccessEvents
+	AccessEvents() *state.AccessEvents
 
-// Finalise must be invoked at the end of a transaction
-Finalise(bool)
+	// Finalise must be invoked at the end of a transaction
+	Finalise(bool)
 }

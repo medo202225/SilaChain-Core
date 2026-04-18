@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,31 +17,31 @@
 package rawdb
 
 import (
-"testing"
+	"testing"
 
-"github.com/SILA/sila-chain/core/rawdb/ancienttest"
-"github.com/SILA/sila-chain/ethdb"
+	"silachain/core/rawdb/ancienttest"
+	"silachain/ethdb"
 )
 
 func TestMemoryFreezer(t *testing.T) {
-ancienttest.TestAncientSuite(t, func(kinds []string) ethdb.AncientStore {
-tables := make(map[string]freezerTableConfig)
-for _, kind := range kinds {
-tables[kind] = freezerTableConfig{
-noSnappy: true,
-prunable: true,
-}
-}
-return NewMemoryFreezer(false, tables)
-})
-ancienttest.TestResettableAncientSuite(t, func(kinds []string) ethdb.ResettableAncientStore {
-tables := make(map[string]freezerTableConfig)
-for _, kind := range kinds {
-tables[kind] = freezerTableConfig{
-noSnappy: true,
-prunable: true,
-}
-}
-return NewMemoryFreezer(false, tables)
-})
+	ancienttest.TestAncientSuite(t, func(kinds []string) ethdb.AncientStore {
+		tables := make(map[string]freezerTableConfig)
+		for _, kind := range kinds {
+			tables[kind] = freezerTableConfig{
+				noSnappy: true,
+				prunable: true,
+			}
+		}
+		return NewMemoryFreezer(false, tables)
+	})
+	ancienttest.TestResettableAncientSuite(t, func(kinds []string) ethdb.ResettableAncientStore {
+		tables := make(map[string]freezerTableConfig)
+		for _, kind := range kinds {
+			tables[kind] = freezerTableConfig{
+				noSnappy: true,
+				prunable: true,
+			}
+		}
+		return NewMemoryFreezer(false, tables)
+	})
 }

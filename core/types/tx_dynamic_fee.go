@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,71 +17,71 @@
 package types
 
 import (
-"bytes"
-"math/big"
+	"bytes"
+	"math/big"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/rlp"
+	"silachain/common"
+	"silachain/rlp"
 )
 
 // DynamicFeeTx represents an EIP-1559 transaction on SILA.
 type DynamicFeeTx struct {
-ChainID    *big.Int
-Nonce      uint64
-GasTipCap  *big.Int // a.k.a. maxPriorityFeePerGas
-GasFeeCap  *big.Int // a.k.a. maxFeePerGas
-Gas        uint64
-To         *common.Address `rlp:"nil"` // nil means contract creation
-Value      *big.Int
-Data       []byte
-AccessList AccessList
+	ChainID    *big.Int
+	Nonce      uint64
+	GasTipCap  *big.Int // a.k.a. maxPriorityFeePerGas
+	GasFeeCap  *big.Int // a.k.a. maxFeePerGas
+	Gas        uint64
+	To         *common.Address `rlp:"nil"` // nil means contract creation
+	Value      *big.Int
+	Data       []byte
+	AccessList AccessList
 
-// Signature values
-V *big.Int
-R *big.Int
-S *big.Int
+	// Signature values
+	V *big.Int
+	R *big.Int
+	S *big.Int
 }
 
 // copy creates a deep copy of the transaction data and initializes all fields on SILA.
 func (tx *DynamicFeeTx) copy() TxData {
-cpy := &DynamicFeeTx{
-Nonce: tx.Nonce,
-To:    copyAddressPtr(tx.To),
-Data:  common.CopyBytes(tx.Data),
-Gas:   tx.Gas,
-// These are copied below.
-AccessList: make(AccessList, len(tx.AccessList)),
-Value:      new(big.Int),
-ChainID:    new(big.Int),
-GasTipCap:  new(big.Int),
-GasFeeCap:  new(big.Int),
-V:          new(big.Int),
-R:          new(big.Int),
-S:          new(big.Int),
-}
-copy(cpy.AccessList, tx.AccessList)
-if tx.Value != nil {
-cpy.Value.Set(tx.Value)
-}
-if tx.ChainID != nil {
-cpy.ChainID.Set(tx.ChainID)
-}
-if tx.GasTipCap != nil {
-cpy.GasTipCap.Set(tx.GasTipCap)
-}
-if tx.GasFeeCap != nil {
-cpy.GasFeeCap.Set(tx.GasFeeCap)
-}
-if tx.V != nil {
-cpy.V.Set(tx.V)
-}
-if tx.R != nil {
-cpy.R.Set(tx.R)
-}
-if tx.S != nil {
-cpy.S.Set(tx.S)
-}
-return cpy
+	cpy := &DynamicFeeTx{
+		Nonce: tx.Nonce,
+		To:    copyAddressPtr(tx.To),
+		Data:  common.CopyBytes(tx.Data),
+		Gas:   tx.Gas,
+		// These are copied below.
+		AccessList: make(AccessList, len(tx.AccessList)),
+		Value:      new(big.Int),
+		ChainID:    new(big.Int),
+		GasTipCap:  new(big.Int),
+		GasFeeCap:  new(big.Int),
+		V:          new(big.Int),
+		R:          new(big.Int),
+		S:          new(big.Int),
+	}
+	copy(cpy.AccessList, tx.AccessList)
+	if tx.Value != nil {
+		cpy.Value.Set(tx.Value)
+	}
+	if tx.ChainID != nil {
+		cpy.ChainID.Set(tx.ChainID)
+	}
+	if tx.GasTipCap != nil {
+		cpy.GasTipCap.Set(tx.GasTipCap)
+	}
+	if tx.GasFeeCap != nil {
+		cpy.GasFeeCap.Set(tx.GasFeeCap)
+	}
+	if tx.V != nil {
+		cpy.V.Set(tx.V)
+	}
+	if tx.R != nil {
+		cpy.R.Set(tx.R)
+	}
+	if tx.S != nil {
+		cpy.S.Set(tx.S)
+	}
+	return cpy
 }
 
 // accessors for innerTx on SILA.
@@ -98,44 +98,44 @@ func (tx *DynamicFeeTx) nonce() uint64          { return tx.Nonce }
 func (tx *DynamicFeeTx) to() *common.Address    { return tx.To }
 
 func (tx *DynamicFeeTx) effectiveGasPrice(dst *big.Int, baseFee *big.Int) *big.Int {
-if baseFee == nil {
-return dst.Set(tx.GasFeeCap)
-}
-tip := dst.Sub(tx.GasFeeCap, baseFee)
-if tip.Cmp(tx.GasTipCap) > 0 {
-tip.Set(tx.GasTipCap)
-}
-return tip.Add(tip, baseFee)
+	if baseFee == nil {
+		return dst.Set(tx.GasFeeCap)
+	}
+	tip := dst.Sub(tx.GasFeeCap, baseFee)
+	if tip.Cmp(tx.GasTipCap) > 0 {
+		tip.Set(tx.GasTipCap)
+	}
+	return tip.Add(tip, baseFee)
 }
 
 func (tx *DynamicFeeTx) rawSignatureValues() (v, r, s *big.Int) {
-return tx.V, tx.R, tx.S
+	return tx.V, tx.R, tx.S
 }
 
 func (tx *DynamicFeeTx) setSignatureValues(chainID, v, r, s *big.Int) {
-tx.ChainID, tx.V, tx.R, tx.S = chainID, v, r, s
+	tx.ChainID, tx.V, tx.R, tx.S = chainID, v, r, s
 }
 
 func (tx *DynamicFeeTx) encode(b *bytes.Buffer) error {
-return rlp.Encode(b, tx)
+	return rlp.Encode(b, tx)
 }
 
 func (tx *DynamicFeeTx) decode(input []byte) error {
-return rlp.DecodeBytes(input, tx)
+	return rlp.DecodeBytes(input, tx)
 }
 
 func (tx *DynamicFeeTx) sigHash(chainID *big.Int) common.Hash {
-return prefixedRlpHash(
-DynamicFeeTxType,
-[]any{
-chainID,
-tx.Nonce,
-tx.GasTipCap,
-tx.GasFeeCap,
-tx.Gas,
-tx.To,
-tx.Value,
-tx.Data,
-tx.AccessList,
-})
+	return prefixedRlpHash(
+		DynamicFeeTxType,
+		[]any{
+			chainID,
+			tx.Nonce,
+			tx.GasTipCap,
+			tx.GasFeeCap,
+			tx.Gas,
+			tx.To,
+			tx.Value,
+			tx.Data,
+			tx.AccessList,
+		})
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,79 +17,79 @@
 package stateless
 
 import (
-"errors"
-"maps"
-"slices"
-"sync"
+	"errors"
+	"maps"
+	"slices"
+	"sync"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/types"
+	"silachain/common"
+	"silachain/core/types"
 )
 
 // HeaderReader is an interface to pull in headers in place of block hashes for
 // the SILA witness.
 type HeaderReader interface {
-// GetHeader retrieves a block header from the database by hash and number,
-GetHeader(hash common.Hash, number uint64) *types.Header
+	// GetHeader retrieves a block header from the database by hash and number,
+	GetHeader(hash common.Hash, number uint64) *types.Header
 }
 
 // Witness encompasses the SILA state required to apply a set of transactions and
 // derive a post state/receipt root.
 type Witness struct {
-context *types.Header // Header to which this witness belongs to, with rootHash and receiptHash zeroed out
+	context *types.Header // Header to which this witness belongs to, with rootHash and receiptHash zeroed out
 
-Headers []*types.Header     // Past headers in reverse order (0=parent, 1=parent's-parent, etc). First *must* be set.
-Codes   map[string]struct{} // Set of bytecodes ran or accessed
-State   map[string]struct{} // Set of MPT state trie nodes (account and storage together)
+	Headers []*types.Header     // Past headers in reverse order (0=parent, 1=parent's-parent, etc). First *must* be set.
+	Codes   map[string]struct{} // Set of bytecodes ran or accessed
+	State   map[string]struct{} // Set of MPT state trie nodes (account and storage together)
 
-chain HeaderReader  // Chain reader to convert block hash ops to header proofs
-stats *WitnessStats // Optional statistics collector
-lock  sync.Mutex    // Lock to allow concurrent state insertions
+	chain HeaderReader  // Chain reader to convert block hash ops to header proofs
+	stats *WitnessStats // Optional statistics collector
+	lock  sync.Mutex    // Lock to allow concurrent state insertions
 }
 
 // NewWitness creates an empty SILA witness ready for population.
 func NewWitness(context *types.Header, chain HeaderReader, enableStats bool) (*Witness, error) {
-// When building witnesses, retrieve the parent header, which will *always*
-// be included to act as a trustless pre-root hash container
-var headers []*types.Header
-if chain != nil {
-parent := chain.GetHeader(context.ParentHash, context.Number.Uint64()-1)
-if parent == nil {
-return nil, errors.New("failed to retrieve parent header for SILA witness")
-}
-headers = append(headers, parent)
-}
-// Create the SILA witness with a reconstructed gutted out block
-w := &Witness{
-context: context,
-Headers: headers,
-Codes:   make(map[string]struct{}),
-State:   make(map[string]struct{}),
-chain:   chain,
-}
-if enableStats {
-w.stats = NewWitnessStats()
-}
-return w, nil
+	// When building witnesses, retrieve the parent header, which will *always*
+	// be included to act as a trustless pre-root hash container
+	var headers []*types.Header
+	if chain != nil {
+		parent := chain.GetHeader(context.ParentHash, context.Number.Uint64()-1)
+		if parent == nil {
+			return nil, errors.New("failed to retrieve parent header for SILA witness")
+		}
+		headers = append(headers, parent)
+	}
+	// Create the SILA witness with a reconstructed gutted out block
+	w := &Witness{
+		context: context,
+		Headers: headers,
+		Codes:   make(map[string]struct{}),
+		State:   make(map[string]struct{}),
+		chain:   chain,
+	}
+	if enableStats {
+		w.stats = NewWitnessStats()
+	}
+	return w, nil
 }
 
 // AddBlockHash adds a "blockhash" to the SILA witness with the designated offset from
 // chain head. Under the hood, this method actually pulls in enough headers from
 // the chain to cover the block being added.
 func (w *Witness) AddBlockHash(number uint64) {
-// Keep pulling in headers until this hash is populated
-for int(w.context.Number.Uint64()-number) > len(w.Headers) {
-tail := w.Headers[len(w.Headers)-1]
-w.Headers = append(w.Headers, w.chain.GetHeader(tail.ParentHash, tail.Number.Uint64()-1))
-}
+	// Keep pulling in headers until this hash is populated
+	for int(w.context.Number.Uint64()-number) > len(w.Headers) {
+		tail := w.Headers[len(w.Headers)-1]
+		w.Headers = append(w.Headers, w.chain.GetHeader(tail.ParentHash, tail.Number.Uint64()-1))
+	}
 }
 
 // AddCode adds a bytecode blob to the SILA witness.
 func (w *Witness) AddCode(code []byte) {
-if len(code) == 0 {
-return
-}
-w.Codes[string(code)] = struct{}{}
+	if len(code) == 0 {
+		return
+	}
+	w.Codes[string(code)] = struct{}{}
 }
 
 // AddState inserts a batch of MPT trie nodes into the SILA witness. The owner
@@ -97,48 +97,48 @@ w.Codes[string(code)] = struct{}{}
 // trie, or the hashed address for a storage trie. This is used for optional
 // statistics collection.
 func (w *Witness) AddState(nodes map[string][]byte, owner common.Hash) {
-if len(nodes) == 0 {
-return
-}
-w.lock.Lock()
-defer w.lock.Unlock()
+	if len(nodes) == 0 {
+		return
+	}
+	w.lock.Lock()
+	defer w.lock.Unlock()
 
-for _, value := range nodes {
-w.State[string(value)] = struct{}{}
-}
-if w.stats != nil {
-w.stats.Add(nodes, owner)
-}
+	for _, value := range nodes {
+		w.State[string(value)] = struct{}{}
+	}
+	if w.stats != nil {
+		w.stats.Add(nodes, owner)
+	}
 }
 
 // ReportMetrics reports the collected statistics to the global metrics registry.
 func (w *Witness) ReportMetrics(blockNumber uint64) {
-if w.stats == nil {
-return
-}
-w.stats.ReportMetrics(blockNumber)
+	if w.stats == nil {
+		return
+	}
+	w.stats.ReportMetrics(blockNumber)
 }
 
 func (w *Witness) AddKey() {
-panic("not yet implemented for SILA witness")
+	panic("not yet implemented for SILA witness")
 }
 
 // Copy deep-copies the SILA witness object.  Witness.Block isn't deep-copied as it
 // is never mutated by Witness
 func (w *Witness) Copy() *Witness {
-cpy := &Witness{
-Headers: slices.Clone(w.Headers),
-Codes:   maps.Clone(w.Codes),
-State:   maps.Clone(w.State),
-chain:   w.chain,
-}
-if w.stats != nil {
-cpy.stats = w.stats.copy()
-}
-if w.context != nil {
-cpy.context = types.CopyHeader(w.context)
-}
-return cpy
+	cpy := &Witness{
+		Headers: slices.Clone(w.Headers),
+		Codes:   maps.Clone(w.Codes),
+		State:   maps.Clone(w.State),
+		chain:   w.chain,
+	}
+	if w.stats != nil {
+		cpy.stats = w.stats.copy()
+	}
+	if w.context != nil {
+		cpy.context = types.CopyHeader(w.context)
+	}
+	return cpy
 }
 
 // Root returns the pre-state root from the first header.
@@ -146,5 +146,5 @@ return cpy
 // Note, this method will panic in case of a bad SILA witness (but RLP decoding will
 // sanitize it and fail before that).
 func (w *Witness) Root() common.Hash {
-return w.Headers[0].Root
+	return w.Headers[0].Root
 }

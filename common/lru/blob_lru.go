@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,13 +17,13 @@
 package lru
 
 import (
-"math"
-"sync"
+	"math"
+	"sync"
 )
 
 // blobType is the type constraint for values stored in SizeConstrainedCache.
 type blobType interface {
-~[]byte | ~string
+	~[]byte | ~string
 }
 
 // SizeConstrainedCache is a cache where capacity is in bytes (instead of item count). When the cache
@@ -33,19 +33,19 @@ type blobType interface {
 // OBS: This cache assumes that items are content-addressed: keys are unique per content.
 // In other words: two Add(..) with the same key K, will always have the same value V.
 type SizeConstrainedCache[K comparable, V blobType] struct {
-size    uint64
-maxSize uint64
-lru     BasicLRU[K, V]
-lock    sync.Mutex
+	size    uint64
+	maxSize uint64
+	lru     BasicLRU[K, V]
+	lock    sync.Mutex
 }
 
 // NewSizeConstrainedCache creates a new size-constrained LRU cache.
 func NewSizeConstrainedCache[K comparable, V blobType](maxSize uint64) *SizeConstrainedCache[K, V] {
-return &SizeConstrainedCache[K, V]{
-size:    0,
-maxSize: maxSize,
-lru:     NewBasicLRU[K, V](math.MaxInt),
-}
+	return &SizeConstrainedCache[K, V]{
+		size:    0,
+		maxSize: maxSize,
+		lru:     NewBasicLRU[K, V](math.MaxInt),
+	}
 }
 
 // Add adds a value to the cache.  Returns true if an eviction occurred.
@@ -53,32 +53,32 @@ lru:     NewBasicLRU[K, V](math.MaxInt),
 // In other words: two Add(..) with the same key K, will always have the same value V.
 // OBS: The value is _not_ copied on Add, so the caller must not modify it afterwards.
 func (c *SizeConstrainedCache[K, V]) Add(key K, value V) (evicted bool) {
-c.lock.Lock()
-defer c.lock.Unlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 
-// Unless it is already present, might need to evict something.
-// OBS: If it is present, we still call Add internally to bump the recentness.
-if !c.lru.Contains(key) {
-targetSize := c.size + uint64(len(value))
-for targetSize > c.maxSize {
-evicted = true
-_, v, ok := c.lru.RemoveOldest()
-if !ok {
-// list is now empty. Break
-break
-}
-targetSize -= uint64(len(v))
-}
-c.size = targetSize
-}
-c.lru.Add(key, value)
-return evicted
+	// Unless it is already present, might need to evict something.
+	// OBS: If it is present, we still call Add internally to bump the recentness.
+	if !c.lru.Contains(key) {
+		targetSize := c.size + uint64(len(value))
+		for targetSize > c.maxSize {
+			evicted = true
+			_, v, ok := c.lru.RemoveOldest()
+			if !ok {
+				// list is now empty. Break
+				break
+			}
+			targetSize -= uint64(len(v))
+		}
+		c.size = targetSize
+	}
+	c.lru.Add(key, value)
+	return evicted
 }
 
 // Get looks up a key's value from the cache.
 func (c *SizeConstrainedCache[K, V]) Get(key K) (V, bool) {
-c.lock.Lock()
-defer c.lock.Unlock()
+	c.lock.Lock()
+	defer c.lock.Unlock()
 
-return c.lru.Get(key)
+	return c.lru.Get(key)
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,90 +17,90 @@
 package state
 
 import (
-"math/big"
-"testing"
+	"math/big"
+	"testing"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/rawdb"
-"github.com/SILA/sila-chain/core/tracing"
-"github.com/SILA/sila-chain/core/types"
-"github.com/SILA/sila-chain/crypto"
-"github.com/SILA/sila-chain/internal/testrand"
-"github.com/SILA/sila-chain/triedb"
-"github.com/holiman/uint256"
+	"github.com/holiman/uint256"
+	"silachain/common"
+	"silachain/core/rawdb"
+	"silachain/core/tracing"
+	"silachain/core/types"
+	"silachain/crypto"
+	"silachain/internal/testrand"
+	"silachain/triedb"
 )
 
 func filledStateDB() *StateDB {
-state, _ := New(types.EmptyRootHash, NewDatabaseForTesting())
+	state, _ := New(types.EmptyRootHash, NewDatabaseForTesting())
 
-// Create an account and check if the retrieved balance is correct
-addr := common.HexToAddress("0xaffeaffeaffeaffeaffeaffeaffeaffeaffeaffe")
-skey := common.HexToHash("aaa")
-sval := common.HexToHash("bbb")
+	// Create an account and check if the retrieved balance is correct
+	addr := common.HexToAddress("0xaffeaffeaffeaffeaffeaffeaffeaffeaffeaffe")
+	skey := common.HexToHash("aaa")
+	sval := common.HexToHash("bbb")
 
-state.SetBalance(addr, uint256.NewInt(42), tracing.BalanceChangeUnspecified) // Change the account trie
-state.SetCode(addr, []byte("hello"), tracing.CodeChangeUnspecified)          // Change an external metadata
-state.SetState(addr, skey, sval)                                             // Change the storage trie
-for i := 0; i < 100; i++ {
-sk := common.BigToHash(big.NewInt(int64(i)))
-state.SetState(addr, sk, sk) // Change the storage trie
-}
-return state
+	state.SetBalance(addr, uint256.NewInt(42), tracing.BalanceChangeUnspecified) // Change the account trie
+	state.SetCode(addr, []byte("hello"), tracing.CodeChangeUnspecified)          // Change an external metadata
+	state.SetState(addr, skey, sval)                                             // Change the storage trie
+	for i := 0; i < 100; i++ {
+		sk := common.BigToHash(big.NewInt(int64(i)))
+		state.SetState(addr, sk, sk) // Change the storage trie
+	}
+	return state
 }
 
 func TestUseAfterTerminate(t *testing.T) {
-db := filledStateDB()
-prefetcher := newTriePrefetcher(db.db, db.originalRoot, "", true)
-skey := common.HexToHash("aaa")
+	db := filledStateDB()
+	prefetcher := newTriePrefetcher(db.db, db.originalRoot, "", true)
+	skey := common.HexToHash("aaa")
 
-if err := prefetcher.prefetch(common.Hash{}, db.originalRoot, common.Address{}, nil, []common.Hash{skey}, false); err != nil {
-t.Errorf("Prefetch failed before terminate: %v", err)
-}
-prefetcher.terminate(false)
+	if err := prefetcher.prefetch(common.Hash{}, db.originalRoot, common.Address{}, nil, []common.Hash{skey}, false); err != nil {
+		t.Errorf("Prefetch failed before terminate: %v", err)
+	}
+	prefetcher.terminate(false)
 
-if err := prefetcher.prefetch(common.Hash{}, db.originalRoot, common.Address{}, nil, []common.Hash{skey}, false); err == nil {
-t.Errorf("Prefetch succeeded after terminate: %v", err)
-}
-if tr := prefetcher.trie(common.Hash{}, db.originalRoot); tr == nil {
-t.Errorf("Prefetcher returned nil trie after terminate")
-}
+	if err := prefetcher.prefetch(common.Hash{}, db.originalRoot, common.Address{}, nil, []common.Hash{skey}, false); err == nil {
+		t.Errorf("Prefetch succeeded after terminate: %v", err)
+	}
+	if tr := prefetcher.trie(common.Hash{}, db.originalRoot); tr == nil {
+		t.Errorf("Prefetcher returned nil trie after terminate")
+	}
 }
 
 func TestOverlayPrefetcher(t *testing.T) {
-disk := rawdb.NewMemoryDatabase()
-db := triedb.NewDatabase(disk, triedb.OverlayDefaults)
-sdb := NewDatabase(db, nil)
+	disk := rawdb.NewMemoryDatabase()
+	db := triedb.NewDatabase(disk, triedb.OverlayDefaults)
+	sdb := NewDatabase(db, nil)
 
-state, err := New(types.EmptyRootHash, sdb)
-if err != nil {
-t.Fatalf("failed to initialize state: %v", err)
-}
-// Create an account and check if the retrieved balance is correct
-addr := testrand.Address()
-skey := testrand.Hash()
-sval := testrand.Hash()
+	state, err := New(types.EmptyRootHash, sdb)
+	if err != nil {
+		t.Fatalf("failed to initialize state: %v", err)
+	}
+	// Create an account and check if the retrieved balance is correct
+	addr := testrand.Address()
+	skey := testrand.Hash()
+	sval := testrand.Hash()
 
-state.SetBalance(addr, uint256.NewInt(42), tracing.BalanceChangeUnspecified) // Change the account trie
-state.SetCode(addr, []byte("hello"), tracing.CodeChangeUnspecified)          // Change an external metadata
-state.SetState(addr, skey, sval)                                             // Change the storage trie
-root, _ := state.Commit(0, true, false)
+	state.SetBalance(addr, uint256.NewInt(42), tracing.BalanceChangeUnspecified) // Change the account trie
+	state.SetCode(addr, []byte("hello"), tracing.CodeChangeUnspecified)          // Change an external metadata
+	state.SetState(addr, skey, sval)                                             // Change the storage trie
+	root, _ := state.Commit(0, true, false)
 
-state, _ = New(root, sdb)
-fetcher := newTriePrefetcher(sdb, root, "", false)
+	state, _ = New(root, sdb)
+	fetcher := newTriePrefetcher(sdb, root, "", false)
 
-// Read account
-fetcher.prefetch(common.Hash{}, root, common.Address{}, []common.Address{addr}, nil, false)
+	// Read account
+	fetcher.prefetch(common.Hash{}, root, common.Address{}, []common.Address{addr}, nil, false)
 
-// Read storage slot
-fetcher.prefetch(crypto.Keccak256Hash(addr.Bytes()), common.Hash{}, addr, nil, []common.Hash{skey}, false)
+	// Read storage slot
+	fetcher.prefetch(crypto.Keccak256Hash(addr.Bytes()), common.Hash{}, addr, nil, []common.Hash{skey}, false)
 
-fetcher.terminate(false)
-accountTrie := fetcher.trie(common.Hash{}, root)
-storageTrie := fetcher.trie(crypto.Keccak256Hash(addr.Bytes()), common.Hash{})
+	fetcher.terminate(false)
+	accountTrie := fetcher.trie(common.Hash{}, root)
+	storageTrie := fetcher.trie(crypto.Keccak256Hash(addr.Bytes()), common.Hash{})
 
-rootA := accountTrie.Hash()
-rootB := storageTrie.Hash()
-if rootA != rootB {
-t.Fatal("Two different tries are retrieved")
-}
+	rootA := accountTrie.Hash()
+	rootB := storageTrie.Hash()
+	if rootA != rootB {
+		t.Fatal("Two different tries are retrieved")
+	}
 }

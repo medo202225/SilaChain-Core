@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -23,28 +23,28 @@ ensuring they behave correctly under random input conditions.
 package vm
 
 import (
-"testing"
+	"testing"
 
-"github.com/silachain/sila-library/common"
+	"silachain/common"
 )
 
 func FuzzPrecompiledContracts(f *testing.F) {
-// Create list of addresses
-var addrs []common.Address
-for k := range allPrecompiles {
-addrs = append(addrs, k)
-}
-f.Fuzz(func(t *testing.T, addr uint8, input []byte) {
-a := addrs[int(addr)%len(addrs)]
-p := allPrecompiles[a]
-gas := p.RequiredGas(input)
-if gas > 10_000_000 {
-return
-}
-inWant := string(input)
-RunPrecompiledContract(nil, p, a, input, gas, nil)
-if inHave := string(input); inWant != inHave {
-t.Errorf("Precompiled %v modified input data", a)
-}
-})
+	// Create list of addresses
+	var addrs []common.Address
+	for k := range allPrecompiles {
+		addrs = append(addrs, k)
+	}
+	f.Fuzz(func(t *testing.T, addr uint8, input []byte) {
+		a := addrs[int(addr)%len(addrs)]
+		p := allPrecompiles[a]
+		gas := p.RequiredGas(input)
+		if gas > 10_000_000 {
+			return
+		}
+		inWant := string(input)
+		RunPrecompiledContract(nil, p, a, input, gas, nil)
+		if inHave := string(input); inWant != inHave {
+			t.Errorf("Precompiled %v modified input data", a)
+		}
+	})
 }

@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -22,11 +22,11 @@ import (
 "sync"
 "time"
 
-"github.com/SILA/sila-chain/common"
-"github.com/SILA/sila-chain/core/rawdb/eradb"
-"github.com/SILA/sila-chain/ethdb"
-"github.com/SILA/sila-chain/log"
-"github.com/SILA/sila-chain/params"
+"silachain/common"
+"silachain/core/rawdb/eradb"
+"silachain/ethdb"
+"silachain/log"
+"silachain/params"
 )
 
 const (

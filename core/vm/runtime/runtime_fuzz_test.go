@@ -1,4 +1,4 @@
-﻿// Copyright 2026 The SILA Authors
+// Copyright 2026 The SILA Authors
 // This file is part of the sila-library.
 //
 // The sila-library is free software: you can redistribute it and/or modify
@@ -17,13 +17,13 @@
 package runtime
 
 import (
-"testing"
+	"testing"
 )
 
 func FuzzVmRuntime(f *testing.F) {
-f.Fuzz(func(t *testing.T, code, input []byte) {
-Execute(code, input, &Config{
-GasLimit: 12000000,
-})
-})
+	f.Fuzz(func(t *testing.T, code, input []byte) {
+		Execute(code, input, &Config{
+			GasLimit: 12000000,
+		})
+	})
 }
