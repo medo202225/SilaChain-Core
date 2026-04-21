@@ -1,0 +1,4 @@
+﻿EVM gas used:    123456
+execution time:  1.234s
+allocations:     1234
+allocated bytes: 123456

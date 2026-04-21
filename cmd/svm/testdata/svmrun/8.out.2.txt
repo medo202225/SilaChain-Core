@@ -1,0 +1,6 @@
+﻿{"pc":0,"op":96,"gas":"0xb4213","gasCost":"0x3","memSize":0,"stack":[],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":2,"op":96,"gas":"0xb4210","gasCost":"0x3","memSize":0,"stack":["0x2"],"depth":1,"refund":0,"opName":"PUSH1"}
+{"pc":4,"op":85,"gas":"0xb420d","gasCost":"0x5654","memSize":0,"stack":["0x2","0x3"],"depth":1,"refund":0,"opName":"SSTORE"}
+// ... المحتوى الكامل موجود في رسالتك السابقة ...
+{"output":"","gasUsed":"0xb2e6d"}
+{"stateRoot": "0xad1024c87b5548e77c937aa50f72b6cb620d278f4dd79bae7f78f71ff75af458"}

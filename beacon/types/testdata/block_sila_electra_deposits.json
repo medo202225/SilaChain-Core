@@ -1,0 +1,56 @@
+﻿{
+  "slot": "151016",
+  "proposer_index": "27017",
+  "parent_root": "0x2f135d2fe887c6012e78b25b8adecc33bc268c8057e444422f9fbdbb02730a30",
+  "state_root": "0x62a65efc3b24c02a29c4fdab5edf076329024a05dfc944b35f920a38d07b24ac",
+  "body": {
+    "randao_reveal": "0xb765dc7a976fb26b7cf8df404055cbab5e7665dfc1106ed4373709840d99312fb5f782a44c25294cece2f55e0cde6d1515504693574ddfb9bbcfb47c21763efed46b91cb47cefb5a14c78dd53f491d51e40b36eaf26e23e1edc49875e8c734cc",
+    "sila1_data": {
+      "deposit_root": "0x8654042dec994aa6fc1a36fd0f4ebb2a49d1b27ada9460b045e2ea2a15718cc2",
+      "deposit_count": "10010",
+      "block_hash": "0x28f59400e7becd79cfe3b14f36dd58fc27826849247dbfd1e4d09448806f8955"
+    },
+    "graffiti": "0x6c69676874686f7573652d6e65746865726d696e642d33000000000000000000",
+    "proposer_slashings": [],
+    "attester_slashings": [],
+    "attestations": [],
+    "deposits": [],
+    "voluntary_exits": [],
+    "sync_aggregate": {
+      "sync_committee_bits": "0xf7f7fffffffbff6ffffffbfffffffdffffffeff7ffdf7ffffeffffffffffffffffffffffffffffffffffffffef777dffffffff7ffeffffebffbf9ffffbffffff",
+      "sync_committee_signature": "0xa7be0f119fee5d9f9409d508b2291e1d8d81d3b9edd64d7a68d12f9b1a84bd50230618e4db78ef6e7f1e2f3e6aa56e2807985b25d52750a56b9d1b087ae3bca80c3a0b091e52c3797d82778acdf877e42b8fb18598d9fc56e9e469ebdd5c15e1"
+    },
+    "execution_payload": {
+      "parent_hash": "0x52ad968c44fe260e5bb67b63c3ede2ade269a23641d27fcceba237065784c89e",
+      "fee_recipient": "0xf97e180c050e5ab072211ad2c213eb5aee4df134",
+      "state_root": "0x34ecb1a20d718e06f69e4ec6b6ad86c75603149a207480b03a077d0231668805",
+      "receipts_root": "0xd2da2f149a53d2c26982187652ecdf1114ae5301359c0ee6752c2b78dd97ea02",
+      "logs_bloom": "0x10200000000000000000000080000000000000000000100000000000200000000000000000800000000080000000000000000000000010000000000000000000000020000000010001800408000000200000000000000000000004000000000000000000000000000000000000000008000000000000000000000810000040000000000000000000008000000000000000000000000000080000004010400000800000000000000000020000000000000000000000000000000000000000000000000002000000000000000000000000000000000000001000000000000000000000000000000000010200000000000000000008000000000000000000000000",
+      "prev_randao": "0xb45479ddbad8fc0733b7762aed1a5b5861712b29bc20c2c0e34dc5e6722e82c9",
+      "block_number": "140858",
+      "gas_limit": "30029295",
+      "gas_used": "2383293",
+      "timestamp": "1740416052",
+      "extra_data": "0x4e65746865726d696e64",
+      "base_fee_per_gas": "7",
+      "block_hash": "0x1f2637170986346c7993d5adbadbebbf4c9ed89c6a4d2dff653db99c8c168076",
+      "transactions": [],
+      "withdrawals": []
+    },
+    "bls_to_execution_changes": [],
+    "blob_kzg_commitments": [],
+    "execution_requests": {
+      "deposits": [
+        {
+          "pubkey": "0xa3dc91086418a5680fe3037dba62dda3de79dd22bb41036719c3771f140b419586ae7d9bdf3b10d88850909d4556b19b",
+          "withdrawal_credentials": "0x010000000000000000000000bf3da697ab02552a5da95f267075cbe495d1ecb3",
+          "amount": "32000000000",
+          "signature": "0x896bccd536b4a30c4c3ce5877544574c624dff09f100abcb2df38df7c797069aed3213f1320fe77e4cf89907fb23fe4601a9008fdbac478412f8d6a5eb4c53b12c3848c29ced5ded2a7e3fbeb1e1dc4f58a563d761f7ea80c06088126e0dd9ea",
+          "index": "10011"
+        }
+      ],
+      "withdrawals": [],
+      "consolidations": []
+    }
+  }
+}
