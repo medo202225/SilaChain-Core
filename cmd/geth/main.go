@@ -307,16 +307,16 @@ func prepare(ctx *cli.Context) {
 	// If we're running a known preset, log it for convenience.
 	switch {
 	case ctx.IsSet(utils.SepoliaFlag.Name):
-		log.Info("Starting Geth on Sepolia testnet...")
+		log.Info("Starting Sila on Sepolia testnet...")
 
 	case ctx.IsSet(utils.HoleskyFlag.Name):
-		log.Info("Starting Geth on Holesky testnet...")
+		log.Info("Starting Sila on Holesky testnet...")
 
 	case ctx.IsSet(utils.HoodiFlag.Name):
-		log.Info("Starting Geth on Hoodi testnet...")
+		log.Info("Starting Sila on Hoodi testnet...")
 
 	case !ctx.IsSet(utils.NetworkIdFlag.Name):
-		log.Info("Starting Geth on Ethereum mainnet...")
+		log.Info("Starting Sila on Ethereum mainnet...")
 	}
 }
 
