@@ -35,9 +35,9 @@ var (
 		Usage:  "Start an interactive JavaScript environment",
 		Flags:  slices.Concat(nodeFlags, rpcFlags, consoleFlags),
 		Description: `
-The Geth console is an interactive shell for the JavaScript runtime environment
+The Sila console is an interactive shell for the JavaScript runtime environment
 which exposes a node admin interface as well as the Ðapp JavaScript API.
-See https://geth.ethereum.org/docs/interacting-with-geth/javascript-console.`,
+See https://sila-blockchain.org/docs/interacting-with-geth/javascript-console.`,
 	}
 
 	attachCommand = &cli.Command{
@@ -47,9 +47,9 @@ See https://geth.ethereum.org/docs/interacting-with-geth/javascript-console.`,
 		ArgsUsage: "[endpoint]",
 		Flags:     slices.Concat([]cli.Flag{utils.DataDirFlag, utils.HttpHeaderFlag}, consoleFlags),
 		Description: `
-The Geth console is an interactive shell for the JavaScript runtime environment
+The Sila console is an interactive shell for the JavaScript runtime environment
 which exposes a node admin interface as well as the Ðapp JavaScript API.
-See https://geth.ethereum.org/docs/interacting-with-geth/javascript-console.
+See https://sila-blockchain.org/docs/interacting-with-geth/javascript-console.
 This command allows to open a console on a running geth node.`,
 	}
 
@@ -61,7 +61,7 @@ This command allows to open a console on a running geth node.`,
 		Flags:     slices.Concat(nodeFlags, consoleFlags),
 		Description: `
 The JavaScript VM exposes a node admin interface as well as the Ðapp
-JavaScript API. See https://geth.ethereum.org/docs/interacting-with-geth/javascript-console`,
+JavaScript API. See https://sila-blockchain.org/docs/interacting-with-geth/javascript-console`,
 	}
 )
 
