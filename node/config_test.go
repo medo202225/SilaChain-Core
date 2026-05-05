@@ -79,15 +79,15 @@ func TestIPCPathResolution(t *testing.T) {
 	}{
 		{"", "", false, ""},
 		{"data", "", false, ""},
-		{"", "geth.ipc", false, filepath.Join(os.TempDir(), "geth.ipc")},
-		{"data", "geth.ipc", false, "data/geth.ipc"},
-		{"data", "./geth.ipc", false, "./geth.ipc"},
-		{"data", "/geth.ipc", false, "/geth.ipc"},
+		{"", "sila.ipc", false, filepath.Join(os.TempDir(), "sila.ipc")},
+		{"data", "sila.ipc", false, "data/sila.ipc"},
+		{"data", "./sila.ipc", false, "./sila.ipc"},
+		{"data", "/sila.ipc", false, "/sila.ipc"},
 		{"", "", true, ``},
 		{"data", "", true, ``},
-		{"", "geth.ipc", true, `\\.\pipe\geth.ipc`},
-		{"data", "geth.ipc", true, `\\.\pipe\geth.ipc`},
-		{"data", `\\.\pipe\geth.ipc`, true, `\\.\pipe\geth.ipc`},
+		{"", "sila.ipc", true, `\\.\pipe\sila.ipc`},
+		{"data", "sila.ipc", true, `\\.\pipe\sila.ipc`},
+		{"data", `\\.\pipe\sila.ipc`, true, `\\.\pipe\sila.ipc`},
 	}
 	for i, test := range tests {
 		// Only run when platform/test match
