@@ -1136,7 +1136,7 @@ var (
 	}
 )
 
-// default account to prefund when running Geth in dev mode
+// default account to prefund when running Sila in dev mode
 var (
 	DeveloperKey, _ = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 	DeveloperAddr   = crypto.PubkeyToAddress(DeveloperKey.PublicKey)
@@ -2196,7 +2196,7 @@ func SetDNSDiscoveryDefaults(cfg *ethconfig.Config, genesis common.Hash) {
 	}
 }
 
-// RegisterEthService adds an Ethereum client to the stack.
+// RegisterEthService adds the Sila execution client to the stack.
 // The second return value is the full node instance.
 func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (*eth.EthAPIBackend, *eth.Ethereum) {
 	backend, err := eth.New(stack, cfg)
