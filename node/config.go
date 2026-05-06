@@ -317,6 +317,10 @@ func (c *Config) ExtRPCEnabled() bool {
 // NodeName returns the devp2p node identifier.
 func (c *Config) NodeName() string {
 	name := c.name()
+	// Sila identity: title-case the default Sila executable name.
+	if name == "sila" {
+		name = "Sila"
+	}
 	// Backwards compatibility: previous versions used title-cased "Geth", keep that.
 	if name == "geth" || name == "geth-testnet" {
 		name = "Geth"

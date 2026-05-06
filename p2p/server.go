@@ -580,7 +580,7 @@ func (srv *Server) setupListening() error {
 		if !tcp.IP.IsLoopback() && !tcp.IP.IsPrivate() {
 			srv.portMappingRegister <- &portMapping{
 				protocol: "TCP",
-				name:     "ethereum p2p",
+				name:     "sila p2p",
 				port:     tcp.Port,
 			}
 		}
@@ -613,7 +613,7 @@ func (srv *Server) setupUDPListening() (*net.UDPConn, error) {
 	if !laddr.IP.IsLoopback() && !laddr.IP.IsPrivate() {
 		srv.portMappingRegister <- &portMapping{
 			protocol: "UDP",
-			name:     "ethereum peer discovery",
+			name:     "sila peer discovery",
 			port:     laddr.Port,
 		}
 	}
