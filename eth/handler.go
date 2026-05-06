@@ -448,7 +448,7 @@ func (h *handler) Stop() {
 	h.peers.close()
 	h.wg.Wait()
 
-	log.Info("Ethereum protocol stopped")
+	log.Info("Sila protocol stopped")
 }
 
 // BroadcastTransactions will propagate a batch of transactions
