@@ -36,8 +36,8 @@ var (
 		Flags:  slices.Concat(nodeFlags, rpcFlags, consoleFlags),
 		Description: `
 The Sila console is an interactive shell for the JavaScript runtime environment
-which exposes a node admin interface as well as the Ðapp JavaScript API.
-See https://sila-blockchain.org/docs/interacting-with-geth/javascript-console.`,
+which exposes a node admin interface as well as the أگapp JavaScript API.
+See https://sila-blockchain.org/docs/interacting-with-sila/javascript-console.`,
 	}
 
 	attachCommand = &cli.Command{
@@ -48,8 +48,8 @@ See https://sila-blockchain.org/docs/interacting-with-geth/javascript-console.`,
 		Flags:     slices.Concat([]cli.Flag{utils.DataDirFlag, utils.HttpHeaderFlag}, consoleFlags),
 		Description: `
 The Sila console is an interactive shell for the JavaScript runtime environment
-which exposes a node admin interface as well as the Ðapp JavaScript API.
-See https://sila-blockchain.org/docs/interacting-with-geth/javascript-console.
+which exposes a node admin interface as well as the أگapp JavaScript API.
+See https://sila-blockchain.org/docs/interacting-with-sila/javascript-console.
 This command allows to open a console on a running geth node.`,
 	}
 
@@ -60,8 +60,8 @@ This command allows to open a console on a running geth node.`,
 		ArgsUsage: "<jsfile> [jsfile...]",
 		Flags:     slices.Concat(nodeFlags, consoleFlags),
 		Description: `
-The JavaScript VM exposes a node admin interface as well as the Ðapp
-JavaScript API. See https://sila-blockchain.org/docs/interacting-with-geth/javascript-console`,
+The JavaScript VM exposes a node admin interface as well as the أگapp
+JavaScript API. See https://sila-blockchain.org/docs/interacting-with-sila/javascript-console`,
 	}
 )
 

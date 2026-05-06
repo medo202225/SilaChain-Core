@@ -58,7 +58,7 @@ type TestCmd struct {
 var id atomic.Int32
 
 // Run exec's the current binary using name as argv[0] which will trigger the
-// reexec init function for that name (e.g. "geth-test" in cmd/geth/run_test.go)
+// reexec init function for that name (e.g. "sila-test" in cmd/sila/run_test.go)
 func (tt *TestCmd) Run(name string, args ...string) {
 	id.Add(1)
 	tt.stderr = &testlogger{t: tt.T, name: fmt.Sprintf("%d", id.Load())}
@@ -137,12 +137,12 @@ func (tt *TestCmd) matchExactOutput(want []byte) error {
 		// Find the mismatch position.
 		for i := 0; i < n; i++ {
 			if want[i] != buf[i] {
-				return fmt.Errorf("output mismatch at ◊:\n---------------- (stdout text)\n%s◊%s\n---------------- (expected text)\n%s",
+				return fmt.Errorf("output mismatch at â—ٹ:\n---------------- (stdout text)\n%sâ—ٹ%s\n---------------- (expected text)\n%s",
 					buf[:i], buf[i:n], want)
 			}
 		}
 		if n < len(want) {
-			return fmt.Errorf("not enough output, got until ◊:\n---------------- (stdout text)\n%s\n---------------- (expected text)\n%s◊%s",
+			return fmt.Errorf("not enough output, got until â—ٹ:\n---------------- (stdout text)\n%s\n---------------- (expected text)\n%sâ—ٹ%s",
 				buf, want[:n], want[n:])
 		}
 	}

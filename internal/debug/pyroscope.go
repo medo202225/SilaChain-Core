@@ -79,7 +79,7 @@ func startPyroscope(ctx *cli.Context) error {
 	}
 
 	config := pyroscope.Config{
-		ApplicationName:   "geth",
+		ApplicationName:   "sila",
 		ServerAddress:     server,
 		BasicAuthUser:     authUsername,
 		BasicAuthPassword: authPassword,

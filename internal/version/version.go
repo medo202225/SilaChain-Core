@@ -114,7 +114,7 @@ func Info() (version, vcs string) {
 // information. If it is unable to determine which module is related to our
 // package it falls back to the hardcoded values in the params package.
 func versionInfo(info *debug.BuildInfo) string {
-	// If the main package is from our repo, prefix version with "geth".
+	// If the main package is from our repo, prefix version with "sila".
 	if strings.HasPrefix(info.Path, ourPath) {
 		return fmt.Sprintf("sila %s", info.Main.Version)
 	}

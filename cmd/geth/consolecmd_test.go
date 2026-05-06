@@ -70,7 +70,7 @@ func TestConsoleWelcome(t *testing.T) {
 	geth.Expect(`
 Welcome to the Sila JavaScript console!
 
-instance: sila/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
+instance: Sila/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
 at block: 0 ({{niltime}})
  datadir: {{.Datadir}}
  modules: {{apis}}
@@ -141,7 +141,7 @@ func testAttachWelcome(t *testing.T, geth *testgeth, endpoint, apis string) {
 	attach.Expect(`
 Welcome to the Sila JavaScript console!
 
-instance: sila/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
+instance: Sila/v{{gethver}}/{{goos}}-{{goarch}}/{{gover}}
 at block: 0 ({{niltime}}){{if ipc}}
  datadir: {{datadir}}{{end}}
  modules: {{apis}}
