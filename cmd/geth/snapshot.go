@@ -58,7 +58,7 @@ var (
 					utils.BloomFilterSizeFlag,
 				}, utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth snapshot prune-state <state-root>
+sila snapshot prune-state <state-root>
 will prune historical state data with the help of the state snapshot.
 All trie nodes and contract codes that do not belong to the specified
 version state will be deleted from the database. After pruning, only
@@ -76,7 +76,7 @@ WARNING: it's only supported in hash mode(--state.scheme=hash)".
 				Action:    verifyState,
 				Flags:     slices.Concat(utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth snapshot verify-state <state-root>
+sila snapshot verify-state <state-root>
 will traverse the whole accounts and storages set based on the specified
 snapshot and recalculate the root hash of state for verification.
 In other words, this command does the snapshot to trie conversion.
@@ -89,7 +89,7 @@ In other words, this command does the snapshot to trie conversion.
 				Action:    checkDanglingStorage,
 				Flags:     slices.Concat(utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth snapshot check-dangling-storage <state-root> traverses the snap storage
+sila snapshot check-dangling-storage <state-root> traverses the snap storage
 data, and verifies that all snapshot storage data has a corresponding account.
 `,
 			},
@@ -100,7 +100,7 @@ data, and verifies that all snapshot storage data has a corresponding account.
 				Action:    checkAccount,
 				Flags:     slices.Concat(utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth snapshot inspect-account <address | hash> checks all snapshot layers and prints out
+sila snapshot inspect-account <address | hash> checks all snapshot layers and prints out
 information about the specified address.
 `,
 			},
@@ -113,7 +113,7 @@ information about the specified address.
 					utils.AccountFlag,
 				}, utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth snapshot traverse-state <state-root>
+sila snapshot traverse-state <state-root>
 will traverse the whole state from the given state root and will abort if any
 referenced trie node or contract code is missing. This command can be used for
 state integrity verification. The default checking target is the HEAD state.
@@ -132,7 +132,7 @@ If --account is specified, only the storage trie of that account is traversed.
 					utils.AccountFlag,
 				}, utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth snapshot traverse-rawstate <state-root>
+sila snapshot traverse-rawstate <state-root>
 will traverse the whole state from the given root and will abort if any referenced
 trie node or contract code is missing. This command can be used for state integrity
 verification. The default checking target is the HEAD state. It's basically identical
@@ -180,7 +180,7 @@ the expected order for the overlay tree migration.
 				Action:  listEIP7610EligibleAccounts,
 				Flags:   slices.Concat(utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth snapshot list-eip-7610-accounts
+sila snapshot list-eip-7610-accounts
 traverses the post–EIP-161 state and returns all accounts that are eligible
 under EIP-7610: accounts with zero nonce, empty runtime code, and non-empty
 storage. The traversal will be aborted immediately if the state is prior to
