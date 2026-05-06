@@ -143,7 +143,7 @@ var (
 	}
 	MainnetFlag = &cli.BoolFlag{
 		Name:     "mainnet",
-		Usage:    "Ethereum mainnet",
+		Usage:    "SilaChain mainnet",
 		Category: flags.EthCategory,
 	}
 	SepoliaFlag = &cli.BoolFlag{
@@ -1404,7 +1404,7 @@ func setIPC(ctx *cli.Context, cfg *node.Config) {
 }
 
 // MakeDatabaseHandles raises out the number of allowed file handles per process
-// for Geth and returns half of the allowance to assign to the database.
+// for SilaChain and returns half of the allowance to assign to the database.
 func MakeDatabaseHandles(max int) int {
 	limit, err := fdlimit.Maximum()
 	if err != nil {
