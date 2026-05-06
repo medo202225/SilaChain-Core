@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-// geth is a command-line client for Ethereum.
+// Sila is a command-line client for Ethereum.
 package main
 
 import (
@@ -316,7 +316,7 @@ func prepare(ctx *cli.Context) {
 		log.Info("Starting Sila on Hoodi testnet...")
 
 	case !ctx.IsSet(utils.NetworkIdFlag.Name):
-		log.Info("Starting Sila on Ethereum mainnet...")
+		log.Info("Starting Sila on Sila mainnet...")
 	}
 }
 

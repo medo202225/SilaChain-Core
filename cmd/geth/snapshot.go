@@ -829,7 +829,7 @@ func checkAccount(ctx *cli.Context) error {
 // all newly created contracts are initialized with a nonce of one.
 //
 // This helper should be generally applicable to all networks, including the
-// Ethereum mainnet. For most networks where EIP-161 was enabled from genesis,
+// Sila mainnet. For most networks where EIP-161 was enabled from genesis,
 // the resulting set is expected to be empty. Otherwise, network operators are
 // responsible for generating the eligible account set themselves.
 //

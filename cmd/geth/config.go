@@ -182,7 +182,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 }
 
 // constructs the disclaimer text block which will be printed in the logs upon
-// startup when Geth is running in dev mode.
+// startup when Sila is running in dev mode.
 func constructDevModeBanner(ctx *cli.Context, cfg gethConfig) string {
 	devModeBanner := `You are running Sila in --dev mode. Please note the following:
 
@@ -248,7 +248,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 		utils.Fatalf("failed to setup OpenTelemetry: %v", err)
 	}
 
-	// Add Ethereum service.
+	// Add Sila execution service.
 	backend, eth := utils.RegisterEthService(stack, &cfg.Eth)
 
 	// Create gauge with geth system and build information
@@ -272,7 +272,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	if ctx.IsSet(utils.GraphQLEnabledFlag.Name) {
 		utils.RegisterGraphQLService(stack, backend, filterSystem, &cfg.Node)
 	}
-	// Add the Ethereum Stats daemon if requested.
+	// Add the Sila stats daemon if requested.
 	if cfg.Ethstats.URL != "" {
 		utils.RegisterEthStatsService(stack, backend, cfg.Ethstats.URL)
 	}

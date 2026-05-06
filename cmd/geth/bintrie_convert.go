@@ -65,7 +65,7 @@ var (
 					memoryLimitFlag,
 				}, utils.NetworkFlags, utils.DatabaseFlags),
 				Description: `
-geth bintrie convert [--delete-source] [--memory-limit MB] [state-root]
+sila bintrie convert [--delete-source] [--memory-limit MB] [state-root]
 
 Reads all state from the Merkle Patricia Trie and writes it into a Binary Trie,
 operating offline. Memory-safe via periodic commit-and-reload cycles.
