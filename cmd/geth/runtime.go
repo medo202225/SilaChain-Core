@@ -33,6 +33,10 @@ func prepare(ctx *cli.Context) {
 }
 
 func runSilaNode(ctx *cli.Context, isConsole bool) error {
+	return runSilaRuntime(ctx, isConsole)
+}
+
+func runSilaRuntime(ctx *cli.Context, isConsole bool) error {
 	if args := ctx.Args().Slice(); len(args) > 0 {
 		return fmt.Errorf("invalid command: %q", args[0])
 	}
