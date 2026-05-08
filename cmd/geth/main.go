@@ -48,6 +48,10 @@ var (
 	clientIdentifier = "sila" // Client identifier to advertise over the network
 )
 
+func setClientIdentifier(name string) {
+	clientIdentifier = name
+}
+
 var (
 	// flags that configure the node
 	nodeFlags = slices.Concat([]cli.Flag{
