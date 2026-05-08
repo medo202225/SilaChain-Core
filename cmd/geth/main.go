@@ -327,25 +327,6 @@ func main() {
 	}
 }
 
-// prepare manipulates memory cache allowance and setups metric system.
-// This function should be called before launching devp2p stack.
-func prepare(ctx *cli.Context) {
-	// If we're running a known preset, log it for convenience.
-	switch {
-	case ctx.IsSet(utils.SepoliaFlag.Name):
-		log.Info("Starting Sila on Sepolia testnet...")
-
-	case ctx.IsSet(utils.HoleskyFlag.Name):
-		log.Info("Starting Sila on Holesky testnet...")
-
-	case ctx.IsSet(utils.HoodiFlag.Name):
-		log.Info("Starting Sila on Hoodi testnet...")
-
-	case !ctx.IsSet(utils.NetworkIdFlag.Name):
-		log.Info("Starting Sila on Sila mainnet...")
-	}
-}
-
 // geth is the main entry point into the system if no special subcommand is run.
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
