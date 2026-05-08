@@ -138,7 +138,7 @@ func defaultNodeConfig() node.Config {
 	return cfg
 }
 
-// loadBaseConfig loads the gethConfig based on the given command line
+// loadBaseConfig loads the SilaChain configuration based on the given command line
 // parameters and config file.
 func loadBaseConfig(ctx *cli.Context) gethConfig {
 	// Load defaults.
@@ -220,7 +220,7 @@ func constructDevModeBanner(ctx *cli.Context, cfg gethConfig) string {
 	return devModeBanner
 }
 
-// makeFullNode loads geth configuration and creates the Ethereum backend.
+// makeFullNode loads SilaChain configuration and creates the execution backend.
 func makeFullNode(ctx *cli.Context) *node.Node {
 	stack, cfg := makeConfigNode(ctx)
 	if ctx.IsSet(utils.OverrideOsaka.Name) {
@@ -251,7 +251,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	// Add Sila execution service.
 	backend, eth := utils.RegisterEthService(stack, &cfg.Eth)
 
-	// Create gauge with geth system and build information
+	// Create gauge with SilaChain system and build information
 	if eth != nil { // The 'eth' backend may be nil in light mode
 		var protos []string
 		for _, p := range eth.Protocols() {
