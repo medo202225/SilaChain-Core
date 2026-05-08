@@ -229,7 +229,11 @@ var (
 	}
 )
 
-var app = flags.NewApp("the SilaChain command line interface")
+var app = newSilaApp()
+
+func newSilaApp() *cli.App {
+	return flags.NewApp("the SilaChain command line interface")
+}
 
 func init() {
 	// Initialize the CLI app and start SilaChain
