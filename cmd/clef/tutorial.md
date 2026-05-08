@@ -44,7 +44,7 @@ You should treat 'masterseed.json' with utmost secrecy and make a backup of it!
 Clef is capable of managing both key-file based accounts as well as hardware wallets. To evaluate clef, we're going to point it to our Rinkeby testnet keystore and specify the Rinkeby chain ID for signing (Clef doesn't have a backing chain, so it doesn't know what network it runs on).
 
 ```text
-$ clef --keystore ~/.ethereum/rinkeby/keystore --chainid 4
+$ clef --keystore ~/.sila/rinkeby/keystore --chainid 4
 
 INFO [07-01|11:00:46.385] Starting signer                          chainid=4 keystore=$HOME/.ethereum/rinkeby/keystore light-kdf=false advanced=false
 DEBUG[07-01|11:00:46.389] FS scan times                            list=3.521941ms set=9.017µs diff=4.112µs
@@ -131,7 +131,7 @@ INFO [07-01|13:25:03.290] Ruleset attestation updated              sha256=645b58
 At this point, we can start Clef with the rule file:
 
 ```text
-$ clef --keystore ~/.ethereum/rinkeby/keystore --chainid 4 --rules rules.js
+$ clef --keystore ~/.sila/rinkeby/keystore --chainid 4 --rules rules.js
 
 INFO [07-01|13:39:49.726] Rule engine configured                   file=rules.js
 INFO [07-01|13:39:49.726] Starting signer                          chainid=4 keystore=$HOME/.ethereum/rinkeby/keystore light-kdf=false advanced=false
@@ -244,7 +244,7 @@ INFO [07-01|14:11:28.509] Ruleset attestation updated              sha256=f163a1
 Restart Clef with the new rules in place:
 
 ```
-$ clef --keystore ~/.ethereum/rinkeby/keystore --chainid 4 --rules rules.js
+$ clef --keystore ~/.sila/rinkeby/keystore --chainid 4 --rules rules.js
 
 INFO [07-01|14:12:41.636] Rule engine configured                   file=rules.js
 INFO [07-01|14:12:41.636] Starting signer                          chainid=4 keystore=$HOME/.ethereum/rinkeby/keystore light-kdf=false advanced=false
@@ -299,13 +299,13 @@ Until then however, we're trying to pave the way via Geth. Geth v1.9.0 has built
 We can try this by running Clef with our previous rules on Rinkeby (for now it's a good idea to allow auto-listing accounts, since Geth likes to retrieve them once in a while).
 
 ```text
-$ clef --keystore ~/.ethereum/rinkeby/keystore --chainid 4 --rules rules.js
+$ clef --keystore ~/.sila/rinkeby/keystore --chainid 4 --rules rules.js
 ```
 
 In a different window we can start Geth, list our accounts, even list our wallets to see where the accounts originate from:
 
 ```text
-$ geth --rinkeby --signer=~/.clef/clef.ipc console
+$ sila --rinkeby --signer=~/.clef/clef.ipc console
 
 > eth.accounts
 ["0xd9c9cd5f6779558b6e0ed4e6acf6b1947e7fa1f3", "0x086278a6c067775f71d6b2bb1856db6e28c30418"]
