@@ -10,9 +10,17 @@ import (
 	"os"
 
 	"github.com/sila-org/sila/cmd/silacli"
+	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	cfg := silacli.SilaAppConfig
-	fmt.Fprintf(os.Stdout, "%s [%s]\n", cfg.Usage, cfg.EnvPrefix)
+	app := silacli.NewApp(silacli.SilaAppConfig)
+	app.Action = func(ctx *cli.Context) error {
+		fmt.Fprintf(os.Stdout, "%s [%s]\n", silacli.SilaAppConfig.Usage, silacli.SilaAppConfig.EnvPrefix)
+		return nil
+	}
+	if err := app.Run(os.Args); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
