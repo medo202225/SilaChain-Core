@@ -25,7 +25,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var app = flags.NewApp("go-ethereum workload test tool")
+var app = flags.NewApp("SilaChain workload test tool")
 
 func init() {
 	app.Flags = append(app.Flags, debug.Flags...)
