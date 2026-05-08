@@ -229,17 +229,27 @@ var (
 	}
 )
 
-var app = newSilaApp("the SilaChain command line interface")
+type silaAppConfig struct {
+	Usage     string
+	EnvPrefix string
+}
 
-func newSilaApp(usage string) *cli.App {
-	return flags.NewApp(usage)
+var defaultSilaAppConfig = silaAppConfig{
+	Usage:     "the SilaChain command line interface",
+	EnvPrefix: "GETH",
+}
+
+var app = newSilaApp(defaultSilaAppConfig)
+
+func newSilaApp(cfg silaAppConfig) *cli.App {
+	return flags.NewApp(cfg.Usage)
 }
 
 func init() {
-	initSilaApp(app, "GETH")
+	initSilaApp(app, defaultSilaAppConfig)
 }
 
-func initSilaApp(app *cli.App, envPrefix string) {
+func initSilaApp(app *cli.App, cfg silaAppConfig) {
 	// Initialize the CLI app and start SilaChain
 	app.Action = geth
 	app.Commands = []*cli.Command{
@@ -288,7 +298,7 @@ func initSilaApp(app *cli.App, envPrefix string) {
 		debug.Flags,
 		metricsFlags,
 	)
-	flags.AutoEnvVars(app.Flags, envPrefix)
+	flags.AutoEnvVars(app.Flags, cfg.EnvPrefix)
 
 	app.Before = func(ctx *cli.Context) error {
 		maxprocs.Set() // Automatically set GOMAXPROCS to match Linux container CPU quota.
@@ -296,7 +306,7 @@ func initSilaApp(app *cli.App, envPrefix string) {
 		if err := debug.Setup(ctx); err != nil {
 			return err
 		}
-		flags.CheckEnvVars(ctx, app.Flags, envPrefix)
+		flags.CheckEnvVars(ctx, app.Flags, cfg.EnvPrefix)
 		return nil
 	}
 	app.After = func(ctx *cli.Context) error {
