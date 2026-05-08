@@ -5,20 +5,10 @@
 
 package main
 
-type silaAppConfig struct {
-	Usage            string
-	EnvPrefix        string
-	ClientIdentifier string
-}
+import "github.com/sila-org/sila/cmd/silacli"
 
-var defaultSilaAppConfig = silaAppConfig{
-	Usage:            "the SilaChain command line interface",
-	EnvPrefix:        "GETH",
-	ClientIdentifier: "sila",
-}
+type silaAppConfig = silacli.AppConfig
 
-var defaultSilaCommandConfig = silaAppConfig{
-	Usage:            "the SilaChain command line interface",
-	EnvPrefix:        "SILA",
-	ClientIdentifier: "sila",
-}
+var defaultSilaAppConfig = silacli.GethAppConfig
+
+var defaultSilaCommandConfig = silacli.SilaAppConfig
