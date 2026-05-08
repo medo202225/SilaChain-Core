@@ -2,11 +2,11 @@
 
 ## Supported Versions
 
-Please see [Releases](https://github.com/ethereum/go-ethereum/releases). We recommend using the [most recently released version](https://github.com/ethereum/go-ethereum/releases/latest).
+Please see [Releases](https://github.com/medo202225/SilaChain-Core/releases). We recommend using the [most recently released version](https://github.com/medo202225/SilaChain-Core/releases/latest).
 
 ## Audit reports
 
-Audit reports are published in the `docs` folder: https://github.com/ethereum/go-ethereum/tree/master/docs/audits 
+Audit reports are published in the `docs` folder: https://github.com/medo202225/SilaChain-Core/tree/main/docs/audits 
 
 | Scope | Date | Report Link |
 | ------- | ------- | ----------- |
@@ -19,7 +19,7 @@ Audit reports are published in the `docs` folder: https://github.com/ethereum/go
 
 **Please do not file a public ticket** mentioning the vulnerability.
 
-To find out how to disclose a vulnerability in Ethereum visit [https://bounty.ethereum.org](https://bounty.ethereum.org) or email bounty@ethereum.org. Please read the [disclosure page](https://github.com/ethereum/go-ethereum/security/advisories?state=published) for more information about publicly disclosed security vulnerabilities.
+To find out how to disclose a vulnerability in SilaChain visit [https://bounty.ethereum.org](https://bounty.ethereum.org) or email bounty@ethereum.org. Please read the [disclosure page](https://github.com/medo202225/SilaChain-Core/security/advisories) for more information about publicly disclosed security vulnerabilities.
 
 
 The following key may be used to communicate sensitive information to developers.
