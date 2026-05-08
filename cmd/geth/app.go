@@ -29,14 +29,16 @@ var defaultSilaAppConfig = silaAppConfig{
 	ClientIdentifier: "sila",
 }
 
-var app = newSilaApp(defaultSilaAppConfig)
+var app = newConfiguredSilaApp(defaultSilaAppConfig)
 
 func newSilaApp(cfg silaAppConfig) *cli.App {
 	return flags.NewApp(cfg.Usage)
 }
 
-func init() {
-	initSilaApp(app, defaultSilaAppConfig)
+func newConfiguredSilaApp(cfg silaAppConfig) *cli.App {
+	app := newSilaApp(cfg)
+	initSilaApp(app, cfg)
+	return app
 }
 
 func initSilaApp(app *cli.App, cfg silaAppConfig) {
