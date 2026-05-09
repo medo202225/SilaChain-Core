@@ -17,8 +17,6 @@
 package main
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -113,18 +111,7 @@ type gethConfig struct {
 }
 
 func loadConfig(file string, cfg *gethConfig) error {
-	f, err := os.Open(file)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	err = tomlSettings.NewDecoder(bufio.NewReader(f)).Decode(cfg)
-	// Add file name to errors that have a line number.
-	if _, ok := err.(*toml.LineError); ok {
-		err = errors.New(file + ", " + err.Error())
-	}
-	return err
+	return silacli.LoadConfig(file, cfg)
 }
 
 func defaultNodeConfig() node.Config {
