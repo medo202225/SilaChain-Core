@@ -21,3 +21,8 @@ func Before(ctx *cli.Context, app *cli.App, cfg AppConfig) error {
 	flags.CheckEnvVars(ctx, app.Flags, cfg.EnvPrefix)
 	return nil
 }
+
+func After(ctx *cli.Context, closeStdin func() error) error {
+	debug.Exit()
+	return closeStdin()
+}
