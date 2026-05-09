@@ -34,7 +34,6 @@ import (
 	"github.com/sila-org/sila/common"
 	"github.com/sila-org/sila/crypto"
 	"github.com/sila-org/sila/eth/catalyst"
-	"github.com/sila-org/sila/eth/ethconfig"
 	"github.com/sila-org/sila/internal/flags"
 	"github.com/sila-org/sila/internal/telemetry/tracesetup"
 	"github.com/sila-org/sila/log"
@@ -77,19 +76,11 @@ func defaultNodeConfig() node.Config {
 // loadBaseConfig loads the SilaChain configuration based on the given command line
 // parameters and config file.
 func loadBaseConfig(ctx *cli.Context) gethConfig {
-	// Load defaults.
-	cfg := gethConfig{
-		Eth:     ethconfig.Defaults,
-		Node:    defaultNodeConfig(),
-		Metrics: metrics.DefaultConfig,
-	}
-
-	// Load config file.
-	silacli.LoadConfigOrFatal(ctx.String(configFileFlag.Name), &cfg)
-
-	// Apply flags.
-	silacli.ApplyNodeConfig(ctx, &cfg.Node)
-	return cfg
+	return silacli.LoadBaseConfig(
+		ctx,
+		ctx.String(configFileFlag.Name),
+		silacli.ApplyNodeConfig,
+	)
 }
 
 // makeConfigNode loads the real execution/node wiring layer.
