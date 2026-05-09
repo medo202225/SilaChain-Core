@@ -64,16 +64,7 @@ var (
 // These settings ensure that TOML keys use the same names as Go struct fields.
 var tomlSettings = silacli.ConfigTOMLSettings
 
-type ethstatsConfig struct {
-	URL string `toml:",omitempty"`
-}
-
-type gethConfig struct {
-	Eth      ethconfig.Config
-	Node     node.Config
-	Ethstats ethstatsConfig
-	Metrics  metrics.Config
-}
+type gethConfig = silacli.ExecutionConfig
 
 func loadConfig(file string, cfg *gethConfig) error {
 	return silacli.LoadConfig(file, cfg)
