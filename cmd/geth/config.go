@@ -62,7 +62,7 @@ var (
 )
 
 // These settings ensure that TOML keys use the same names as Go struct fields.
-var tomlSettings = silacli.ConfigTOMLSettings
+var tomlSettings = silaexec.ConfigTOMLSettings
 
 type gethConfig = silaexec.ExecutionConfig
 
