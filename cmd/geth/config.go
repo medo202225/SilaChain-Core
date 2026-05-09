@@ -104,10 +104,7 @@ func loadBaseConfig(ctx *cli.Context) gethConfig {
 // makeConfigNode loads geth configuration and creates a blank node instance.
 func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 	cfg := loadBaseConfig(ctx)
-	stack, err := node.New(&cfg.Node)
-	if err != nil {
-		utils.Fatalf("Failed to create the protocol stack: %v", err)
-	}
+	stack := silacli.NewNodeOrFatal(&cfg.Node)
 	// Node doesn't by default populate account manager backends
 	if err := setAccountManagerBackends(stack.Config(), stack.AccountManager(), stack.KeyStoreDir()); err != nil {
 		utils.Fatalf("Failed to set account manager backends: %v", err)
