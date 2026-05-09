@@ -65,23 +65,18 @@ var tomlSettings = silacli.ConfigTOMLSettings
 
 type gethConfig = silacli.ExecutionConfig
 
-// loadBaseConfig loads the SilaChain configuration based on the given command line
-// parameters and config file.
-func loadBaseConfig(ctx *cli.Context) gethConfig {
-	return silacli.LoadBaseConfig(
-		ctx,
-		ctx.String(configFileFlag.Name),
-		silacli.ApplyNodeConfig,
-	)
-}
-
 // makeConfigNode loads the real execution/node wiring layer.
 //
 // Shared bootstrap/runtime/config helpers belong in cmd/silacli.
 // Real protocol wiring, account backends and Ethereum-compatible
 // execution assembly remain inside cmd/geth.
+
 func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
-	cfg := loadBaseConfig(ctx)
+	cfg := silacli.LoadBaseConfig(
+		ctx,
+		ctx.String(configFileFlag.Name),
+		silacli.ApplyNodeConfig,
+	)
 	stack := silacli.NewNodeOrFatal(&cfg.Node)
 	// Node doesn't by default populate account manager backends
 	if err := setAccountManagerBackends(stack.Config(), stack.AccountManager(), stack.KeyStoreDir()); err != nil {

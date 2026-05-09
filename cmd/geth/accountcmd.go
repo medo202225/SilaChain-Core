@@ -24,6 +24,7 @@ import (
 
 	"github.com/sila-org/sila/accounts"
 	"github.com/sila-org/sila/accounts/keystore"
+	"github.com/sila-org/sila/cmd/silacli"
 	"github.com/sila-org/sila/cmd/utils"
 	"github.com/sila-org/sila/common"
 	"github.com/sila-org/sila/crypto"
@@ -192,7 +193,11 @@ nodes.
 
 // makeAccountManager creates an account manager with backends
 func makeAccountManager(ctx *cli.Context) *accounts.Manager {
-	cfg := loadBaseConfig(ctx)
+	cfg := silacli.LoadBaseConfig(
+		ctx,
+		ctx.String(configFileFlag.Name),
+		silacli.ApplyNodeConfig,
+	)
 	am := accounts.NewManager(nil)
 	keydir, isEphemeral, err := cfg.Node.GetKeyStoreDir()
 	if err != nil {
@@ -241,7 +246,11 @@ func readPasswordFromFile(path string) (string, bool) {
 
 // accountCreate creates a new account into the keystore defined by the CLI flags.
 func accountCreate(ctx *cli.Context) error {
-	cfg := loadBaseConfig(ctx)
+	cfg := silacli.LoadBaseConfig(
+		ctx,
+		ctx.String(configFileFlag.Name),
+		silacli.ApplyNodeConfig,
+	)
 	keydir, isEphemeral, err := cfg.Node.GetKeyStoreDir()
 	if err != nil {
 		utils.Fatalf("Failed to get the keystore directory: %v", err)
