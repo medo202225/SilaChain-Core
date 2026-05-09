@@ -19,7 +19,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"slices"
 	"strings"
 
@@ -34,7 +33,6 @@ import (
 	"github.com/sila-org/sila/internal/flags"
 	"github.com/sila-org/sila/internal/silaexec"
 	"github.com/sila-org/sila/log"
-	"github.com/sila-org/sila/metrics"
 	"github.com/sila-org/sila/node"
 	"github.com/urfave/cli/v2"
 )
@@ -159,18 +157,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	backend, eth := silaexec.RegisterExecutionService(stack, &cfg.Eth)
 
 	// Create gauge with SilaChain system and build information
-	if eth != nil { // The 'eth' backend may be nil in light mode
-		var protos []string
-		for _, p := range eth.Protocols() {
-			protos = append(protos, fmt.Sprintf("%v/%d", p.Name, p.Version))
-		}
-		metrics.NewRegisteredGaugeInfo("sila/info", nil).Update(metrics.GaugeInfoValue{
-			"arch":      runtime.GOARCH,
-			"os":        runtime.GOOS,
-			"version":   cfg.Node.Version,
-			"protocols": strings.Join(protos, ","),
-		})
-	}
+	silaexec.RegisterBuildInfoGauge(eth, cfg.Node.Version)
 
 	// Configure log filter RPC API.
 	filterSystem := silaexec.RegisterFilterAPI(stack, backend, &cfg.Eth)
