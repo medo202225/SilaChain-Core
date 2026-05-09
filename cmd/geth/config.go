@@ -128,10 +128,7 @@ func constructDevModeBanner(ctx *cli.Context, cfg gethConfig) string {
 // makeFullNode loads SilaChain configuration and creates the execution backend.
 func makeFullNode(ctx *cli.Context) *node.Node {
 	stack, cfg := makeConfigNode(ctx)
-	if ctx.IsSet(utils.OverrideOsaka.Name) {
-		v := ctx.Uint64(utils.OverrideOsaka.Name)
-		cfg.Eth.OverrideOsaka = &v
-	}
+	silaexec.ApplyProtocolOverrides(ctx, &cfg.Eth)
 	if ctx.IsSet(utils.OverrideBPO1.Name) {
 		v := ctx.Uint64(utils.OverrideBPO1.Name)
 		cfg.Eth.OverrideBPO1 = &v
