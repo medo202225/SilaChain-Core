@@ -22,12 +22,14 @@ func main() {
 	app.After = func(ctx *cli.Context) error {
 		return silacli.After(ctx, func() error { return nil })
 	}
-	app.Action = func(ctx *cli.Context) error {
-		fmt.Fprintf(os.Stdout, "%s [%s]\n", silacli.SilaAppConfig.Usage, silacli.SilaAppConfig.EnvPrefix)
-		return nil
-	}
+	app.Action = runSilaCommand
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func runSilaCommand(ctx *cli.Context) error {
+	fmt.Fprintf(os.Stdout, "%s [%s]\n", silacli.SilaAppConfig.Usage, silacli.SilaAppConfig.EnvPrefix)
+	return nil
 }
