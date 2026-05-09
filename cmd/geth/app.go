@@ -13,9 +13,7 @@ import (
 	"github.com/sila-org/sila/cmd/utils"
 	"github.com/sila-org/sila/console/prompt"
 	"github.com/sila-org/sila/internal/debug"
-	"github.com/sila-org/sila/internal/flags"
 	"github.com/urfave/cli/v2"
-	"go.uber.org/automaxprocs/maxprocs"
 )
 
 var app = newConfiguredSilaApp(defaultSilaAppConfig)
@@ -84,13 +82,7 @@ func initSilaApp(app *cli.App, cfg silaAppConfig) {
 	silacli.ConfigureEnv(app, cfg)
 
 	app.Before = func(ctx *cli.Context) error {
-		maxprocs.Set() // Automatically set GOMAXPROCS to match Linux container CPU quota.
-		flags.MigrateGlobalFlags(ctx)
-		if err := debug.Setup(ctx); err != nil {
-			return err
-		}
-		flags.CheckEnvVars(ctx, app.Flags, cfg.EnvPrefix)
-		return nil
+		return silacli.Before(ctx, app, cfg)
 	}
 	app.After = func(ctx *cli.Context) error {
 		debug.Exit()
