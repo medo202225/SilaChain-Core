@@ -45,3 +45,9 @@ func RegisterSyncOverrideService(stack *node.Node, ethBackend *eth.Ethereum, tar
 func RegisterEngineAPI(stack *node.Node, ethBackend *eth.Ethereum) error {
 	return catalyst.Register(stack, ethBackend)
 }
+
+// NewSimulatedBeacon creates the dev-mode simulated beacon.
+var NewSimulatedBeacon = catalyst.NewSimulatedBeacon
+
+// RegisterSimulatedBeaconAPIs registers dev-mode simulated beacon APIs.
+var RegisterSimulatedBeaconAPIs = catalyst.RegisterSimulatedBeaconAPIs
