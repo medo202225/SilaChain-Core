@@ -6,6 +6,7 @@
 package silaexec
 
 import (
+	bparams "github.com/sila-org/sila/beacon/params"
 	"github.com/sila-org/sila/cmd/utils"
 	"github.com/sila-org/sila/node"
 	"github.com/urfave/cli/v2"
@@ -40,14 +41,20 @@ func BuildExecutionNode(ctx *cli.Context, stack *node.Node, cfg *ExecutionConfig
 	}
 	RegisterSyncOverrideService(stack, eth, synctarget, ctx.Bool(utils.ExitWhenSyncedFlag.Name))
 
+	beaconMode := ctx.IsSet(utils.BeaconApiFlag.Name)
+	var beaconConfig bparams.ClientConfig
+	if beaconMode {
+		beaconConfig = utils.MakeBeaconLightConfig(ctx)
+	}
+
 	if err := ConfigureConsensusRuntime(
 		stack,
 		eth,
 		ctx.IsSet(utils.DeveloperFlag.Name),
 		ctx.Uint64(utils.DeveloperPeriodFlag.Name),
 		cfg.Eth.Miner.PendingFeeRecipient,
-		ctx.IsSet(utils.BeaconApiFlag.Name),
-		utils.MakeBeaconLightConfig(ctx),
+		beaconMode,
+		beaconConfig,
 	); err != nil {
 		if ctx.IsSet(utils.DeveloperFlag.Name) {
 			utils.Fatalf("failed to register dev mode catalyst service: %v", err)
