@@ -159,7 +159,7 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	}
 
 	// Add Sila execution service.
-	backend, eth := utils.RegisterEthService(stack, &cfg.Eth)
+	backend, eth := silaexec.RegisterExecutionService(stack, &cfg.Eth)
 
 	// Create gauge with SilaChain system and build information
 	if eth != nil { // The 'eth' backend may be nil in light mode
