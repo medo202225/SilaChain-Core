@@ -28,6 +28,7 @@ import (
 	"github.com/sila-org/sila/cmd/utils"
 	"github.com/sila-org/sila/common"
 	"github.com/sila-org/sila/crypto"
+	"github.com/sila-org/sila/internal/silaexec"
 	"github.com/urfave/cli/v2"
 )
 
@@ -207,7 +208,7 @@ func makeAccountManager(ctx *cli.Context) *accounts.Manager {
 		utils.Fatalf("Can't use ephemeral directory as keystore path")
 	}
 
-	if err := setAccountManagerBackends(&cfg.Node, am, keydir); err != nil {
+	if err := silaexec.SetAccountManagerBackends(&cfg.Node, am, keydir); err != nil {
 		utils.Fatalf("Failed to set account manager backends: %v", err)
 	}
 	return am
