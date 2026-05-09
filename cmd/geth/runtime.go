@@ -5,24 +5,24 @@
 package main
 
 import (
-	"github.com/sila-org/sila/cmd/silacli"
+	"github.com/sila-org/sila/internal/silaexec"
 	"github.com/sila-org/sila/node"
 	"github.com/urfave/cli/v2"
 )
 
 func prepare(ctx *cli.Context) {
-	silacli.Prepare(ctx)
+	silaexec.Prepare(ctx)
 }
 
 func runSilaNode(ctx *cli.Context, isConsole bool) error {
-	return silacli.RunRuntime(ctx, silaRuntimeHooks(), isConsole)
+	return silaexec.RunRuntime(ctx, silaRuntimeHooks(), isConsole)
 }
 
-func silaRuntimeHooks() silacli.RuntimeHooks {
-	return silacli.RuntimeHooks{
+func silaRuntimeHooks() silaexec.RuntimeHooks {
+	return silaexec.RuntimeHooks{
 		Prepare:      prepare,
-		MakeFullNode: func(ctx *cli.Context) silacli.NodeLifecycle { return makeFullNode(ctx) },
-		StartNode: func(ctx *cli.Context, stack silacli.NodeLifecycle, isConsole bool) {
+		MakeFullNode: func(ctx *cli.Context) silaexec.NodeLifecycle { return makeFullNode(ctx) },
+		StartNode: func(ctx *cli.Context, stack silaexec.NodeLifecycle, isConsole bool) {
 			startNode(ctx, stack.(*node.Node), isConsole)
 		},
 	}
