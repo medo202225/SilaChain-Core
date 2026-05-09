@@ -65,10 +65,6 @@ var tomlSettings = silacli.ConfigTOMLSettings
 
 type gethConfig = silacli.ExecutionConfig
 
-func loadConfig(file string, cfg *gethConfig) error {
-	return silacli.LoadConfig(file, cfg)
-}
-
 func defaultNodeConfig() node.Config {
 	return silacli.DefaultNodeConfig()
 }
