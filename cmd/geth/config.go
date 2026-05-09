@@ -19,13 +19,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"runtime"
 	"slices"
 	"strings"
-	"unicode"
 
-	"github.com/naoina/toml"
 	"github.com/sila-org/sila/accounts"
 	"github.com/sila-org/sila/accounts/external"
 	"github.com/sila-org/sila/accounts/keystore"
@@ -65,39 +62,7 @@ var (
 )
 
 // These settings ensure that TOML keys use the same names as Go struct fields.
-var tomlSettings = toml.Config{
-	NormFieldName: func(rt reflect.Type, key string) string {
-		return key
-	},
-	FieldToKey: func(rt reflect.Type, field string) string {
-		return field
-	},
-	MissingField: func(rt reflect.Type, field string) error {
-		id := fmt.Sprintf("%s.%s", rt.String(), field)
-		if deprecatedConfigFields[id] {
-			log.Warn(fmt.Sprintf("Config field '%s' is deprecated and won't have any effect.", id))
-			return nil
-		}
-		var link string
-		if unicode.IsUpper(rune(rt.Name()[0])) && rt.PkgPath() != "main" {
-			link = fmt.Sprintf(", see https://godoc.org/%s#%s for available fields", rt.PkgPath(), rt.Name())
-		}
-		return fmt.Errorf("field '%s' is not defined in %s%s", field, rt.String(), link)
-	},
-}
-
-var deprecatedConfigFields = map[string]bool{
-	"ethconfig.Config.EVMInterpreter":          true,
-	"ethconfig.Config.EWASMInterpreter":        true,
-	"ethconfig.Config.TrieCleanCacheJournal":   true,
-	"ethconfig.Config.TrieCleanCacheRejournal": true,
-	"ethconfig.Config.LightServ":               true,
-	"ethconfig.Config.LightIngress":            true,
-	"ethconfig.Config.LightEgress":             true,
-	"ethconfig.Config.LightPeers":              true,
-	"ethconfig.Config.LightNoPrune":            true,
-	"ethconfig.Config.LightNoSyncServe":        true,
-}
+var tomlSettings = silacli.ConfigTOMLSettings
 
 type ethstatsConfig struct {
 	URL string `toml:",omitempty"`
