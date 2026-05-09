@@ -35,6 +35,7 @@ import (
 	"github.com/sila-org/sila/crypto"
 	"github.com/sila-org/sila/eth/catalyst"
 	"github.com/sila-org/sila/internal/flags"
+	"github.com/sila-org/sila/internal/silaexec"
 	"github.com/sila-org/sila/internal/telemetry/tracesetup"
 	"github.com/sila-org/sila/log"
 	"github.com/sila-org/sila/metrics"
@@ -63,7 +64,7 @@ var (
 // These settings ensure that TOML keys use the same names as Go struct fields.
 var tomlSettings = silacli.ConfigTOMLSettings
 
-type gethConfig = silacli.ExecutionConfig
+type gethConfig = silaexec.ExecutionConfig
 
 // makeConfigNode loads the real execution/node wiring layer.
 //
