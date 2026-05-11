@@ -65,7 +65,7 @@ func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
 		ctx.String(configFileFlag.Name),
 		silacli.ApplyNodeConfig,
 	)
-	stack := silacli.NewNodeOrFatal(&cfg.Node)
+	stack := silaexec.NewNodeOrFatal(&cfg.Node)
 	// Node doesn't by default populate account manager backends
 	if err := silaexec.SetAccountManagerBackends(stack.Config(), stack.AccountManager(), stack.KeyStoreDir()); err != nil {
 		utils.Fatalf("Failed to set account manager backends: %v", err)

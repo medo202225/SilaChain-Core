@@ -5,7 +5,11 @@
 
 package silaexec
 
-import "github.com/sila-org/sila/cmd/silacli"
+import (
+	"github.com/sila-org/sila/cmd/silacli"
+	"github.com/sila-org/sila/cmd/utils"
+	"github.com/sila-org/sila/node"
+)
 
 // ExecutionConfig represents the shared execution runtime configuration.
 type ExecutionConfig = silacli.ExecutionConfig
@@ -17,7 +21,13 @@ var LoadBaseConfig = silacli.LoadBaseConfig
 var ApplyNodeConfig = silacli.ApplyNodeConfig
 
 // NewNodeOrFatal creates a node or exits on failure.
-var NewNodeOrFatal = silacli.NewNodeOrFatal
+func NewNodeOrFatal(cfg *node.Config) *node.Node {
+	stack, err := node.New(cfg)
+	if err != nil {
+		utils.Fatalf("Failed to create the protocol stack: %v", err)
+	}
+	return stack
+}
 
 // Prepare prepares the shared runtime context.
 var Prepare = silacli.Prepare
