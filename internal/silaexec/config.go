@@ -22,3 +22,6 @@ var NewNodeOrFatal = silacli.NewNodeOrFatal
 // ExecutionConfig represents the shared execution runtime configuration
 // boundary used by Sila execution clients.
 type ExecutionConfig = silacli.ExecutionConfig
+
+// Prepare prepares the shared execution runtime context.
+var Prepare = silacli.Prepare
