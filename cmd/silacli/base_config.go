@@ -1,7 +1,6 @@
 package silacli
 
 import (
-	"github.com/sila-org/sila/cmd/utils"
 	"github.com/sila-org/sila/eth/ethconfig"
 	"github.com/sila-org/sila/metrics"
 	"github.com/sila-org/sila/node"
@@ -31,17 +30,4 @@ func LoadBaseConfig(
 	applyNode(ctx, &cfg.Node)
 
 	return cfg
-}
-
-// LoadBaseConfigWithDefaultNodeFlags loads the shared execution
-// configuration using the standard node flag application logic.
-func LoadBaseConfigWithDefaultNodeFlags(
-	ctx *cli.Context,
-	configFile string,
-) ExecutionConfig {
-	return LoadBaseConfig(
-		ctx,
-		configFile,
-		utils.SetNodeConfig,
-	)
 }
