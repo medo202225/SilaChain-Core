@@ -30,6 +30,8 @@ func initSilaApp(app *cli.App, cfg silaAppConfig) {
 		versionCommand,
 		licenseCommand,
 		dumpConfigCommand,
+		accountCommand,
+		walletCommand,
 	}
 
 	silacli.ConfigureEnv(app, cfg)
