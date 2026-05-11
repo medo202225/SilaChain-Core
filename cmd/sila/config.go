@@ -55,7 +55,7 @@ type gethConfig = silacli.ExecutionConfig
 
 // makeConfigNode loads the real execution/node wiring layer.
 //
-// Shared bootstrap/runtime/config helpers belong in cmd/silacli.
+// Shared bootstrap/runtime/config helpers belong in the Sila CLI layer.
 // Real protocol wiring, account backends and Ethereum-compatible
 // execution assembly remain inside the Sila execution runtime boundary.
 
