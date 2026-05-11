@@ -2,15 +2,15 @@
 # with Go source code. If you know what GOPATH is then you probably
 # don't need to bother with make.
 
-.PHONY: geth evm all test lint fmt clean devtools help
+.PHONY: sila evm all test lint fmt clean devtools help
 
 GOBIN = ./build/bin
 GO ?= latest
 GORUN = go run
 
-#? geth: Build geth.
-geth:
-	$(GORUN) build/ci.go install ./cmd/geth
+#? sila: Build geth.
+sila:
+	$(GORUN) build/ci.go install ./cmd/sila
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/geth\" to launch geth."
 
