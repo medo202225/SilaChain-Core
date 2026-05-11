@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/sila-org/sila/cmd/silacli"
 	"github.com/sila-org/sila/cmd/utils"
 	"github.com/sila-org/sila/crypto"
 	"github.com/sila-org/sila/internal/flags"
@@ -48,9 +49,9 @@ var (
 )
 
 // These settings ensure that TOML keys use the same names as Go struct fields.
-var tomlSettings = silaexec.ConfigTOMLSettings
+var tomlSettings = silacli.ConfigTOMLSettings
 
-type gethConfig = silaexec.ExecutionConfig
+type gethConfig = silacli.ExecutionConfig
 
 // makeConfigNode loads the real execution/node wiring layer.
 //
@@ -59,12 +60,12 @@ type gethConfig = silaexec.ExecutionConfig
 // execution assembly remain inside the Sila execution runtime boundary.
 
 func makeConfigNode(ctx *cli.Context) (*node.Node, gethConfig) {
-	cfg := silaexec.LoadBaseConfig(
+	cfg := silacli.LoadBaseConfig(
 		ctx,
 		ctx.String(configFileFlag.Name),
-		silaexec.ApplyNodeConfig,
+		silacli.ApplyNodeConfig,
 	)
-	stack := silaexec.NewNodeOrFatal(&cfg.Node)
+	stack := silacli.NewNodeOrFatal(&cfg.Node)
 	// Node doesn't by default populate account manager backends
 	if err := silaexec.SetAccountManagerBackends(stack.Config(), stack.AccountManager(), stack.KeyStoreDir()); err != nil {
 		utils.Fatalf("Failed to set account manager backends: %v", err)
