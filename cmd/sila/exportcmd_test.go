@@ -25,13 +25,13 @@ import (
 	"github.com/sila-org/sila/common"
 )
 
-// TestExport does a basic test of "geth export", exporting the test-genesis.
+// TestExport does a basic test of "sila export", exporting the test-genesis.
 func TestExport(t *testing.T) {
 	t.Parallel()
 	outfile := fmt.Sprintf("%v/testExport.out", t.TempDir())
-	geth := runGeth(t, "--datadir", initGeth(t), "export", outfile)
-	geth.WaitExit()
-	if have, want := geth.ExitStatus(), 0; have != want {
+	sila := runSila(t, "--datadir", initGeth(t), "export", outfile)
+	sila.WaitExit()
+	if have, want := sila.ExitStatus(), 0; have != want {
 		t.Errorf("exit error, have %d want %d", have, want)
 	}
 	have, err := os.ReadFile(outfile)
