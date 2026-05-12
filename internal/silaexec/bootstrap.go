@@ -6,39 +6,29 @@
 package silaexec
 
 import (
-	"github.com/sila-org/sila/cmd/utils"
+	"github.com/sila-org/sila/internal/version"
 	"github.com/sila-org/sila/node"
-	"github.com/urfave/cli/v2"
 )
 
-// BuildExecutionStack loads the shared execution/node bootstrap layer.
-func BuildExecutionStack(
-	ctx *cli.Context,
-	configFile string,
-) (*node.Node, ExecutionConfig) {
-	cfg := LoadBaseConfig(
-		ctx,
-		configFile,
-		utils.SetNodeConfig,
-	)
+var clientIdentifier = "sila"
 
-	stack := NewNodeOrFatal(&cfg.Node)
+func SetClientIdentifier(name string) {
+	clientIdentifier = name
+}
 
-	if err := SetAccountManagerBackends(
-		stack.Config(),
-		stack.AccountManager(),
-		stack.KeyStoreDir(),
-	); err != nil {
-		utils.Fatalf("Failed to set account manager backends: %v", err)
-	}
+func ClientIdentifier() string {
+	return clientIdentifier
+}
 
-	utils.SetEthConfig(ctx, stack, &cfg.Eth)
+func DefaultNodeConfig() node.Config {
+	git, _ := version.VCS()
 
-	if ctx.IsSet(utils.EthStatsURLFlag.Name) {
-		cfg.Ethstats.URL = ctx.String(utils.EthStatsURLFlag.Name)
-	}
+	cfg := node.DefaultConfig
+	cfg.Name = clientIdentifier
+	cfg.Version = version.WithCommit(git.Commit, git.Date)
+	cfg.HTTPModules = append(cfg.HTTPModules, "eth")
+	cfg.WSModules = append(cfg.WSModules, "eth")
+	cfg.IPCPath = clientIdentifier + ".ipc"
 
-	ApplyMetricConfig(ctx, &cfg)
-
-	return stack, cfg
+	return cfg
 }

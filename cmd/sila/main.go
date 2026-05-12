@@ -214,7 +214,7 @@ func newConfiguredSilaApp(cfg silaAppConfig) *cli.App {
 }
 
 func initSilaApp(app *cli.App, cfg silaAppConfig) {
-	silacli.SetClientIdentifier(cfg.ClientIdentifier)
+	silaexec.SetClientIdentifier(cfg.ClientIdentifier)
 
 	app.Action = runSilaCommand
 	app.Commands = []*cli.Command{

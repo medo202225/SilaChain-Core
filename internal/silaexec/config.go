@@ -6,7 +6,6 @@
 package silaexec
 
 import (
-	"github.com/sila-org/sila/cmd/silacli"
 	"github.com/sila-org/sila/cmd/utils"
 	"github.com/sila-org/sila/eth/ethconfig"
 	"github.com/sila-org/sila/log"
@@ -32,7 +31,7 @@ type ExecutionConfig struct {
 func DefaultExecutionConfig() ExecutionConfig {
 	return ExecutionConfig{
 		Eth:     ethconfig.Defaults,
-		Node:    silacli.DefaultNodeConfig(),
+		Node:    DefaultNodeConfig(),
 		Metrics: metrics.DefaultConfig,
 	}
 }
