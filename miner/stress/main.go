@@ -172,10 +172,10 @@ func makeNode(genesis *core.Genesis) (*node.Node, *eth.Ethereum, *catalyst.Simul
 	datadir, _ := os.MkdirTemp("", "")
 
 	config := &node.Config{
-		Name:    "geth",
+		Name:    "sila",
 		DataDir: datadir,
 	}
-	// Start the node and configure a full Ethereum node on it
+	// Start the node and configure a full Sila execution node on it
 	stack, err := node.New(config)
 	if err != nil {
 		return nil, nil, nil, err
