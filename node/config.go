@@ -46,7 +46,7 @@ const (
 // all registered services.
 type Config struct {
 	// Name sets the instance name of the node. It must not contain the / character and is
-	// used in the devp2p node identifier. The instance name of geth is "sila". If no
+	// used in the devp2p node identifier. The instance name of Sila is "sila". If no
 	// value is specified, the basename of the current executable is used.
 	Name string `toml:"-"`
 
@@ -374,7 +374,7 @@ func (c *Config) ResolvePath(path string) string {
 		if oldpath != "" && common.FileExist(oldpath) {
 			if warn && !c.oldGethResourceWarning {
 				c.oldGethResourceWarning = true
-				log.Warn("Using deprecated resource file, please move this file to the 'geth' subdirectory of datadir.", "file", oldpath)
+				log.Warn("Using deprecated resource file, please move this file to the 'sila' subdirectory of datadir.", "file", oldpath)
 			}
 			return oldpath
 		}
