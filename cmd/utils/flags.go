@@ -938,7 +938,7 @@ var (
 	HttpHeaderFlag = &cli.StringSliceFlag{
 		Name:     "header",
 		Aliases:  []string{"H"},
-		Usage:    "Pass custom headers to the RPC server when using --" + RemoteDBFlag.Name + " or the geth attach console. This flag can be given multiple times.",
+		Usage:    "Pass custom headers to the RPC server when using --" + RemoteDBFlag.Name + " or the sila attach console. This flag can be given multiple times.",
 		Category: flags.APICategory,
 	}
 
@@ -2276,10 +2276,10 @@ func SetupMetrics(cfg *metrics.Config) {
 	)
 	if enableExport {
 		log.Info("Enabling metrics export to InfluxDB", "interval", interval)
-		go influxdb.InfluxDBWithTags(metrics.DefaultRegistry, interval, endpoint, database, username, password, "geth.", tagsMap)
+		go influxdb.InfluxDBWithTags(metrics.DefaultRegistry, interval, endpoint, database, username, password, "sila.", tagsMap)
 	} else if enableExportV2 {
 		log.Info("Enabling metrics export to InfluxDB (v2)", "interval", interval)
-		go influxdb.InfluxDBV2WithTags(metrics.DefaultRegistry, interval, endpoint, token, bucket, organization, "geth.", tagsMap)
+		go influxdb.InfluxDBV2WithTags(metrics.DefaultRegistry, interval, endpoint, token, bucket, organization, "sila.", tagsMap)
 	}
 
 	// Expvar exporter.
