@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -17,7 +17,7 @@
 // Package keystore implements encrypted storage of secp256k1 private keys.
 //
 // Keys are stored as encrypted JSON files according to the Web3 Secret Storage specification.
-// See https://ethereum.org/en/developers/docs/data-structures-and-encoding/web3-secret-storage/ for more information.
+// See https://sila-blockchain.org/docs/data-structures-and-encoding/web3-secret-storage/ for more information.
 package keystore
 
 import (
