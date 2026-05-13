@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the SilaChain library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package web3ext contains geth specific web3.js extensions.
+// Package web3ext contains SilaChain-specific web3.js extensions.
 package web3ext
 
 var Modules = map[string]string{

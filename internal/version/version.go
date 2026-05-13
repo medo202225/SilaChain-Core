@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -54,7 +54,7 @@ func WithCommit(gitCommit, gitDate string) string {
 	return vsn
 }
 
-// Archive holds the textual version string used for Geth archives. e.g.
+// Archive holds the textual version string used for SilaChain archives. e.g.
 // "1.8.11-dea1ce05" for stable releases, or "1.8.13-unstable-21c059b6" for unstable
 // releases.
 func Archive(gitCommit string) string {
@@ -82,7 +82,7 @@ func ClientName(clientIdentifier string) string {
 
 // Info returns build and platform information about the current binary.
 //
-// If the package that is currently executing is a prefixed by our go-ethereum
+// If the package that is currently executing is a prefixed by our SilaChain
 // module path, it will print out commit and date VCS information. Otherwise,
 // it will assume it's imported by a third-party and will return the imported
 // version and whether it was replaced by another module.

@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -247,9 +247,9 @@ func (*HandlerT) SetGCPercent(v int) int {
 //     runtime may cause the garbage collector to run nearly continuously. However,
 //     the application may still make progress.
 //
-//   - Setting the limit too low will cause Geth to become unresponsive.
+//   - Setting the limit too low will cause SilaChain to become unresponsive.
 //
-//   - Geth also allocates memory off-heap, particularly for fastCache and Pebble,
+//   - SilaChain also allocates memory off-heap, particularly for fastCache and Pebble,
 //     which can be non-trivial (a few gigabytes by default).
 func (*HandlerT) SetMemoryLimit(limit int64) int64 {
 	log.Info("Setting memory limit", "size", common.StorageSize(limit))

@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -55,11 +55,11 @@ var migrationApplied = map[*cli.Command]struct{}{}
 //
 // Example:
 //
-//	geth account new --keystore /tmp/mykeystore --lightkdf
+//	sila account new --keystore /tmp/mykeystore --lightkdf
 //
 // is equivalent after calling this method with:
 //
-//	geth --keystore /tmp/mykeystore --lightkdf account new
+//	sila --keystore /tmp/mykeystore --lightkdf account new
 //
 // i.e. in the subcommand Action function of 'account new', ctx.Bool("lightkdf)
 // will return true even if --lightkdf is set as a global option.

@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -76,7 +76,7 @@ func getCompletions(vm *goja.Runtime, line string) (results []string) {
 	if len(results) == 1 && results[0] == line {
 		// Accessing the property will cause it to be evaluated.
 		// This can cause an error, e.g. in case of web3.eth.protocolVersion
-		// which has been dropped from geth. Ignore the error for autocompletion
+		// which has been dropped from the client. Ignore the error for autocompletion
 		// purposes.
 		obj := SafeGet(obj, parts[len(parts)-1])
 		if obj != nil {

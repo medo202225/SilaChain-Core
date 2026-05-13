@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -40,7 +40,7 @@ type txSyncTimeoutError struct {
 }
 
 // ErrorCode returns the JSON error code for a revert.
-// See: https://ethereum.org/en/developers/docs/apis/json-rpc/#error-codes
+// See: JSON-RPC error codes
 func (e *revertError) ErrorCode() int {
 	return 3
 }
@@ -77,7 +77,7 @@ func (e *TxIndexingError) Error() string {
 }
 
 // ErrorCode returns the JSON error code for a revert.
-// See: https://ethereum.org/en/developers/docs/apis/json-rpc/#error-codes
+// See: JSON-RPC error codes
 func (e *TxIndexingError) ErrorCode() int {
 	return -32000 // to be decided
 }

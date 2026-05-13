@@ -1,7 +1,6 @@
 // Copyright 2026 The SilaChain Authors
 // This file is part of the SilaChain library.
 //
-// The SilaChain library is derived from the go-ethereum library.
 
 // Package silaexec owns the shared Sila execution runtime wiring.
 //

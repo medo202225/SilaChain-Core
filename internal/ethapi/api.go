@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -1715,7 +1715,7 @@ func (api *TransactionAPI) SendRawTransaction(ctx context.Context, input hexutil
 	}
 
 	// Convert legacy blob transaction proofs.
-	// TODO: remove in go-ethereum v1.17.x
+	// TODO: remove in a future SilaChain release
 	if sc := tx.BlobTxSidecar(); sc != nil {
 		exp := api.currentBlobSidecarVersion()
 		if sc.Version == types.BlobSidecarVersion0 && exp == types.BlobSidecarVersion1 {
@@ -1738,7 +1738,7 @@ func (api *TransactionAPI) SendRawTransactionSync(ctx context.Context, input hex
 	}
 
 	// Convert legacy blob transaction proofs.
-	// TODO: remove in go-ethereum v1.17.x
+	// TODO: remove in a future SilaChain release
 	if sc := tx.BlobTxSidecar(); sc != nil {
 		exp := api.currentBlobSidecarVersion()
 		if sc.Version == types.BlobSidecarVersion0 && exp == types.BlobSidecarVersion1 {
@@ -1834,7 +1834,7 @@ func (api *TransactionAPI) SendRawTransactionSync(ctx context.Context, input hex
 //
 // The account associated with addr must be unlocked.
 //
-// https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_sign
+// JSON-RPC eth_sign
 func (api *TransactionAPI) Sign(addr common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: addr}

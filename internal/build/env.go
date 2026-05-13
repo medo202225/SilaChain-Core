@@ -1,5 +1,5 @@
 // Copyright 2026 The SilaChain Authors
-// This file is part of the SilaChain library (derived from go-ethereum).
+// This file is part of the SilaChain library.
 //
 // The SilaChain library is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as published by
@@ -126,7 +126,7 @@ func Env() Environment {
 
 // LocalEnv returns build environment metadata gathered from git.
 func LocalEnv() Environment {
-	env := applyEnvFlags(Environment{Name: "local", Repo: "ethereum/go-ethereum"})
+	env := applyEnvFlags(Environment{Name: "local", Repo: "sila-org/sila"})
 
 	head := readGitFile("HEAD")
 	if fields := strings.Fields(head); len(fields) == 2 {
