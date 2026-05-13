@@ -2373,7 +2373,7 @@ func DialRPCWithHeaders(endpoint string, headers []string) (*rpc.Client, error) 
 		return nil, errors.New("endpoint must be specified")
 	}
 	if strings.HasPrefix(endpoint, "rpc:") || strings.HasPrefix(endpoint, "ipc:") {
-		// Backwards compatibility with geth < 1.5 which required
+		// Backwards compatibility with legacy clients which required
 		// these prefixes.
 		endpoint = endpoint[4:]
 	}
