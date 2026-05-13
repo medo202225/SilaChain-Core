@@ -33,7 +33,7 @@ import (
 
 // decodeRLPxDisconnect parses a disconnect message payload. Per the RLPx spec
 // the payload is a list containing a single reason, but some implementations
-// (including older geth) sent the reason as a bare byte. Accept both forms.
+// (including older clients) sent the reason as a bare byte. Accept both forms.
 func decodeRLPxDisconnect(data []byte) (p2p.DiscReason, error) {
 	s := rlp.NewStream(bytes.NewReader(data), uint64(len(data)))
 	k, _, err := s.Kind()
@@ -130,7 +130,7 @@ func rlpxPing(ctx *cli.Context) error {
 		fmt.Printf("%+v\n", h)
 	case 1:
 		// The disconnect message is specified as a list containing the reason,
-		// but some implementations (including older geth) send the reason as a
+		// but some implementations (including older clients) send the reason as a
 		// single byte. Handle both forms, and on failure include the raw payload
 		// so the operator can see what was actually sent.
 		reason, decErr := decodeRLPxDisconnect(data)

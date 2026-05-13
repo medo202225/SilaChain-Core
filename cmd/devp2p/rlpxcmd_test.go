@@ -40,7 +40,7 @@ func TestDecodeRLPxDisconnect(t *testing.T) {
 			want:    p2p.DiscRequested,
 		},
 		{
-			name:    "bare byte form (legacy geth)",
+			name:    "bare byte form (legacy client)",
 			payload: []byte{0x04}, // 4 = TooManyPeers
 			want:    p2p.DiscTooManyPeers,
 		},
