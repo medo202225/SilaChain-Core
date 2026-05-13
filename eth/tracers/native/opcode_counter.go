@@ -1,5 +1,5 @@
-// Copyright 2025 The go-ethereum Authors
-// This file is part of go-ethereum.
+// Copyright 2026 The SilaChain Authors
+// This file is part of the SilaChain library.
 //
 // go-ethereum is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
