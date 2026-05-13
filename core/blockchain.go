@@ -442,7 +442,7 @@ func NewBlockChain(db ethdb.Database, genesis *Genesis, engine consensus.Engine,
 	// Update chain info data metrics
 	chainInfoGauge.Update(metrics.GaugeInfoValue{"chain_id": bc.chainConfig.ChainID.String()})
 
-	// If Geth is initialized with an external ancient store, re-initialize the
+	// If Sila is initialized with an external ancient store, re-initialize the
 	// missing chain indexes and chain flags. This procedure can survive crash
 	// and can be resumed in next restart since chain flags are updated in last step.
 	if bc.empty() {
@@ -745,7 +745,7 @@ func (bc *BlockChain) initializeHistoryPruning(latest uint64) error {
 		// Database needs pruning (freezerTail < target).
 		if latest != 0 {
 			log.Error(fmt.Sprintf("Chain history mode is configured as %q, but database is not pruned to the target block.", policy.Mode.String()))
-			log.Error(fmt.Sprintf("Run 'geth prune-history --history.chain %s' to prune history.", policy.Mode.String()))
+			log.Error(fmt.Sprintf("Run 'sila prune-history --history.chain %s' to prune history.", policy.Mode.String()))
 			return errors.New("history pruning required")
 		}
 		// Fresh database (latest == 0), will sync from target point.

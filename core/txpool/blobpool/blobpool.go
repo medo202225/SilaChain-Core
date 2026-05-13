@@ -1121,7 +1121,7 @@ func (p *BlobPool) reinject(addr common.Address, txhash common.Hash) error {
 	//
 	// Performance note: Conversion takes ~140ms (Mac M1 Pro). Since a maximum of
 	// 9 legacy blob transactions are allowed in a block pre-Osaka, an adversary
-	// could theoretically halt a Geth node for ~1.2s by reorging per block. However,
+	// could theoretically halt a Sila node for ~1.2s by reorging per block. However,
 	// this attack is financially inefficient to execute.
 	head := p.head.Load()
 	if p.chain.Config().IsOsaka(head.Number, head.Time) && tx.BlobTxSidecar().Version == types.BlobSidecarVersion0 {

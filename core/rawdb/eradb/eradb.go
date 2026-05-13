@@ -136,7 +136,7 @@ func (db *Store) GetRawReceipts(number uint64) ([]byte, error) {
 }
 
 // convertReceipts transforms an encoded block receipts list from the format
-// used by era1 into the 'storage' format used by the go-ethereum ancients database.
+// used by era1 into the 'storage' format used by the SilaChain ancients database.
 func convertReceipts(input []byte) ([]byte, error) {
 	var (
 		out bytes.Buffer

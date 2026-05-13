@@ -16,9 +16,9 @@
 
 // Package tracing defines hooks for 'live tracing' of block processing and transaction
 // execution. Here we define the low-level [Hooks] object that carries hooks which are
-// invoked by the go-ethereum core at various points in the state transition.
+// invoked by the SilaChain core at various points in the state transition.
 //
-// To create a tracer that can be invoked with Geth, you need to register it using
+// To create a tracer that can be invoked with Sila, you need to register it using
 // [github.com/sila-org/sila/eth/tracers.LiveDirectory.Register].
 //
 // See https://sila-blockchain.org/docs/developers/evm-tracing/live-tracing for a tutorial.
