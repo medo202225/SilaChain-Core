@@ -10,16 +10,16 @@ Audit reports are published in the `docs` folder: https://github.com/medo202225/
 
 | Scope | Date | Report Link |
 | ------- | ------- | ----------- |
-| `sila` | 20170425 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2017-04-25_Sila-audit_Truesec.pdf) |
-| `clef` | 20180914 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2018-09-14_Clef-audit_NCC.pdf) |
-| `Discv5` | 20191015 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2019-10-15_Discv5_audit_LeastAuthority.pdf) |
-| `Discv5` | 20200124 | [pdf](https://github.com/ethereum/go-ethereum/blob/master/docs/audits/2020-01-24_DiscV5_audit_Cure53.pdf) |
+| `sila` | 20170425 | [pdf](https://github.com/medo202225/SilaChain-Core/blob/main/docs/audits/2017-04-25_Sila-audit_Truesec.pdf) |
+| `clef` | 20180914 | [pdf](https://github.com/medo202225/SilaChain-Core/blob/main/docs/audits/2018-09-14_Clef-audit_NCC.pdf) |
+| `Discv5` | 20191015 | [pdf](https://github.com/medo202225/SilaChain-Core/blob/main/docs/audits/2019-10-15_Discv5_audit_LeastAuthority.pdf) |
+| `Discv5` | 20200124 | [pdf](https://github.com/medo202225/SilaChain-Core/blob/main/docs/audits/2020-01-24_DiscV5_audit_Cure53.pdf) |
 
 ## Reporting a Vulnerability
 
 **Please do not file a public ticket** mentioning the vulnerability.
 
-To find out how to disclose a vulnerability in SilaChain visit [https://bounty.ethereum.org](https://bounty.ethereum.org) or email bounty@ethereum.org. Please read the [disclosure page](https://github.com/medo202225/SilaChain-Core/security/advisories) for more information about publicly disclosed security vulnerabilities.
+To find out how to disclose a vulnerability in SilaChain visit [https://sila-blockchain.org/security](https://sila-blockchain.org/security) or email security@sila-blockchain.org. Please read the [disclosure page](https://github.com/medo202225/SilaChain-Core/security/advisories) for more information about publicly disclosed security vulnerabilities.
 
 
 The following key may be used to communicate sensitive information to developers.
