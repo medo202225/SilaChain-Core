@@ -321,7 +321,7 @@ func (c *Config) NodeName() string {
 	if name == "sila" {
 		name = "Sila"
 	}
-	// Backwards compatibility: previous versions used legacy client names, keep that.
+	// Backwards compatibility: previous versions used legacy execution client names, keep that.
 	if name == "geth" || name == "geth-testnet" {
 		name = "Sila"
 	}
