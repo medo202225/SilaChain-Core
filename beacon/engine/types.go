@@ -397,7 +397,7 @@ type ExecutionPayloadBody struct {
 
 // Client identifiers to support ClientVersionV1.
 const (
-	ClientCode = "GE"
+	ClientCode = "SI"
 	ClientName = "SilaChain"
 )
 
