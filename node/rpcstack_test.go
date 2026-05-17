@@ -625,6 +625,36 @@ func TestHTTP2H2C(t *testing.T) {
 	}
 }
 
+func TestFilterLegacyCompatibilityAPIs(t *testing.T) {
+	apis := []rpc.API{
+		{Namespace: "eth", Service: &testService{}},
+		{Namespace: "net", Service: &testService{}},
+		{Namespace: "web3", Service: &testService{}},
+		{Namespace: "engine", Service: &testService{}},
+		{Namespace: "sila", Service: &testService{}},
+		{Namespace: "silaNet", Service: &testService{}},
+		{Namespace: "silaWeb3", Service: &testService{}},
+		{Namespace: "silaEngine", Service: &testService{}},
+	}
+
+	if filtered := filterLegacyCompatibilityAPIs(apis, true); len(filtered) != len(apis) {
+		t.Fatalf("legacy enabled should keep all APIs, got %d want %d", len(filtered), len(apis))
+	}
+
+	filtered := filterLegacyCompatibilityAPIs(apis, false)
+	got := make(map[string]bool)
+	for _, api := range filtered {
+		got[api.Namespace] = true
+		if isLegacyCompatibilityNamespace(api.Namespace) {
+			t.Fatalf("legacy namespace %q was not filtered", api.Namespace)
+		}
+	}
+	for _, namespace := range []string{"sila", "silaNet", "silaWeb3", "silaEngine"} {
+		if !got[namespace] {
+			t.Fatalf("sila namespace %q was filtered", namespace)
+		}
+	}
+}
 func apis() []rpc.API {
 	return []rpc.API{
 		{
