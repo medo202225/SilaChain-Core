@@ -30,7 +30,7 @@ import (
 	"github.com/sila-org/sila/core/stateless"
 	"github.com/sila-org/sila/core/types"
 	"github.com/sila-org/sila/crypto"
-	"github.com/sila-org/sila/internal/silaapi"
+	"github.com/sila-org/sila/internal/silaapi/blockapi"
 	"github.com/sila-org/sila/log"
 	"github.com/sila-org/sila/rlp"
 	"github.com/sila-org/sila/rpc"
@@ -121,7 +121,7 @@ func (api *DebugAPI) GetBadBlocks(ctx context.Context) ([]*BadBlockArgs, error) 
 		} else {
 			blockRlp = fmt.Sprintf("%#x", rlpBytes)
 		}
-		blockJSON = silaapi.RPCMarshalBlock(block, true, true, api.eth.APIBackend.ChainConfig())
+		blockJSON = blockapi.RPCMarshalBlock(block, true, true, api.eth.APIBackend.ChainConfig())
 		results = append(results, &BadBlockArgs{
 			Hash:  block.Hash(),
 			RLP:   blockRlp,
