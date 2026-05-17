@@ -104,13 +104,14 @@ func TestAuthEndpoints(t *testing.T) {
 	}
 	// We get ports assigned by the node automatically
 	conf := &Config{
-		HTTPHost:  "127.0.0.1",
-		HTTPPort:  0,
-		WSHost:    "127.0.0.1",
-		WSPort:    0,
-		AuthAddr:  "127.0.0.1",
-		AuthPort:  0,
-		JWTSecret: jwtPath,
+		HTTPHost:        "127.0.0.1",
+		HTTPPort:        0,
+		WSHost:          "127.0.0.1",
+		WSPort:          0,
+		AuthAddr:        "127.0.0.1",
+		AuthPort:        0,
+		JWTSecret:       jwtPath,
+		ExposeLegacyRPC: true,
 
 		WSModules:   []string{"eth", "engine"},
 		HTTPModules: []string{"eth", "engine"},
