@@ -446,7 +446,7 @@ func (n *Node) startRPC() error {
 		err := server.enableRPC(allAPIs, httpConfig{
 			CorsAllowedOrigins: DefaultAuthCors,
 			Vhosts:             n.config.AuthVirtualHosts,
-			Modules:            DefaultAuthModules,
+			Modules:            DefaultLegacyAuthModules,
 			prefix:             DefaultAuthPrefix,
 			rpcEndpointConfig:  sharedConfig,
 		})
@@ -461,7 +461,7 @@ func (n *Node) startRPC() error {
 			return err
 		}
 		if err := server.enableWS(allAPIs, wsConfig{
-			Modules:           DefaultAuthModules,
+			Modules:           DefaultLegacyAuthModules,
 			Origins:           DefaultAuthOrigins,
 			prefix:            DefaultAuthPrefix,
 			rpcEndpointConfig: sharedConfig,
