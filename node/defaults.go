@@ -61,6 +61,7 @@ var DefaultConfig = Config{
 	AuthPort:             DefaultAuthPort,
 	AuthVirtualHosts:     DefaultAuthVhosts,
 	HTTPModules:          []string{"sila", "silaNet", "silaWeb3"},
+	ExposeLegacyRPC:      true,
 	HTTPVirtualHosts:     []string{"localhost"},
 	HTTPTimeouts:         rpc.DefaultHTTPTimeouts,
 	WSPort:               DefaultWSPort,
