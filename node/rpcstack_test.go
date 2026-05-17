@@ -638,7 +638,7 @@ func TestFilterLegacyCompatibilityAPIs(t *testing.T) {
 	}
 
 	if filtered := filterLegacyCompatibilityAPIs(apis); len(filtered) != len(apis) {
-		t.Fatalf("legacy enabled should keep all APIs, got %d want %d", len(filtered), len(apis))
+		t.Fatalf("filtered API count mismatch, got %d want %d", len(filtered), len(apis))
 	}
 
 	filtered := filterLegacyCompatibilityAPIs(apis)
@@ -646,12 +646,12 @@ func TestFilterLegacyCompatibilityAPIs(t *testing.T) {
 	for _, api := range filtered {
 		got[api.Namespace] = true
 		if isLegacyCompatibilityNamespace(api.Namespace) {
-			t.Fatalf("legacy namespace %q was not filtered", api.Namespace)
+			t.Fatalf("non-sila namespace %q was not filtered", api.Namespace)
 		}
 	}
 	for _, namespace := range []string{"sila", "silaNet", "silaWeb3", "silaEngine"} {
 		if !got[namespace] {
-			t.Fatalf("sila namespace %q was filtered", namespace)
+			t.Fatalf("sila namespace %q must remain available", namespace)
 		}
 	}
 }
