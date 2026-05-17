@@ -17,16 +17,21 @@
 // Package web3ext contains SilaChain-specific web3.js extensions.
 package web3ext
 
+import "strings"
+
 var Modules = map[string]string{
-	"admin":  AdminJs,
-	"clique": CliqueJs,
-	"debug":  DebugJs,
-	"eth":    EthJs,
-	"miner":  MinerJs,
-	"net":    NetJs,
-	"rpc":    RpcJs,
-	"txpool": TxpoolJs,
-	"dev":    DevJs,
+	"admin":    AdminJs,
+	"clique":   CliqueJs,
+	"debug":    DebugJs,
+	"eth":      EthJs,
+	"miner":    MinerJs,
+	"net":      NetJs,
+	"sila":     SilaJs,
+	"silaNet":  SilaNetJs,
+	"silaWeb3": SilaWeb3Js,
+	"rpc":      RpcJs,
+	"txpool":   TxpoolJs,
+	"dev":      DevJs,
 }
 
 const CliqueJs = `
@@ -635,6 +640,47 @@ web3._extend({
 	]
 });
 `
+
+const SilaNetJs = `
+web3._extend({
+        property: 'silaNet',
+        methods: [],
+        properties: [
+                new web3._extend.Property({
+                        name: 'version',
+                        getter: 'silaNet_version'
+                }),
+        ]
+});
+`
+
+const SilaWeb3Js = `
+web3._extend({
+        property: 'silaWeb3',
+        methods: [
+                new web3._extend.Method({
+                        name: 'sha3',
+                        call: 'silaWeb3_sha3',
+                        params: 1
+                }),
+        ],
+        properties: [
+                new web3._extend.Property({
+                        name: 'clientVersion',
+                        getter: 'silaWeb3_clientVersion'
+                }),
+        ]
+});
+`
+
+var SilaJs = strings.NewReplacer(
+	"property: 'eth'",
+	"property: 'sila'",
+	"call: 'eth_",
+	"call: 'sila_",
+	"getter: 'eth_",
+	"getter: 'sila_",
+).Replace(EthJs)
 
 const MinerJs = `
 web3._extend({

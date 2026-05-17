@@ -307,8 +307,8 @@ func (c *Console) Welcome() {
 
 	// Print some generic Sila metadata
 	if res, err := c.jsre.Run(`
-		var message = "instance: " + web3.version.node + "\n";
-		message += "at block: " + eth.blockNumber + " (" + new Date(1000 * eth.getBlock(eth.blockNumber).timestamp) + ")\n";
+		var message = "instance: " + admin.nodeInfo.name + "\n";
+		message += "at block: " + eth.blockNumber + " (" + new Date(1000 * sila.getBlock(eth.blockNumber).timestamp) + ")\n";
 		try {
 			message += " datadir: " + admin.datadir + "\n";
 		} catch (err) {}
