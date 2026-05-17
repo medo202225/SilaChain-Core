@@ -6,7 +6,6 @@ package silaapi
 import ethapi "github.com/sila-org/sila/internal/ethapi"
 
 var GetAPIs = ethapi.GetAPIs
-var RPCMarshalBlock = ethapi.RPCMarshalBlock
 var DoCall = ethapi.DoCall
 var DoEstimateGas = ethapi.DoEstimateGas
 var SubmitTransaction = ethapi.SubmitTransaction
