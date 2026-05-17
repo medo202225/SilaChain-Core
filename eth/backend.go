@@ -52,6 +52,7 @@ import (
 	"github.com/sila-org/sila/event"
 	"github.com/sila-org/sila/internal/shutdowncheck"
 	"github.com/sila-org/sila/internal/silaapi"
+	"github.com/sila-org/sila/internal/silaapi/netapi"
 	"github.com/sila-org/sila/internal/version"
 	"github.com/sila-org/sila/log"
 	"github.com/sila-org/sila/miner"
@@ -118,7 +119,7 @@ type Ethereum struct {
 	gasPrice *big.Int
 
 	networkID     uint64
-	netRPCService *silaapi.NetAPI
+	netRPCService *netapi.NetAPI
 
 	p2pServer *p2p.Server
 
@@ -363,7 +364,7 @@ func New(stack *node.Node, config *ethconfig.Config) (*Ethereum, error) {
 	eth.APIBackend.gpo = gasprice.NewOracle(eth.APIBackend, config.GPO, config.Miner.GasPrice)
 
 	// Start the RPC service
-	eth.netRPCService = silaapi.NewNetAPI(eth.p2pServer, networkID)
+	eth.netRPCService = netapi.NewNetAPI(eth.p2pServer, networkID)
 
 	// Register the backend on the node
 	stack.RegisterAPIs(eth.APIs())
