@@ -377,13 +377,13 @@ func (n *Node) obtainJWTSecret(cliParam string) ([]byte, error) {
 // startup. It's not meant to be called at any time afterwards as it makes certain
 // assumptions about the state of the node.
 func (n *Node) startRPC() error {
-	if err := n.startInProc(filterLegacyCompatibilityAPIs(n.rpcAPIs, n.config.ExposeLegacyRPC)); err != nil {
+	if err := n.startInProc(filterLegacyCompatibilityAPIs(n.rpcAPIs)); err != nil {
 		return err
 	}
 
 	// Configure IPC.
 	if n.ipc.endpoint != "" {
-		if err := n.ipc.start(filterLegacyCompatibilityAPIs(n.rpcAPIs, n.config.ExposeLegacyRPC)); err != nil {
+		if err := n.ipc.start(filterLegacyCompatibilityAPIs(n.rpcAPIs)); err != nil {
 			return err
 		}
 	}

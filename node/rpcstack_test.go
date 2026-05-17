@@ -637,11 +637,11 @@ func TestFilterLegacyCompatibilityAPIs(t *testing.T) {
 		{Namespace: "silaEngine", Service: &testService{}},
 	}
 
-	if filtered := filterLegacyCompatibilityAPIs(apis, true); len(filtered) != len(apis) {
+	if filtered := filterLegacyCompatibilityAPIs(apis); len(filtered) != len(apis) {
 		t.Fatalf("legacy enabled should keep all APIs, got %d want %d", len(filtered), len(apis))
 	}
 
-	filtered := filterLegacyCompatibilityAPIs(apis, false)
+	filtered := filterLegacyCompatibilityAPIs(apis)
 	got := make(map[string]bool)
 	for _, api := range filtered {
 		got[api.Namespace] = true

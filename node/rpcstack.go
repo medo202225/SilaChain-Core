@@ -648,10 +648,7 @@ func isLegacyCompatibilityNamespace(namespace string) bool {
 	}
 }
 
-func filterLegacyCompatibilityAPIs(apis []rpc.API, exposeLegacy bool) []rpc.API {
-	if exposeLegacy {
-		return apis
-	}
+func filterLegacyCompatibilityAPIs(apis []rpc.API) []rpc.API {
 	filtered := make([]rpc.API, 0, len(apis))
 	for _, api := range apis {
 		if !isLegacyCompatibilityNamespace(api.Namespace) {
