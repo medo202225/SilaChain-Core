@@ -58,7 +58,7 @@ func Register(stack *node.Node, backend *eth.Ethereum) error {
 		},
 		{
 			Namespace:     "silaEngine",
-			Service:       NewConsensusAPI(backend),
+			Service:       NewSilaEngineAPI(backend),
 			Authenticated: true,
 		},
 	})
@@ -138,6 +138,22 @@ func NewConsensusAPI(eth *eth.Ethereum) *ConsensusAPI {
 	api := newConsensusAPIWithoutHeartbeat(eth)
 	go api.heartbeat()
 	return api
+}
+
+// SilaEngineAPI exposes the consensus API under SilaEngine method names while
+// sharing the same execution semantics as the legacy engine API.
+type SilaEngineAPI struct {
+	*ConsensusAPI
+}
+
+// NewSilaEngineAPI creates a Sila-namespaced consensus API wrapper.
+func NewSilaEngineAPI(eth *eth.Ethereum) *SilaEngineAPI {
+	return &SilaEngineAPI{ConsensusAPI: NewConsensusAPI(eth)}
+}
+
+// ExchangeCapabilities returns the SilaEngine methods provided by this node.
+func (api *SilaEngineAPI) ExchangeCapabilities([]string) []string {
+	return api.ConsensusAPI.exchangeCapabilities("silaEngine")
 }
 
 // newConsensusAPIWithoutHeartbeat creates a new consensus api for the SimulatedBeacon Node.
@@ -1084,6 +1100,10 @@ func (api *ConsensusAPI) checkFork(timestamp uint64, forks ...forks.Fork) bool {
 
 // ExchangeCapabilities returns the current methods provided by this node.
 func (api *ConsensusAPI) ExchangeCapabilities([]string) []string {
+	return api.exchangeCapabilities("engine")
+}
+
+func (api *ConsensusAPI) exchangeCapabilities(namespace string) []string {
 	valueT := reflect.TypeOf(api)
 	caps := make([]string, 0, valueT.NumMethod())
 	for i := 0; i < valueT.NumMethod(); i++ {
@@ -1091,7 +1111,7 @@ func (api *ConsensusAPI) ExchangeCapabilities([]string) []string {
 		if string(name) == "ExchangeCapabilities" {
 			continue
 		}
-		caps = append(caps, "engine_"+string(unicode.ToLower(name[0]))+string(name[1:]))
+		caps = append(caps, namespace+"_"+string(unicode.ToLower(name[0]))+string(name[1:]))
 	}
 	return caps
 }
