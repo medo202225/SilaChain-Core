@@ -57,3 +57,9 @@ cmd/sila/sila
 cmd/rlpdump/rlpdump
 cmd/workload/workload
 cmd/keeper/keeper
+# Local SilaChain devnet runtime data
+silanet/
+
+# Local JWT secrets
+devnets/**/secrets/jwtsecret
+devnets/**/secrets/*.secret
