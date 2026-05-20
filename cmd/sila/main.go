@@ -365,7 +365,7 @@ func DefaultNodeConfig() node.Config {
 
 // RegisterExecutionService registers the Sila execution service.
 func RegisterExecutionService(stack *node.Node, cfg *ethconfig.Config) (*sila.EthAPIBackend, *sila.Ethereum) {
-	return utils.RegisterEthService(stack, cfg)
+	return utils.RegisterSilaService(stack, cfg)
 }
 
 // RegisterSyncOverrideService configures synchronization override service.
@@ -441,7 +441,7 @@ func RegisterGraphQLService(stack *node.Node, backend ethapi.Backend, filterSyst
 
 // RegisterSilaStatsService adds the Sila stats daemon if requested.
 func RegisterSilaStatsService(stack *node.Node, backend *sila.EthAPIBackend, url string) {
-	utils.RegisterEthStatsService(stack, backend, url)
+	utils.RegisterSilaStatsService(stack, backend, url)
 }
 
 // StartExecutionNode starts the node and shared execution runtime services.

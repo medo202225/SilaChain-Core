@@ -2208,6 +2208,11 @@ func SetDNSDiscoveryDefaults(cfg *ethconfig.Config, genesis common.Hash) {
 
 // RegisterEthService adds the Sila execution client to the stack.
 // The second return value is the full node instance.
+// RegisterSilaService adds the Sila execution client to the stack.
+func RegisterSilaService(stack *node.Node, cfg *ethconfig.Config) (*eth.EthAPIBackend, *eth.Ethereum) {
+	return RegisterEthService(stack, cfg)
+}
+
 func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (*eth.EthAPIBackend, *eth.Ethereum) {
 	backend, err := eth.New(stack, cfg)
 	if err != nil {
@@ -2218,6 +2223,11 @@ func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (*eth.EthAPIBac
 }
 
 // RegisterEthStatsService configures the Ethereum Stats daemon and adds it to the node.
+// RegisterSilaStatsService configures the Sila Stats daemon and adds it to the node.
+func RegisterSilaStatsService(stack *node.Node, backend *eth.EthAPIBackend, url string) {
+	RegisterEthStatsService(stack, backend, url)
+}
+
 func RegisterEthStatsService(stack *node.Node, backend *eth.EthAPIBackend, url string) {
 	if err := ethstats.New(stack, backend, backend.Engine(), url); err != nil {
 		Fatalf("Failed to register the Ethereum Stats service: %v", err)
