@@ -2250,7 +2250,7 @@ func RegisterFilterAPI(stack *node.Node, backend ethapi.Backend, ethcfg *ethconf
 		RangeLimit:    ethcfg.RangeLimit,
 	})
 	stack.RegisterAPIs([]rpc.API{{
-		Namespace: "eth",
+		Namespace: "sila",
 		Service:   filters.NewFilterAPI(filterSystem),
 	}})
 	return filterSystem
