@@ -90,6 +90,16 @@ func (at *authTest) Run(t *testing.T) {
 	if x != "hello eth" {
 		t.Fatalf("method was silent but did not return expected value: %q", x)
 	}
+
+	if !at.expectCall2Fail {
+		err = cl.CallContext(ctx, &x, "sila_helloWorld")
+		if err != nil {
+			t.Fatalf("failed to call sila rpc endpoint: %v", err)
+		}
+		if x != "hello eth" {
+			t.Fatalf("sila method returned unexpected value: %q", x)
+		}
+	}
 }
 
 func TestAuthEndpoints(t *testing.T) {
