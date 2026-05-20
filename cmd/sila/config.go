@@ -188,7 +188,7 @@ func BuildExecutionNode(ctx *cli.Context, stack *node.Node, cfg *ExecutionConfig
 		RegisterGraphQLService(stack, backend, filterSystem, &cfg.Node)
 	}
 	if cfg.Ethstats.URL != "" {
-		RegisterEthStatsService(stack, backend, cfg.Ethstats.URL)
+		RegisterSilaStatsService(stack, backend, cfg.Ethstats.URL)
 	}
 
 	synctarget, err := SyncTargetFromContext(ctx)

@@ -439,8 +439,8 @@ func RegisterGraphQLService(stack *node.Node, backend ethapi.Backend, filterSyst
 	utils.RegisterGraphQLService(stack, backend, filterSystem, cfg)
 }
 
-// RegisterEthStatsService adds the Sila stats daemon if requested.
-func RegisterEthStatsService(stack *node.Node, backend *sila.EthAPIBackend, url string) {
+// RegisterSilaStatsService adds the Sila stats daemon if requested.
+func RegisterSilaStatsService(stack *node.Node, backend *sila.EthAPIBackend, url string) {
 	utils.RegisterEthStatsService(stack, backend, url)
 }
 
