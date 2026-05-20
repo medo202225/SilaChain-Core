@@ -2222,7 +2222,7 @@ func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (*eth.EthAPIBac
 	return backend.APIBackend, backend
 }
 
-// RegisterEthStatsService configures the Ethereum Stats daemon and adds it to the node.
+// RegisterEthStatsService configures the Sila Stats compatibility daemon and adds it to the node.
 // RegisterSilaStatsService configures the Sila Stats daemon and adds it to the node.
 func RegisterSilaStatsService(stack *node.Node, backend *eth.EthAPIBackend, url string) {
 	RegisterEthStatsService(stack, backend, url)
